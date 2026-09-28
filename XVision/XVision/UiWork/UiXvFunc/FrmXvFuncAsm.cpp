@@ -1,6 +1,7 @@
 ﻿#include "FrmXvFuncAsm.h"
 #include "ui_FrmXvFuncAsm.h"
 #include <QScrollBar>
+#include <QScopedValueRollback>
 
 #include "XvFuncAssembly.h"
 
@@ -224,6 +225,8 @@ void FrmXvFuncAsm::initFrm()
 
 void FrmXvFuncAsm::onShowXvFuncTypeDrawer(const QRect &rect,const XvCore::EXvFuncType &type)
 {
+    if(m_creatingDrawer) return;
+    QScopedValueRollback<bool> creating(m_creatingDrawer,true);
     auto funcCreateFrmType=[&](QMap<XvCore::EXvFuncType,XMatDrawer*> &map,const XvCore::EXvFuncType &type)
     {
         if(map.contains(type)) return;
@@ -263,7 +266,8 @@ void FrmXvFuncAsm::onShowXvFuncTypeDrawer(const QRect &rect,const XvCore::EXvFun
         auto parWdg=qobject_cast<QWidget*>(drawer->parent());
         if(parWdg)
         {
-
+             // Parent geometry events already happened before lazy creation.
+             drawer->setGeometry(parWdg->rect());
              auto drawerH=drawer->drawerHeight();
              auto parH= parWdg->height();
              if(offsetBtnTopPos.y()+drawerH>parH)
@@ -285,6 +289,8 @@ void FrmXvFuncAsm::onShowXvFuncTypeDrawer(const QRect &rect,const XvCore::EXvFun
              }
 
         }
+        // A child created after its visible parent needs an explicit show.
+        drawer->show();
         drawer->openDrawer();
         m_drawerCurSingleTypeXvFuncs=drawer;
     }

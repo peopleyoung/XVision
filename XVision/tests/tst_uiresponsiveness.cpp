@@ -5,6 +5,8 @@
 #include <thread>
 
 #include "FrmLogShow.h"
+#include "FrmXvFuncAsm.h"
+#include "FrmXvFuncType.h"
 #include "BaseSystemFuncWdg.h"
 #include "Delayer.h"
 #include "XInt.h"
@@ -26,6 +28,29 @@ private slots:
         XLang->init();
         qRegisterMetaType<XLogger::ELogType>();
         QVERIFY(XvFuncAsm->registerXvFunc(Delayer::staticMetaObject));
+    }
+    void toolboxCreatesVisibleDrawerOnFirstClick()
+    {
+        QWidget host;host.resize(640,480);
+        FrmXvFuncAsm toolbox(&host);toolbox.setGeometry(0,0,56,480);
+        toolbox.setDrawerParWidget(&host);host.show();
+        QCoreApplication::processEvents();
+        QVERIFY(host.findChildren<FrmXvFuncType*>().isEmpty());
+        QToolButton *category=nullptr;
+        for(auto button:toolbox.findChildren<QToolButton*>())
+            if(button->property("Type").isValid()) { category=button;break; }
+        QVERIFY(category);
+        // XMatDrawer initializes its animation by processing queued events.
+        QTimer::singleShot(0,category,[category]() { category->click(); });
+        category->click();
+        QTRY_COMPARE_WITH_TIMEOUT(host.findChildren<FrmXvFuncType*>().size(),1,1000);
+        auto contents=host.findChild<FrmXvFuncType*>();
+        QTRY_VERIFY_WITH_TIMEOUT(contents->isVisible(),1000);
+        QTRY_VERIFY_WITH_TIMEOUT(contents->visibleRegion().boundingRect().height()>50,1000);
+        for(auto drawer:host.findChildren<XMatDrawer*>())
+            if(drawer->isAncestorOf(contents)) QCOMPARE(drawer->geometry(),host.rect());
+        category->click();
+        QCOMPARE(host.findChildren<FrmXvFuncType*>().size(),1);
     }
     void logBurstKeepsGuiResponsive()
     {

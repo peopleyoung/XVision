@@ -597,6 +597,12 @@ endif()
 # Real application widgets are compiled into the UI regression executable.
 add_executable(XvUiResponsivenessTests
     tst_uiresponsiveness.cpp
+    ../XVision/UiWork/UiXvFunc/FrmXvFuncAsm.cpp
+    ../XVision/UiWork/UiXvFunc/FrmXvFuncAsm.ui
+    ../XVision/UiWork/UiXvFunc/FrmXvFuncType.cpp
+    ../XVision/UiWork/UiXvFunc/FrmXvFuncType.ui
+    ../XVision/UiWork/UiXvFunc/WdgItemXvFunc.cpp
+    ../XVision/UiWork/UiXvFunc/WdgItemXvFunc.ui
     ../XVision/Res/AppRes.qrc
     ../XVision/Model/BaseWidget.cpp
     ../XVision/UIOutput/FrmLogShow.cpp

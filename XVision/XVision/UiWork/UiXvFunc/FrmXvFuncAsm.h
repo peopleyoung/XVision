@@ -35,6 +35,7 @@ protected:
 
 private:
     Ui::FrmXvFuncAsm *ui;
+    bool m_creatingDrawer=false;
     //抽屉显示父窗口
     QWidget* m_drawerParWidget=nullptr;
     ///当前单类型算子抽屉(临时抽屉)
