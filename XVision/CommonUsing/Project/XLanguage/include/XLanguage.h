@@ -14,6 +14,7 @@ class XLANGUAGE_EXPORT XLanguage
 public:
     ///获取单例
     static XLanguage *getInstance();
+    ~XLanguage();
 private:
     XLanguage();
     static XLanguage* s_Instance;

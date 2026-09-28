@@ -195,6 +195,8 @@ protected:
 
 };
 
+XLanguage::~XLanguage() = default;
+
 XLanguage::XLanguage()
     :d_ptr(new XLanguagePrivate(this))
 {
