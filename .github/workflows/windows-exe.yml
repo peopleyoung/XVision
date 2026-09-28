@@ -41,6 +41,8 @@ jobs:
           key: xvision-win64-vs2019-qt640-opencv4100-contrib-onnx1181-v2
       - name: Build, test, and package full-feature Release
         run: ./XVision/scripts/Package-WindowsBuild.ps1 -Configuration Release -KeepStaging
+      - name: Verify extracted application startup
+        run: ./XVision/scripts/Test-PackagedWindowsApp.ps1 -ArchivePath ./XVision/dist/XVision-Release-win64.zip
       - name: Upload Windows executable package
         uses: actions/upload-artifact@v4
         with:
@@ -56,6 +58,7 @@ jobs:
           path: |
             XVision/build/windows-msvc2019-release/Testing/Temporary/*.log
             XVision/build/windows-msvc2019-release/Testing/QtTest/*.txt
+            XVision/build/windows-msvc2019-release/Testing/ApplicationSmoke/*
             XVision/build/windows-msvc2019-release/CMakeFiles/CMakeConfigureLog.yaml
           if-no-files-found: ignore
           retention-days: 7

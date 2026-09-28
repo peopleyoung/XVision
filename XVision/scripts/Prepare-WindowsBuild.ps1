@@ -1,4 +1,4 @@
-param(
+﻿param(
     [Parameter(Mandatory = $true)]
     [string]$SdkDirectory
 )
@@ -115,7 +115,12 @@ if (-not (Test-Path -LiteralPath (Join-Path $OnnxRoot 'lib/onnxruntime.dll'))) {
     Copy-Item -Path (Join-Path $OnnxExtracted '*') -Destination $OnnxRoot -Recurse -Force
 }
 
-$Values = @{ QTDIR = $QtDirectory; XVISION_OPENCV_ROOT = $OpenCvRoot; XVISION_ONNXRUNTIME_ROOT = $OnnxRoot }
+# SDK binaries can be built with newer MSVC than the application. Use the
+# newest installed compatible v14 runtime for deployment, not an older CRT.
+$RuntimeVisualStudio = & $VsWhere -latest -products '*' -version '[16.0,18.0)' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+if (-not $RuntimeVisualStudio) { throw 'No Visual Studio C++ runtime deployment directory was found.' }
+$VcInstallDirectory = Join-Path $RuntimeVisualStudio 'VC'
+$Values = @{ QTDIR = $QtDirectory; XVISION_OPENCV_ROOT = $OpenCvRoot; XVISION_ONNXRUNTIME_ROOT = $OnnxRoot; VCINSTALLDIR = $VcInstallDirectory }
 foreach ($Name in $Values.Keys) {
     Set-Item -LiteralPath "Env:$Name" -Value $Values[$Name]
     if ($env:GITHUB_ENV) {

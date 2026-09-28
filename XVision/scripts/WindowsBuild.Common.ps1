@@ -76,3 +76,38 @@ function Get-XVisionQtRuntimeFiles {
     "platforms/qwindows${Suffix}.dll"
     "sqldrivers/qsqlite${Suffix}.dll"
 }
+
+
+function Get-XVisionMsvcRuntimeFiles {
+    param(
+        [ValidateSet('Debug', 'Release')][string]$Configuration,
+        [string]$VcInstallDirectory = $env:VCINSTALLDIR
+    )
+    if ([string]::IsNullOrWhiteSpace($VcInstallDirectory)) {
+        throw 'Set VCINSTALLDIR to the Visual Studio VC directory to deploy the MSVC runtime.'
+    }
+    $RedistRoot = Join-Path $VcInstallDirectory 'Redist/MSVC'
+    if (-not (Test-Path -LiteralPath $RedistRoot -PathType Container)) {
+        throw "Missing MSVC redist directory: $RedistRoot"
+    }
+    $Versions = @(Get-ChildItem -LiteralPath $RedistRoot -Directory |
+        Where-Object { $_.Name -match '^\d+\.\d+\.\d+(\.\d+)?$' } |
+        Sort-Object { [version]$_.Name } -Descending)
+    $Suffix = if ($Configuration -eq 'Debug') { 'd' } else { '' }
+    $ArchitecturePath = if ($Configuration -eq 'Debug') { 'Debug_NonRedist/x64' } else { 'x64' }
+    $CrtPattern = if ($Configuration -eq 'Debug') { 'Microsoft.VC*.DebugCRT' } else { 'Microsoft.VC*.CRT' }
+    foreach ($Version in $Versions) {
+        $ArchitectureDirectory = Join-Path $Version.FullName $ArchitecturePath
+        if (-not (Test-Path -LiteralPath $ArchitectureDirectory -PathType Container)) { continue }
+        $CrtDirectories = @(Get-ChildItem -LiteralPath $ArchitectureDirectory -Directory -Filter $CrtPattern)
+        if ($CrtDirectories.Count -eq 0) { continue }
+        $CrtDirectory = $CrtDirectories[0].FullName
+        foreach ($RequiredName in @("msvcp140$Suffix.dll", "vcruntime140$Suffix.dll", "vcruntime140_1$Suffix.dll")) {
+            if (-not (Test-Path -LiteralPath (Join-Path $CrtDirectory $RequiredName) -PathType Leaf)) {
+                throw "Missing MSVC runtime $RequiredName in $CrtDirectory"
+            }
+        }
+        return @(Get-ChildItem -LiteralPath $CrtDirectory -File -Filter '*.dll')
+    }
+    throw "No x64 $Configuration MSVC CRT directory found under $RedistRoot"
+}

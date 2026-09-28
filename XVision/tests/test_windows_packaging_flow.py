@@ -26,6 +26,11 @@ def case(name,config='Release',skip=False,skip_build=True,fault=''):
         if fault=='disabled': cache=[s.replace('XVISION_ENABLE_ONNXRUNTIME:BOOL=ON','XVISION_ENABLE_ONNXRUNTIME:BOOL=OFF') for s in cache]
         put(build/'CMakeCache.txt','\n'.join(cache))
         if fault=='missing_backend': (bins/'onnxruntime.dll').unlink()
+        vc=r/'Visual Studio with spaces'/'VC'
+        crt=vc/'Redist/MSVC/14.44.35208'/('Debug_NonRedist/x64/Microsoft.VC143.DebugCRT' if config=='Debug' else 'x64/Microsoft.VC143.CRT')
+        crt_names=[f'msvcp140{suffix}.dll',f'vcruntime140{suffix}.dll',f'vcruntime140_1{suffix}.dll',f'concrt140{suffix}.dll']
+        for filename in crt_names: put(crt/filename)
+        if fault=='missing_msvc': (crt/f'vcruntime140_1{suffix}.dll').unlink()
         qt=r/'Qt'; put(qt/'lib/cmake/Qt6/Qt6Config.cmake'); put(qt/f'bin/Qt6Test{suffix}.dll')
         put(qt/'bin/qmake.exe','#!/bin/sh\nprintf "6.4.0\\n"\n',True)
         put(qt/'bin/windeployqt.exe','''#!/usr/bin/python3
@@ -68,7 +73,7 @@ pathlib.Path(os.environ['MARKER']+'.verify').write_text('called')
 sys.exit(9 if os.environ['FAULT']=='verify_fail' else 0)
 ''',True)
         put(tools/'git','#!/bin/sh\nprintf "fixture-commit\\n"\n',True)
-        env=dict(os.environ,OS='Windows_NT',QTDIR=str(qt),SystemRoot=str(r/'Windows'),PATH=str(tools)+':'+str(tools)+':/usr/bin',FAULT=fault,MARKER=str(r/'called'))
+        env=dict(os.environ,OS='Windows_NT',QTDIR=str(qt),VCINSTALLDIR=str(vc),SystemRoot=str(r/'Windows'),PATH=str(tools)+':'+str(tools)+':/usr/bin',FAULT=fault,MARKER=str(r/'called'))
         cmd=[PWSH,'-NoProfile','-File',str(scripts/'Package-WindowsBuild.ps1'),'-Configuration',config,'-OpenCvRoot',str(sdk),'-OnnxRuntimeRoot',str(sdk),'-KeepStaging']
         if skip_build: cmd+=['-SkipBuild']
         if skip: cmd+=['-SkipTests']
@@ -77,7 +82,7 @@ sys.exit(9 if os.environ['FAULT']=='verify_fail' else 0)
         if fault:
             assert p.returncode!=0,(name,p.stdout)
             assert not archive.exists(),(name,'published despite fault')
-            expected={'disabled':'XVISION_ENABLE_ONNXRUNTIME=ON','missing_backend':'enabled backend runtime','missing_sql':'Qt6Sql.dll','wrong_debug':'qwindowsd.dll','plugin_fail':'Packaged plugin failed','verify_fail':'First-party tests for the existing Windows build failed'}[fault]
+            expected={'missing_msvc':'Missing MSVC runtime','disabled':'XVISION_ENABLE_ONNXRUNTIME=ON','missing_backend':'enabled backend runtime','missing_sql':'Qt6Sql.dll','wrong_debug':'qwindowsd.dll','plugin_fail':'Packaged plugin failed','verify_fail':'First-party tests for the existing Windows build failed'}[fault]
             assert expected in p.stdout,(name,p.stdout)
         else:
             assert p.returncode==0,(name,p.stdout)
@@ -90,6 +95,7 @@ sys.exit(9 if os.environ['FAULT']=='verify_fail' else 0)
             with zipfile.ZipFile(archive) as z:
                 names=z.namelist(); assert 'XVision.exe' in names
                 assert 'XvFuncCollection/XvFuncSystem.dll' in names
+                assert all(filename in names for filename in crt_names)
                 assert not any('XvSystemPluginTests' in n or 'Qt6Test' in n for n in names)
         print('PASS',name,flush=True)
 case('Release with verified staging')
@@ -97,6 +103,6 @@ case('Debug with correct DLL suffixes',config='Debug')
 case('Explicitly skipped tests are recorded',skip=True)
 case('Fresh build forwards SDK roots',skip_build=False)
 case('Skipped tests still enable backends',skip=True,skip_build=False)
-for fault in ['disabled','missing_backend','missing_sql','wrong_debug','plugin_fail','verify_fail']:
+for fault in ['missing_msvc','disabled','missing_backend','missing_sql','wrong_debug','plugin_fail','verify_fail']:
     case('Reject '+fault,config='Debug' if fault=='wrong_debug' else 'Release',fault=fault)
-print('11 packaging flow fixtures passed; mock tools do not establish Windows runtime acceptance.')
+print('12 packaging flow fixtures passed; mock tools do not establish Windows runtime acceptance.')

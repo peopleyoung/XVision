@@ -20,7 +20,7 @@ function Assert-Fails {
 $TemporaryDirectory = Join-Path ([System.IO.Path]::GetTempPath()) ('xvision-package-tests-' + [guid]::NewGuid())
 New-Item -ItemType Directory -Path $TemporaryDirectory | Out-Null
 try {
-    foreach ($Script in @('Package-WindowsBuild.ps1', 'Verify-WindowsBuild.ps1', 'WindowsBuild.Common.ps1', 'Prepare-WindowsBuild.ps1')) {
+    foreach ($Script in @('Package-WindowsBuild.ps1', 'Verify-WindowsBuild.ps1', 'WindowsBuild.Common.ps1', 'Prepare-WindowsBuild.ps1', 'Test-PackagedWindowsApp.ps1')) {
         $Tokens = $null
         $ParseErrors = $null
         $ScriptPath = Join-Path $SourceDirectory "scripts/$Script"

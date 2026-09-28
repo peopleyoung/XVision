@@ -179,6 +179,11 @@ Copy-Item -LiteralPath (Join-Path $BinDir "XVision.exe") -Destination $PackageDi
 $WindeployqtArguments = @(Get-XVisionQtDeploymentArguments $Configuration $PackageDirectory)
 Invoke-Checked $Windeployqt $WindeployqtArguments "Qt runtime deployment failed."
 
+# Qt's Release deployment only adds the redistributable installer. Include the
+# x64 CRT DLLs beside the EXE so startup does not depend on running that installer.
+$MsvcRuntimeFiles = @(Get-XVisionMsvcRuntimeFiles $Configuration)
+$MsvcRuntimeFiles | Copy-Item -Destination $PackageDirectory -Force
+
 $PackageReadmePath = Join-Path $PackageDirectory "PACKAGE-README.txt"
 @(
     "XVision Windows x64",
@@ -202,7 +207,7 @@ $RequiredPackageFiles = @(
     "XvFuncCollection/XvFuncSystem.dll",
     "halcon.dll",
     "halconcpp.dll"
-) + $RequiredCommonDlls + $SdkRuntimeNames + @(Get-XVisionQtRuntimeFiles $Configuration)
+) + $RequiredCommonDlls + $SdkRuntimeNames + @(Get-XVisionQtRuntimeFiles $Configuration) + @($MsvcRuntimeFiles | ForEach-Object { $_.Name })
 foreach ($RelativePath in $RequiredPackageFiles) {
     Assert-File (Join-Path $PackageDirectory $RelativePath) "packaged runtime file $RelativePath"
 }
@@ -258,6 +263,7 @@ $ManifestLines = @(
     "Package: $PackageName",
     "Configuration: $Configuration",
     "Architecture: x64",
+    "MSVC runtime: app-local x64 CRT DLLs",
     "Qt: $QtVersion",
     "CMake: $CMakeVersion",
     "Halcon headers: 19.11",
