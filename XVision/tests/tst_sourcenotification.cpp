@@ -29,6 +29,12 @@ using namespace XvCore;
 
 namespace
 {
+class TestImageAcquisition:public ImageAcquisition
+{
+public:
+    using ImageAcquisition::executionDirective;
+};
+
 template<typename T>
 T *parameter(XvFunc *function,const QString &name)
 {
@@ -54,7 +60,7 @@ private slots:
 
 void SourceNotificationTests::videoContractDefaultsAndDisabledBackend()
 {
-    ImageAcquisition acquisition;
+    TestImageAcquisition acquisition;
     QCOMPARE(acquisition.persistentPropertyNames(),
              QStringList({"acqType","localFile","localDir"}));
     const QStringList optional=acquisition.optionalPersistentParameterNames();
@@ -126,7 +132,7 @@ void SourceNotificationTests::generatedVideoRangeStepEosAndLoop()
     }
     writer.release();
 
-    ImageAcquisition acquisition;
+    TestImageAcquisition acquisition;
     acquisition.setAcqType(ImageAcquisition::Video);
     acquisition.setVideoPath(path);
     acquisition.setVideoStartFrame(1);
