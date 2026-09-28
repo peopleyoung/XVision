@@ -31,7 +31,6 @@ list(APPEND _LIBS
 )
 #添加工程库
 list(APPEND _LIBS
-    XvCore #核心库
     XvData #数据库
     XvDisplay #图像交互库
     XvTokenMsg #Token消息库
@@ -43,7 +42,6 @@ list(APPEND _LIBS
 list(APPEND _LIBS
     XWidget         #控件库
     XLog            #日志库
-    XLanguage       #多语言库
     XConcurrent     #多线程管理库
 )
 #添加第三方库
@@ -180,7 +178,15 @@ list(APPEND _INCLUDE_DIR
 include_directories(${_INCLUDE_DIR})
 
 #连接[第三方库/内部库] 动态
-target_link_libraries(${PROJECT_NAME} PRIVATE ${_LIBS})
+# Public operator headers expose XvCore types and inline translation calls.
+target_include_directories(XvFuncSystem PUBLIC
+    "${CMAKE_CURRENT_SOURCE_DIR}/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../${XLanguage_Inc}"
+)
+target_link_libraries(XvFuncSystem
+    PUBLIC XvCore XLanguage
+    PRIVATE ${_LIBS}
+)
 
 
 target_compile_definitions(XvFuncSystem PRIVATE XVFUNCSYSTEM_LIBRARY)
