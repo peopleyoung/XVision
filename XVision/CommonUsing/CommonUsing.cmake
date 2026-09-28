@@ -1,8 +1,4 @@
-﻿#当前构建模式:Debug-No Release-Off
-set(CurBuildType_IsDebug ON)
-
-
-#include_dir:
+﻿#include_dir:
 
 set(AdsDocking_Inc CommonUsing/Project/AdsDocking/include)
 set(XFlowGraphics_Inc CommonUsing/Project/XFlowGraphics/include)
@@ -21,8 +17,7 @@ else()
 endif()
 
 
-if(CurBuildType_IsDebug) #debug lib目录为LibD
-   set(COMMON_USING_LINK_DIR  CommonUsing/LibD/${OUTPUT_DIR})
-else() #release lib目录为Lib
-   set(COMMON_USING_LINK_DIR  CommonUsing/Lib/${OUTPUT_DIR})
-endif()
+# Multi-config generators resolve the dependency directory per configuration.
+# This also works for single-config generators through the CONFIG expression.
+set(COMMON_USING_LINK_DIR
+    "CommonUsing/Lib$<$<CONFIG:Debug>:D>/${OUTPUT_DIR}")

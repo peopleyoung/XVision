@@ -62,29 +62,27 @@ bool XvPluginManager::init()
                 }
                 else
                 {
-                   m_lstPlg.append(vFuncplg);
-                   QString strError="";
-                   QString strEvent="";
-                   auto lst=vFuncplg->getPlgXvFunc();
-                   foreach (auto meta, lst)
+                   const QList<QMetaObject> functions=vFuncplg->getPlgXvFunc();
+                   const QList<XvFuncPreset> presets=vFuncplg->getPlgXvFuncPresets();
+                   QString registrationError;
+                   if(!XvFuncAsm->registerPlugin(functions,presets,&registrationError))
                    {
-                       bool bRet=this->plgRegisterXvFunc(meta);
-                       if(!bRet)
-                       {
-                            strError+=QString("<%1>").arg(meta.className());
-                       }
-                       else
-                       {
-                           strEvent+=QString("<%1>").arg(meta.className());
-                       }
+                       vFuncplg->uninit();
+                       Log_Error(QString("%1:%2 %3")
+                                 .arg(plgName,registrationError,
+                                      getLang(Core_XvFunc_RegFail,"算子注册失败")));
                    }
-                   if(!strError.isEmpty())
+                   else
                    {
-                       Log_Error(QString("%1:%2 %3").arg(plgName).arg(strError).arg(getLang(Core_XvFunc_RegFail,"算子注册失败")));
-                   }
-                   if(!strEvent.isEmpty())
-                   {
-                      Log_Event(QString("%1:%2 %3").arg(plgName).arg(strEvent).arg(getLang(Core_XvFunc_RegSuccess,"算子注册成功")));
+                       m_lstPlg.append(vFuncplg);
+                       QStringList registeredNames;
+                       for(const QMetaObject &meta:functions)
+                           registeredNames.append(meta.className());
+                       for(const XvFuncPreset &preset:presets)
+                           registeredNames.append(preset.alias);
+                       Log_Event(QString("%1:<%2> %3")
+                                 .arg(plgName,registeredNames.join("><"),
+                                      getLang(Core_XvFunc_RegSuccess,"算子注册成功")));
                    }
                 }
              }
@@ -105,22 +103,5 @@ bool XvPluginManager::uninit()
 
 bool XvPluginManager::plgRegisterXvFunc(const QMetaObject &funcMeta)
 {
-    if(funcMeta.superClass()->className()!= XvFunc::staticMetaObject.className())
-    {
-        return false;
-    }
-    auto objVfunc= funcMeta.newInstance();
-    XvFunc* iVFunc=qobject_cast<XvFunc*>(objVfunc);
-    if(iVFunc)
-    {
-        bool bRet= XvFuncAsm->registerXvFunc(iVFunc);
-        delete iVFunc;
-        iVFunc=nullptr;
-        return bRet;
-    }
-    else
-    {
-        return false;
-    }
+    return XvFuncAsm->registerXvFunc(funcMeta);
 }
-

@@ -18,7 +18,7 @@ public:
     ///初始化
     bool init(const QString &objectName,const QString &valueType,XObjectSet* parObjectSet=nullptr,const QString &dispalyName="");
 public://重载
-    XObject *clone() override { return nullptr;}
+    XObject *clone() override;
     QString typeName() override { return XObjectListType;}
     bool isContainer() override { return true; }
     bool getData(XObject *object) override;
@@ -40,6 +40,8 @@ public://*[数据操作]*
     ///数据大小
     qsizetype count() const;
 protected:
+    bool copyValuesFrom(const XObjectList &source);
+
     QString _valueType;//列表类型
     QList<XObject*> _lst;//数据列表
 

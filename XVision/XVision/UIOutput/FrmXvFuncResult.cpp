@@ -87,17 +87,26 @@ void FrmXvFuncResult::onUpdateXvFunc(XvFunc *func)
     {
        return;
     }
-    if(m_curFunc)
-    {
-        disconnect(m_curFunc,&XvFunc::sgFuncRunEnd,this,&FrmXvFuncResult::onUpdateXvFuncResult);
-    }
+    clearXvFunc();
     m_curFunc=func;
     connect(m_curFunc,&XvFunc::sgFuncRunEnd,this,&FrmXvFuncResult::onUpdateXvFuncResult);
-    connect(m_curFunc,&XvFunc::destroyed,this,[=]()
+    connect(m_curFunc,&XvFunc::destroyed,this,[this,func]()
     {
+        if(m_curFunc!=func) return;
         m_curFunc=nullptr;
+        ui->tbwXvFuncResult->setRowCount(0);
     });
     onUpdateXvFuncResult();
+}
+
+void FrmXvFuncResult::clearXvFunc()
+{
+    if(m_curFunc)
+    {
+        disconnect(m_curFunc,nullptr,this,nullptr);
+        m_curFunc=nullptr;
+    }
+    ui->tbwXvFuncResult->setRowCount(0);
 }
 
 

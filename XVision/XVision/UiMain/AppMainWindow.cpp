@@ -8,6 +8,8 @@
 #include <QToolBar>
 #include <QSettings>
 #include <QDir>
+#include <QFileDialog>
+#include <QFileInfo>
 #include <QLabel>
 #include <QtConcurrent>
 
@@ -29,6 +31,7 @@
 //XVsion
 #include "XvSingleApplication.h"
 #include "XvViewManager.h"
+#include "XvWorkManager.h"
 //#include "XvWorkManager.h"
 #include "DockMainManager.h"
 //#include "DockDef.h"
@@ -37,6 +40,9 @@
 #include "HardWareInfo.h"
 
 #include "FrmAbout.h"
+#include "FrmXvProjectConfig.h"
+#include "XvProject.h"
+#include "XvNotificationCenter.h"
 //XvUtils
 //#include "XvUtils.h"
 
@@ -99,6 +105,9 @@ protected:
     ///初始化主界面状态栏
     /// 软件系统信息添加
     void initMwStatusBar(AppMainWindow* mw);
+
+    void showNotification(XvCore::XvNotificationKind kind,
+                          const QString &message,bool modal);
 
     ///主界面显示事件
     void showEvent();
@@ -316,7 +325,8 @@ void AppMainWindowPrivate::initMwToolBar(QFrame* fm)
         });
     };
 
-    auto funcAddBtn=[&](QHBoxLayout *layout,const QString &text,const QString &objName,QIcon icon,const QString &tip="")
+    auto funcAddBtn=[&](QHBoxLayout *layout,const QString &text,const QString &objName,
+                       QIcon icon,const QString &tip="",bool todo=true)
     {
 
         auto fmH=fm->minimumHeight()-2;
@@ -328,7 +338,7 @@ void AppMainWindowPrivate::initMwToolBar(QFrame* fm)
         btn->setToolTip(tip);
         btn->setIconSize(QSize(25,25));
         layout->addWidget(btn);
-        funcBtnTodo(btn);
+        if(todo) funcBtnTodo(btn);
         return btn;
     };
     auto funcAddVLine=[&](QHBoxLayout *layout,const QString &objName)
@@ -348,25 +358,26 @@ void AppMainWindowPrivate::initMwToolBar(QFrame* fm)
     hLayout->setContentsMargins(0, 0, 0, 0);
     fm->setLayout(hLayout);
 //项目保存加载
-    auto btn= funcAddBtn(hLayout,getLang(App_AppMainWindow_SaveProject,"保存项目"),"btnSaveProject", QIcon(":/images/Ui/AppMainWindowSaveProject.svg"),getLang(App_AppMainWindow_SaveProject,"保存项目"));
+    auto btn= funcAddBtn(hLayout,getLang(App_AppMainWindow_SaveProject,"保存项目"),"btnSaveProject", QIcon(":/images/Ui/AppMainWindowSaveProject.svg"),getLang(App_AppMainWindow_SaveProject,"保存项目"),false);
     QObject::connect(btn,&QToolButton::clicked,q,&AppMainWindow::saveProject);    
-    btn= funcAddBtn(hLayout,getLang(App_AppMainWindow_OpenProject,"打开项目"),"btnOpenProject", QIcon(":/images/Ui/AppMainWindowOpenProject.svg"),getLang(App_AppMainWindow_OpenProject,"打开项目"));
+    btn= funcAddBtn(hLayout,getLang(App_AppMainWindow_OpenProject,"打开项目"),"btnOpenProject", QIcon(":/images/Ui/AppMainWindowOpenProject.svg"),getLang(App_AppMainWindow_OpenProject,"打开项目"),false);
     QObject::connect(btn,&QToolButton::clicked,q,&AppMainWindow::openProject);
     funcAddVLine(hLayout,"vLine1");
 //项目操作
     btn= funcAddBtn(hLayout,getLang(App_AppMainWindow_ProjectOnceRun,"项目单次运行"),"btnProjectOnceRun",
-                    QIcon(":/images/Ui/AppMainWindowProjectOnceRun.svg"),getLang(App_AppMainWindow_ProjectOnceRun,"项目单次运行"));
+                    QIcon(":/images/Ui/AppMainWindowProjectOnceRun.svg"),getLang(App_AppMainWindow_ProjectOnceRun,"项目单次运行"),false);
     QObject::connect(btn,&QToolButton::clicked,q,&AppMainWindow::projectOnceRun);
     btn= funcAddBtn(hLayout,getLang(App_AppMainWindow_ProjectLoopRun,"项目重复运行"),"btnProjectLoopRun",
-                    QIcon(":/images/Ui/AppMainWindowProjectLoopRun.svg"),getLang(App_AppMainWindow_ProjectLoopRun,"项目重复运行"));
+                    QIcon(":/images/Ui/AppMainWindowProjectLoopRun.svg"),getLang(App_AppMainWindow_ProjectLoopRun,"项目重复运行"),false);
     QObject::connect(btn,&QToolButton::clicked,q,&AppMainWindow::projectLoopRun);
     btn= funcAddBtn(hLayout,getLang(App_AppMainWindow_ProjectStop,"项目停止运行"),"btnProjectStop",
-                    QIcon(":/images/Ui/AppMainWindowProjectStop.svg"),getLang(App_AppMainWindow_ProjectStop,"项目停止运行"));
+                    QIcon(":/images/Ui/AppMainWindowProjectStop.svg"),getLang(App_AppMainWindow_ProjectStop,"项目停止运行"),false);
     btn->setRippleColor(Qt::red);
     QObject::connect(btn,&QToolButton::clicked,q,&AppMainWindow::projectStop);
 
     btn= funcAddBtn(hLayout,getLang(App_AppMainWindow_ProjectSetting,"项目设置"),"btnProjectSetting",
-                    QIcon(":/images/Ui/AppMainWindowProjectSetting.svg"),getLang(App_AppMainWindow_ProjectSetting,"项目设置"));
+                    QIcon(":/images/Ui/AppMainWindowProjectSetting.svg"),getLang(App_AppMainWindow_ProjectSetting,"项目设置"),false);
+    QObject::connect(btn,&QToolButton::clicked,q,&AppMainWindow::projectSetting);
 
     funcAddVLine(hLayout,"vLine2");
 //全局管理/变量监控/全局脚本
@@ -425,6 +436,18 @@ void AppMainWindowPrivate::initMwStatusBar(AppMainWindow* mw)
 
 }
 
+void AppMainWindowPrivate::showNotification(XvCore::XvNotificationKind kind,
+                                            const QString &message,bool modal)
+{
+    Q_Q(AppMainWindow);
+    if(modal || kind==XvCore::XvNotificationKind::Dialog)
+    {
+        XMessageBox::information(getLang(App_UiCommon_Info,"信息"),message,q);
+        return;
+    }
+    if(statusBar) statusBar->showMessage(message,5000);
+}
+
 void AppMainWindowPrivate::showEvent()
 {
     Q_Q(AppMainWindow);
@@ -464,6 +487,13 @@ AppMainWindow::~AppMainWindow()
 void AppMainWindow::init()
 {
     connect(this,&AppMainWindow::sgStatusBarInfoUpdate,this,&AppMainWindow::onStatusBarInfoUpdate);
+    connect(XvNotificationMgr,&XvCore::XvNotificationCenter::notificationPublished,
+            this,[this](XvCore::XvNotificationKind kind,const QString &message,
+                        const QString &,bool modal)
+    {
+        Q_D(AppMainWindow);
+        d->showNotification(kind,message,modal);
+    },Qt::QueuedConnection);
     auto ret= QtConcurrent::run([=]()
     {
         auto funcMsToHMS=[=](qint64 ms)
@@ -535,32 +565,186 @@ void AppMainWindow::newProject()
 
 void AppMainWindow::openProject()
 {
+    XvCore::XvCoreManager *coreManager=XvWorkMgr->getXvCoreMgr();
+    if(coreManager->hasRunningXvFlow())
+    {
+        XMessageBox::warning(
+                    getLang(App_UiCommon_Warning,"警告"),
+                    getLang(App_AppMainWindow_ProjectRunning,
+                            "项目中存在正在运行的流程，请先停止所有流程"),
+                    this,U_getXMessageBoxButtonTexts({XMessageBox::Close}),
+                    XMessageBox::Close,XMessageBox::Close);
+        return;
+    }
+
+    const QString path=QFileDialog::getOpenFileName(
+                this,getLang(App_AppMainWindow_OpenProject,"打开项目"),QString(),
+                getLang(App_AppMainWindow_ProjectFileFilter,
+                        "XVision项目 (*.%1 *.xml);;所有文件 (*)")
+                .arg(coreManager->projectFileSuffix()));
+    if(path.isEmpty()) return;
+
+    if(!coreManager->validateXvProjectFile(path))
+    {
+        QString error=coreManager->lastErrorMsg();
+        if(error.isEmpty()) error=getLang(App_AppMainWindow_OpenProjectFailed,"打开项目失败");
+        XMessageBox::warning(
+                    getLang(App_UiCommon_Warning,"警告"),error,this,
+                    U_getXMessageBoxButtonTexts({XMessageBox::Close}),
+                    XMessageBox::Close,XMessageBox::Close);
+        return;
+    }
+
+    const auto answer=XMessageBox::question(
+                getLang(App_AppMainWindow_OpenProject,"打开项目"),
+                getLang(App_AppMainWindow_ConfirmReplaceProject,
+                        "当前项目将被替换，是否继续？"),
+                this,U_getXMessageBoxButtonTexts({XMessageBox::Yes,XMessageBox::No}),
+                XMessageBox::StandardButtons(XMessageBox::Yes|XMessageBox::No),
+                XMessageBox::No);
+    if(answer!=XMessageBox::Yes) return;
+
+    if(!coreManager->loadXvProject(path))
+    {
+        QString error=coreManager->lastErrorMsg();
+        if(error.isEmpty()) error=getLang(App_AppMainWindow_OpenProjectFailed,"打开项目失败");
+        XMessageBox::warning(
+                    getLang(App_UiCommon_Warning,"警告"),error,this,
+                    U_getXMessageBoxButtonTexts({XMessageBox::Close}),
+                    XMessageBox::Close,XMessageBox::Close);
+        return;
+    }
+
+    XMessageBox::information(
+                getLang(App_UiCommon_Info,"信息"),
+                getLang(App_AppMainWindow_OpenProjectSuccess,"项目打开成功"),this,
+                U_getXMessageBoxButtonTexts({XMessageBox::Close}),
+                XMessageBox::Close,XMessageBox::Close);
 
 }
 
 void AppMainWindow::saveProject()
 {
+    XvCore::XvCoreManager *coreManager=XvWorkMgr->getXvCoreMgr();
+    if(coreManager->hasRunningXvFlow())
+    {
+        XMessageBox::warning(
+                    getLang(App_UiCommon_Warning,"警告"),
+                    getLang(App_AppMainWindow_ProjectRunning,
+                            "项目中存在正在运行的流程，请先停止所有流程"),
+                    this,U_getXMessageBoxButtonTexts({XMessageBox::Close}),
+                    XMessageBox::Close,XMessageBox::Close);
+        return;
+    }
+
+    QString path=QFileDialog::getSaveFileName(
+                this,getLang(App_AppMainWindow_SaveProject,"保存项目"),QString(),
+                getLang(App_AppMainWindow_SaveProjectFileFilter,
+                        "XVision项目 (*.%1);;XML文件 (*.xml)")
+                .arg(coreManager->projectFileSuffix()));
+    if(path.isEmpty()) return;
+    if(QFileInfo(path).suffix().isEmpty())
+    {
+        path.append("."+coreManager->projectFileSuffix());
+    }
+
+    if(!coreManager->saveXvProject(path))
+    {
+        QString error=coreManager->lastErrorMsg();
+        if(error.isEmpty()) error=getLang(App_AppMainWindow_SaveProjectFailed,"保存项目失败");
+        XMessageBox::warning(
+                    getLang(App_UiCommon_Warning,"警告"),error,this,
+                    U_getXMessageBoxButtonTexts({XMessageBox::Close}),
+                    XMessageBox::Close,XMessageBox::Close);
+        return;
+    }
+
+    XMessageBox::information(
+                getLang(App_UiCommon_Info,"信息"),
+                getLang(App_AppMainWindow_SaveProjectSuccess,"项目保存成功"),this,
+                U_getXMessageBoxButtonTexts({XMessageBox::Close}),
+                XMessageBox::Close,XMessageBox::Close);
 
 }
 
 void AppMainWindow::projectOnceRun()
 {
-
+    XvCore::XvProject *project=XvWorkMgr->getXvProjevt();
+    if(!project)
+    {
+        XMessageBox::warning(getLang(App_UiCommon_Warning,"警告"),
+                             getLang(App_XvWorkMgr_XvProjectIsNull,"项目为空"),this,
+                             U_getXMessageBoxButtonTexts({XMessageBox::Close}),
+                             XMessageBox::Close,XMessageBox::Close);
+        return;
+    }
+    const RetXv result=project->runOnce();
+    if(result!=Ret_Xv_Success)
+    {
+        QString error=project->lastErrorMsg();
+        if(error.isEmpty())
+            error=getLang(App_AppMainWindow_ProjectCommandFailed,
+                          "项目命令失败，错误码[%1]").arg(result);
+        XMessageBox::warning(getLang(App_UiCommon_Warning,"警告"),error,this,
+                             U_getXMessageBoxButtonTexts({XMessageBox::Close}),
+                             XMessageBox::Close,XMessageBox::Close);
+    }
 }
 
 void AppMainWindow::projectLoopRun()
 {
-
+    XvCore::XvProject *project=XvWorkMgr->getXvProjevt();
+    if(!project)
+    {
+        XMessageBox::warning(getLang(App_UiCommon_Warning,"警告"),
+                             getLang(App_XvWorkMgr_XvProjectIsNull,"项目为空"),this,
+                             U_getXMessageBoxButtonTexts({XMessageBox::Close}),
+                             XMessageBox::Close,XMessageBox::Close);
+        return;
+    }
+    const RetXv result=project->runLoop();
+    if(result!=Ret_Xv_Success)
+    {
+        QString error=project->lastErrorMsg();
+        if(error.isEmpty())
+            error=getLang(App_AppMainWindow_ProjectCommandFailed,
+                          "项目命令失败，错误码[%1]").arg(result);
+        XMessageBox::warning(getLang(App_UiCommon_Warning,"警告"),error,this,
+                             U_getXMessageBoxButtonTexts({XMessageBox::Close}),
+                             XMessageBox::Close,XMessageBox::Close);
+    }
 }
 
 void AppMainWindow::projectStop()
 {
-
+    XvCore::XvProject *project=XvWorkMgr->getXvProjevt();
+    if(!project) return;
+    const RetXv result=project->stop();
+    if(result!=Ret_Xv_Success)
+    {
+        QString error=project->lastErrorMsg();
+        if(error.isEmpty())
+            error=getLang(App_AppMainWindow_ProjectCommandFailed,
+                          "项目命令失败，错误码[%1]").arg(result);
+        XMessageBox::warning(getLang(App_UiCommon_Warning,"警告"),error,this,
+                             U_getXMessageBoxButtonTexts({XMessageBox::Close}),
+                             XMessageBox::Close,XMessageBox::Close);
+    }
 }
 
 void AppMainWindow::projectSetting()
 {
-
+    XvCore::XvProject *project=XvWorkMgr->getXvProjevt();
+    if(!project)
+    {
+        XMessageBox::warning(getLang(App_UiCommon_Warning,"警告"),
+                             getLang(App_XvWorkMgr_XvProjectIsNull,"项目为空"),this,
+                             U_getXMessageBoxButtonTexts({XMessageBox::Close}),
+                             XMessageBox::Close,XMessageBox::Close);
+        return;
+    }
+    FrmXvProjectConfig dialog(project,this);
+    dialog.exec();
 }
 
 void AppMainWindow::systemSetting()

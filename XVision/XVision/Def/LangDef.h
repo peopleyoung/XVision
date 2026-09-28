@@ -109,6 +109,15 @@
 //Msg
 #define App_AppMainWindow_MsgSwitchLangError  "App_AppMainWindow_MsgSwitchLangError" //切换语言失败
 #define App_AppMainWindow_MsgSwitchLangSuccess  "App_AppMainWindow_MsgSwitchLangSuccess" //切换语言成功，请重启软件
+#define App_AppMainWindow_ProjectRunning  "App_AppMainWindow_ProjectRunning" //项目中存在正在运行的流程，请先停止所有流程
+#define App_AppMainWindow_ProjectFileFilter  "App_AppMainWindow_ProjectFileFilter" //打开项目文件筛选器
+#define App_AppMainWindow_SaveProjectFileFilter  "App_AppMainWindow_SaveProjectFileFilter" //保存项目文件筛选器
+#define App_AppMainWindow_ConfirmReplaceProject  "App_AppMainWindow_ConfirmReplaceProject" //确认替换当前项目
+#define App_AppMainWindow_OpenProjectFailed  "App_AppMainWindow_OpenProjectFailed" //打开项目失败
+#define App_AppMainWindow_OpenProjectSuccess  "App_AppMainWindow_OpenProjectSuccess" //项目打开成功
+#define App_AppMainWindow_SaveProjectFailed  "App_AppMainWindow_SaveProjectFailed" //保存项目失败
+#define App_AppMainWindow_SaveProjectSuccess  "App_AppMainWindow_SaveProjectSuccess" //项目保存成功
+#define App_AppMainWindow_ProjectCommandFailed "App_AppMainWindow_ProjectCommandFailed"
 //StatusBar
 #define App_AppMainWindow_StatusBarAppRunTime  "App_AppMainWindow_StatusBarAppRunTime" //软件运行时间
 #define App_AppMainWindow_StatusBarCpuUsage "App_AppMainWindow_StatusBarCpuUsage" //CPU占用率
@@ -154,6 +163,18 @@
 #define App_FrmXvFlowConfig_FlowLoopInterval        "App_FrmXvFlowConfig_FlowLoopInterval" //循环间隔(ms)
 #define App_FrmXvFlowConfig_FuncErrorInterruptRun   "App_FrmXvFlowConfig_FuncErrorInterruptRun" //算子错误中断运行
 
+#define App_FrmXvProjectConfig_Title                 "App_FrmXvProjectConfig_Title"
+#define App_FrmXvProjectConfig_MainFlows             "App_FrmXvProjectConfig_MainFlows"
+#define App_FrmXvProjectConfig_LoopInterval          "App_FrmXvProjectConfig_LoopInterval"
+#define App_FrmXvProjectConfig_ErrorPolicy           "App_FrmXvProjectConfig_ErrorPolicy"
+#define App_FrmXvProjectConfig_Enabled               "App_FrmXvProjectConfig_Enabled"
+#define App_FrmXvProjectConfig_FlowName              "App_FrmXvProjectConfig_FlowName"
+#define App_FrmXvProjectConfig_MoveUp                "App_FrmXvProjectConfig_MoveUp"
+#define App_FrmXvProjectConfig_MoveDown              "App_FrmXvProjectConfig_MoveDown"
+#define App_FrmXvProjectConfig_StopOnError           "App_FrmXvProjectConfig_StopOnError"
+#define App_FrmXvProjectConfig_ContinueOnError       "App_FrmXvProjectConfig_ContinueOnError"
+#define App_FrmXvProjectConfig_ApplyFailed           "App_FrmXvProjectConfig_ApplyFailed"
+
 /*UiXvWorkMgr*/
 //流程
 #define App_UiXvWorkMgr_FlowId          "App_UiXvWorkMgr_FlowId"   //流程ID
@@ -174,6 +195,12 @@
 #define App_UiXvWorkMgr_FlowConfig       "App_UiXvWorkMgr_FlowConfig"    //流程配置
 #define App_UiXvWorkMgr_FlowImport       "App_UiXvWorkMgr_FlowImport"    //流程导入
 #define App_UiXvWorkMgr_FlowExport       "App_UiXvWorkMgr_FlowExport"    //流程导出
+#define App_UiXvWorkMgr_FlowFileFilter   "App_UiXvWorkMgr_FlowFileFilter"
+#define App_UiXvWorkMgr_FlowImportFailed "App_UiXvWorkMgr_FlowImportFailed"
+#define App_UiXvWorkMgr_FlowImportSuccess "App_UiXvWorkMgr_FlowImportSuccess"
+#define App_UiXvWorkMgr_FlowExportFailed "App_UiXvWorkMgr_FlowExportFailed"
+#define App_UiXvWorkMgr_FlowExportSuccess "App_UiXvWorkMgr_FlowExportSuccess"
+#define App_UiXvWorkMgr_NoCurrentFlow    "App_UiXvWorkMgr_NoCurrentFlow"
 
 #define App_UiXvWorkMgr_FlowViewZoomScale         "App_UiXvWorkMgr_FlowViewZoomScale"      //缩放比例
 

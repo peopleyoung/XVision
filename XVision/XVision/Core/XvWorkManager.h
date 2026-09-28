@@ -74,6 +74,8 @@ public://公共接口
 
 protected slots:
  //[项目]
+    ///项目即将替换响应槽
+    void onXvProjectAboutToReplace(XvCore::XvProject* project);
     ///项目更新响应槽
     void onUpdateXvProject(XvCore::XvProject* project);
     ///项目销毁响应槽

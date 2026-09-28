@@ -47,6 +47,8 @@ protected: //初始化接口
     void initConnect();
 
 public slots:
+    ///清除当前算子绑定和显示内容
+    void clearXvFuncBinding();
     ///绑定当前显示的算子
     void onBindXvFunc(XvCore::XvFunc* func);
     ///更新绑定的算子

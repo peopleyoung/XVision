@@ -27,7 +27,7 @@
 #include "DockAreaTitleBar.h"
 
 #ifdef Q_OS_LINUX
-#include "linux/FloatingWidgetTitleBar.h"
+#include "FloatingWidgetTitleBar.h"
 #endif
 
 namespace ads

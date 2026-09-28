@@ -1,7 +1,10 @@
 ﻿#include "UiXvWorkManager.h"
 //Qt
+#include <QFileDialog>
+#include <QFileInfo>
 #include <QLayout>
 #include <QGraphicsSceneMouseEvent>
+#include <QSignalBlocker>
 //XFlowGraphics
 #include "XFlowGraphicsScene.h"
 #include "XFlowGraphicsView.h"
@@ -329,6 +332,21 @@ XFlowGraphicsScene *UiXvWorkManager::getFlowScene(const QString &flowId)
     return nullptr;
 }
 
+void UiXvWorkManager::setProjectRunning(bool running)
+{
+    m_projectRunning=running;
+    if(m_dockFlowManager)
+    {
+        // The project stop command lives in the main toolbar; lock every
+        // flow-editor action while the project scheduler owns the flows.
+        m_dockFlowManager->setEnabled(!running);
+    }
+    for(XFlowGraphicsScene *scene:m_mapFlowScene)
+    {
+        if(scene) scene->setEnabled(!running);
+    }
+}
+
 
 XFlowGraphicsScene *UiXvWorkManager::createFlowScene(XvFlow *flow)
 {
@@ -436,9 +454,20 @@ bool UiXvWorkManager::removeFlowScene(XvFlow *flow)
                        break;
                    }
                    disconnect(dock->tabWidget(),&ads::CDockWidget::customContextMenuRequested,this,&UiXvWorkManager::onFlowDockTabMenuRequested);
-                   dock->closeDockWidget();
-                   dock->deleteDockWidget();
                    uninitFlowScene(flow,scene);
+                   const bool keepDock=m_dockFlowArea->dockWidgets().count()==1;
+                   if(keepDock)
+                   {
+                       QWidget *view=dock->takeWidget();
+                       dock->setProperty(FlowId,QVariant());
+                       dock->setWindowTitle(QString());
+                       if(view) view->deleteLater();
+                   }
+                   else
+                   {
+                       dock->closeDockWidget();
+                       dock->deleteDockWidget();
+                   }
                    scene->deleteLater();
                   return true;
                }
@@ -447,6 +476,70 @@ bool UiXvWorkManager::removeFlowScene(XvFlow *flow)
        }
     }
     return false;
+}
+
+void UiXvWorkManager::clearProject(XvProject *project)
+{
+    if(!project) return;
+    const QList<XvFlow*> flows=project->getXvFlows();
+    for(XvFlow *flow:flows)
+    {
+        if(flow) removeFlowScene(flow);
+    }
+}
+
+bool UiXvWorkManager::restoreFlowScene(XvFlow *flow)
+{
+    if(!flow) return false;
+    XFlowGraphicsScene *scene=createFlowScene(flow);
+    if(!scene) return false;
+
+    QSignalBlocker blocker(scene);
+    QMap<QString,XFlowGraphicsItem*> items;
+    for(XvFunc *function:flow->getXvFuncs())
+    {
+        XFlowGraphicsItem *item=scene->xItemDelegateFactory()
+                ?scene->xItemDelegateFactory()->getXFlowGraphicsItem(function->funcRole())
+               :nullptr;
+        if(!item)
+        {
+            removeFlowScene(flow);
+            return false;
+        }
+        item->setText(function->funcName());
+        item->setItemTag(function->funcId());
+        item->setItemQPtrTag(function);
+        item->item()->setPos(function->canvasPosition());
+        scene->addXItem(item);
+        updateFuncToolTip(item,function);
+        initFuncXItem(function,item);
+        items.insert(function->funcId(),item);
+    }
+
+    for(XvFunc *function:flow->getXvFuncs())
+    {
+        XFlowGraphicsItem *fatherItem=items.value(function->funcId());
+        for(XvFunc *son:function->linkedSonFuncs())
+        {
+            XFlowGraphicsItem *sonItem=items.value(son->funcId());
+            XFlowGraphicsConnectLink *link=scene->xLinkDelegateFactory()
+                    ?scene->xLinkDelegateFactory()->getXFlowGraphicsLink():nullptr;
+            if(!fatherItem || !sonItem || !link
+                    || !link->setFatherXItemKey(fatherItem,"Right")
+                    || !link->setSonXItemKey(sonItem,"Left"))
+            {
+                delete link;
+                removeFlowScene(flow);
+                return false;
+            }
+            const QString port=function->sonFuncPort(son);
+            if(port!="default") link->setText(port);
+            link->setLinkState(true);
+            link->onXItemUpdate();
+            scene->addXLink(link);
+        }
+    }
+    return true;
 }
 
 bool UiXvWorkManager::addXItemByFuncRole(const QString &role, const QString &flowId, const QPointF &pos)
@@ -496,6 +589,7 @@ void UiXvWorkManager::initFlowScene(XvFlow *flow,XFlowGraphicsScene *scene)
     connect(scene,&XFlowGraphicsScene::xItemAdd,this,&UiXvWorkManager::onFlowSceneXItemAdd);
     connect(scene,&XFlowGraphicsScene::xItemRemoveStart,this,&UiXvWorkManager::onFlowSceneXItemRemoveStart);
     connect(scene,&XFlowGraphicsScene::judgeCantConnectXItem,this,&UiXvWorkManager::onFlowSceneXItemConnectJudge);
+    connect(scene,&XFlowGraphicsScene::xLinkConnectSuccess,this,&UiXvWorkManager::onFlowSceneConnectSuccess);
     connect(scene,&XFlowGraphicsScene::xLinkRemove,this,&UiXvWorkManager::onFlowSceneConnectRemove);
     /*流程*/
     connect(flow,&XvFlow::sgFlowNameChanged,this,&UiXvWorkManager::onFlowNameChanged);
@@ -507,6 +601,12 @@ void UiXvWorkManager::initFlowScene(XvFlow *flow,XFlowGraphicsScene *scene)
 void UiXvWorkManager::uninitFlowScene(XvFlow *flow,XFlowGraphicsScene *scene)
 {
     if(!flow||!scene) return;
+    for(XFlowGraphicsItem *xItem:scene->getXItems())
+    {
+        if(!xItem) continue;
+        XvFunc *func=flow->getXvFunc(xItem->itemTag().toString());
+        if(func) uninitFuncXItem(func,xItem);
+    }
     /*场景*/
     //常规
     disconnect(scene,&XFlowGraphicsScene::sceneContextMenuRequested,this,&UiXvWorkManager::onFlowSceneMenuRequested);
@@ -517,7 +617,10 @@ void UiXvWorkManager::uninitFlowScene(XvFlow *flow,XFlowGraphicsScene *scene)
     disconnect(scene->getView(),&XFlowGraphicsView::sgWheelEvent,this,&UiXvWorkManager::onFlowViewZoomSliderUpdate);
      //算子
     disconnect(scene,&XFlowGraphicsScene::xItemAdd,this,&UiXvWorkManager::onFlowSceneXItemAdd);
-    connect(scene,&XFlowGraphicsScene::xItemRemoveStart,this,&UiXvWorkManager::onFlowSceneXItemRemoveStart);
+    disconnect(scene,&XFlowGraphicsScene::xItemRemoveStart,this,&UiXvWorkManager::onFlowSceneXItemRemoveStart);
+    disconnect(scene,&XFlowGraphicsScene::judgeCantConnectXItem,this,&UiXvWorkManager::onFlowSceneXItemConnectJudge);
+    disconnect(scene,&XFlowGraphicsScene::xLinkConnectSuccess,this,&UiXvWorkManager::onFlowSceneConnectSuccess);
+    disconnect(scene,&XFlowGraphicsScene::xLinkRemove,this,&UiXvWorkManager::onFlowSceneConnectRemove);
 
     /*流程*/
     disconnect(flow,&XvFlow::sgFlowNameChanged,this,&UiXvWorkManager::onFlowNameChanged);
@@ -529,6 +632,14 @@ void UiXvWorkManager::uninitFlowScene(XvFlow *flow,XFlowGraphicsScene *scene)
 void UiXvWorkManager::initFuncXItem(XvFunc *func, XFlowGraphicsItem *xItem)
 {
     if(!func||!xItem) return;
+
+    connect(xItem,&XFlowGraphicsItem::posChanged,func,[func,xItem]()
+    {
+        if(xItem->item())
+        {
+            func->setCanvasPosition(xItem->item()->pos());
+        }
+    },Qt::QueuedConnection);
 
     //算子
     connect(func,&XvFunc::sgFuncRunStart,this,[=]()
@@ -577,6 +688,8 @@ void UiXvWorkManager::initFuncXItem(XvFunc *func, XFlowGraphicsItem *xItem)
 void UiXvWorkManager::uninitFuncXItem(XvFunc *func, XFlowGraphicsItem *xItem)
 {
    if(!func||!xItem) return;
+   disconnect(func,nullptr,this,nullptr);
+   disconnect(xItem,nullptr,this,nullptr);
 }
 
 bool UiXvWorkManager::getCurDockFlowId(QString &id)
@@ -659,12 +772,80 @@ void UiXvWorkManager::flowRemove()
 
 void UiXvWorkManager::flowImport()
 {
-    Log_Critical("xie.y todo:此功能未完成");
+    XvCoreManager *coreManager=XvWorkMgr->getXvCoreMgr();
+    const QString path=QFileDialog::getOpenFileName(
+                nullptr,getLang(App_UiXvWorkMgr_FlowImport,"流程导入"),QString(),
+                getLang(App_UiXvWorkMgr_FlowFileFilter,
+                        "XVision流程 (*.%1);;所有文件 (*)")
+                .arg(coreManager->flowFileSuffix()));
+    if(path.isEmpty()) return;
+
+    XvFlow *flow=coreManager->importXvFlow(path);
+    if(!flow)
+    {
+        QString error=coreManager->lastErrorMsg();
+        if(error.isEmpty())
+        {
+            error=getLang(App_UiXvWorkMgr_FlowImportFailed,"流程导入失败");
+        }
+        XMessageBox::warning(
+                    getLang(App_UiCommon_Warning,"警告"),error,nullptr,
+                    U_getXMessageBoxButtonTexts({XMessageBox::Close}),
+                    XMessageBox::Close,XMessageBox::Close);
+        return;
+    }
+
+    XMessageBox::information(
+                getLang(App_UiCommon_Info,"信息"),
+                getLang(App_UiXvWorkMgr_FlowImportSuccess,"流程导入成功"),nullptr,
+                U_getXMessageBoxButtonTexts({XMessageBox::Close}),
+                XMessageBox::Close,XMessageBox::Close);
 }
 
 void UiXvWorkManager::flowExport()
 {
-    Log_Critical("xie.y todo:此功能未完成");
+    XvFlow *flow=getCurDockFlow();
+    if(!flow)
+    {
+        XMessageBox::warning(
+                    getLang(App_UiCommon_Warning,"警告"),
+                    getLang(App_UiXvWorkMgr_NoCurrentFlow,"当前没有可导出的流程"),
+                    nullptr,U_getXMessageBoxButtonTexts({XMessageBox::Close}),
+                    XMessageBox::Close,XMessageBox::Close);
+        return;
+    }
+
+    XvCoreManager *coreManager=XvWorkMgr->getXvCoreMgr();
+    QString path=QFileDialog::getSaveFileName(
+                nullptr,getLang(App_UiXvWorkMgr_FlowExport,"流程导出"),QString(),
+                getLang(App_UiXvWorkMgr_FlowFileFilter,
+                        "XVision流程 (*.%1);;所有文件 (*)")
+                .arg(coreManager->flowFileSuffix()));
+    if(path.isEmpty()) return;
+    if(QFileInfo(path).suffix().isEmpty())
+    {
+        path.append("."+coreManager->flowFileSuffix());
+    }
+
+    if(!coreManager->exportXvFlow(flow->flowId(),path))
+    {
+        QString error=coreManager->lastErrorMsg();
+        if(error.isEmpty())
+        {
+            error=getLang(App_UiXvWorkMgr_FlowExportFailed,"流程导出失败");
+        }
+        XMessageBox::warning(
+                    getLang(App_UiCommon_Warning,"警告"),error,nullptr,
+                    U_getXMessageBoxButtonTexts({XMessageBox::Close}),
+                    XMessageBox::Close,XMessageBox::Close);
+        return;
+    }
+
+    XMessageBox::information(
+                getLang(App_UiCommon_Info,"信息"),
+                getLang(App_UiXvWorkMgr_FlowExportSuccess,"流程导出成功"),nullptr,
+                U_getXMessageBoxButtonTexts({XMessageBox::Close}),
+                XMessageBox::Close,XMessageBox::Close);
 }
 void UiXvWorkManager::flowRename()
 {
@@ -786,7 +967,7 @@ void UiXvWorkManager::onFlowRunEnd()
 
     auto scene=getFlowScene(flow->flowId());
     if(!scene) return;
-    scene->setEnabled(true);
+    scene->setEnabled(!m_projectRunning);
     auto par= scene->getView()->parent();
     if(par)
     {
@@ -808,7 +989,7 @@ void UiXvWorkManager::onFlowRunStop()
     Log_Event(QString(getLang(App_UiXvWorkMgr_XvFlowRunStop,"流程<%1>运行停止")).arg(flow->flowName()));
     auto scene=getFlowScene(flow->flowId());
     if(!scene) return;
-    scene->setEnabled(true);
+    scene->setEnabled(!m_projectRunning);
 }
 
 void UiXvWorkManager::flowShowConfig()
@@ -878,8 +1059,37 @@ void UiXvWorkManager::onFlowSceneMenuRequested(const QPoint &pos)
     /*[连线区域]*/
     if(link)
     {
-     //xie.y todo
         QMenu menu(scene->getView());
+        auto flow=qobject_cast<XvFlow*>(scene->sceneQPtrTag());
+        XvFunc *fatherFunc=nullptr;
+        XvFunc *sonFunc=nullptr;
+        if(flow && link->fatherXItem() && link->sonXItem())
+        {
+            fatherFunc=flow->getXvFunc(link->fatherXItem()->itemTag().toString());
+            sonFunc=flow->getXvFunc(link->sonXItem()->itemTag().toString());
+        }
+        if(fatherFunc && sonFunc && fatherFunc->outputPorts().count()>1)
+        {
+            QMenu *portMenu=menu.addMenu(
+                        getLang("App_UiXvWorkMgr_FuncLinkPort","输出端口"));
+            const QString currentPort=fatherFunc->sonFuncPort(sonFunc);
+            for(const QString &port:fatherFunc->outputPorts())
+            {
+                QAction *portAction=portMenu->addAction(port);
+                portAction->setCheckable(true);
+                portAction->setChecked(port==currentPort);
+                connect(portAction,&QAction::triggered,this,
+                        [fatherFunc,sonFunc,link,port]()
+                {
+                    if(fatherFunc->setSonFuncPort(sonFunc,port))
+                    {
+                        link->setText(port);
+                        link->update();
+                    }
+                });
+            }
+            menu.addSeparator();
+        }
         /*[删除连线]*/
         auto action=menu.addAction(getLang(App_UiXvWorkMgr_FuncLinkDel,"删除连线"),this,[&]()
         {
@@ -1067,6 +1277,7 @@ void UiXvWorkManager::onFlowSceneXItemAdd(XFlowGraphicsItem *xItem)
         return;
     }
     func->setFuncName(xItem->text());
+    func->setCanvasPosition(xItem->item()->pos());
     xItem->setItemTag(func->funcId());//设置XItem的Tag为算子ID
     xItem->setItemQPtrTag(func);//设置XItem的QPtrTag为算子指针
     updateFuncToolTip(xItem,func);
@@ -1147,6 +1358,20 @@ bool UiXvWorkManager::onFlowSceneXItemConnectJudge(XFlowGraphicsItem *fatherXIte
        }
     }
     return false;
+}
+
+void UiXvWorkManager::onFlowSceneConnectSuccess(XFlowGraphicsConnectLink *xLink)
+{
+    if(!xLink || !xLink->fatherXItem() || !xLink->sonXItem()) return;
+    auto scene=qobject_cast<XFlowGraphicsScene*>(sender());
+    auto flow=scene?qobject_cast<XvFlow*>(scene->sceneQPtrTag()):nullptr;
+    if(!flow) return;
+    XvFunc *father=flow->getXvFunc(xLink->fatherXItem()->itemTag().toString());
+    XvFunc *son=flow->getXvFunc(xLink->sonXItem()->itemTag().toString());
+    if(!father || !son) return;
+    const QString port=father->sonFuncPort(son);
+    xLink->setText(port=="default"?QString():port);
+    xLink->update();
 }
 
 

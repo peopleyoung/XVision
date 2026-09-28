@@ -7,7 +7,11 @@ struct QMetaObject;
 ///XMat公共定义命名空间
 namespace XMatCommonDef
 {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
  Q_NAMESPACE_EXPORT(XWIDGET_EXPORT)
+#else
+ Q_NAMESPACE
+#endif
 
 
 

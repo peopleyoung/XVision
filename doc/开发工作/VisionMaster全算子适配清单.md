@@ -1,0 +1,197 @@
+# VisionMaster 4.0 算子兼容清单
+
+> 此文件由 `XVision/scripts/VerifyVisionMasterMatrix.cmake` 根据 `VisionMaster算子兼容矩阵.csv` 生成，请勿手工修改。
+
+## 基线统计
+
+- 上游节点：126
+- XVision 规范角色：31
+- 重复节点：0
+- 未解析映射：0
+- 状态 `covered`：12
+- 状态 `implemented_external_validation_pending`：114
+
+## 能力域
+
+| 能力域 | 节点数 |
+| --- | ---: |
+| `image` | 34 |
+| `morphology` | 7 |
+| `detection` | 10 |
+| `feature` | 9 |
+| `source` | 15 |
+| `output` | 8 |
+| `flow` | 3 |
+| `measurement` | 8 |
+| `onnx` | 9 |
+| `record` | 4 |
+| `communication` | 12 |
+| `template` | 4 |
+| `rectification` | 3 |
+
+## 规范角色
+
+| XVision 角色 | 映射节点数 |
+| --- | ---: |
+| `OImageArithmetic` | 4 |
+| `OImageFilter` | 6 |
+| `OImageAnalysis` | 4 |
+| `OImageColor` | 4 |
+| `OImageModel` | 3 |
+| `OImageTransform` | 8 |
+| `OImageThreshold` | 2 |
+| `OImageComposition` | 3 |
+| `OMorphology` | 7 |
+| `ORegionDetector` | 6 |
+| `OCodeDetector` | 1 |
+| `OPointFeature` | 9 |
+| `OCascadeDetector` | 2 |
+| `ImageAcquisition` | 15 |
+| `NotificationOutput` | 8 |
+| `ConditionalFlow` | 1 |
+| `LoopFlow` | 2 |
+| `GeometryCreate` | 1 |
+| `GeometryMeasure` | 7 |
+| `NObjectDetection` | 4 |
+| `NClassification` | 2 |
+| `NInference` | 2 |
+| `NSemanticSegmentation` | 2 |
+| `DetectRecord` | 4 |
+| `HttpJson` | 2 |
+| `ModbusRegister` | 2 |
+| `TcpText` | 2 |
+| `UdpText` | 2 |
+| `SerialData` | 4 |
+| `OTemplateMatch` | 4 |
+| `ORectification` | 3 |
+
+## 完整映射
+
+| VisionMaster 节点 | 能力域 | XVision 角色 | 模式 | 映射方式 | 状态 |
+| --- | --- | --- | --- | --- | --- |
+| `AddSutract` | `image` | `OImageArithmetic` | `add_subtract` | `mode` | `implemented_external_validation_pending` |
+| `BitwiseNot` | `image` | `OImageArithmetic` | `bitwise_not` | `mode` | `implemented_external_validation_pending` |
+| `Blur` | `image` | `OImageFilter` | `box_blur` | `mode` | `implemented_external_validation_pending` |
+| `Canny` | `image` | `OImageAnalysis` | `canny` | `mode` | `implemented_external_validation_pending` |
+| `CvtColor` | `image` | `OImageColor` | `convert` | `mode` | `implemented_external_validation_pending` |
+| `DetailEnhance` | `image` | `OImageFilter` | `detail_enhance` | `mode` | `implemented_external_validation_pending` |
+| `DnnSuperres` | `image` | `OImageModel` | `super_resolution` | `mode` | `implemented_external_validation_pending` |
+| `EdgePreservingFilter` | `image` | `OImageFilter` | `edge_preserving` | `mode` | `implemented_external_validation_pending` |
+| `Flip` | `image` | `OImageTransform` | `flip` | `mode` | `implemented_external_validation_pending` |
+| `GaussianBlur` | `image` | `OImageFilter` | `gaussian_blur` | `mode` | `implemented_external_validation_pending` |
+| `Hist` | `image` | `OImageAnalysis` | `histogram` | `mode` | `implemented_external_validation_pending` |
+| `Hog` | `image` | `OImageAnalysis` | `hog` | `mode` | `implemented_external_validation_pending` |
+| `HomographyTransform` | `image` | `OImageTransform` | `homography` | `mode` | `implemented_external_validation_pending` |
+| `HSVInRange` | `image` | `OImageColor` | `hsv_in_range` | `mode` | `implemented_external_validation_pending` |
+| `MOG` | `image` | `OImageModel` | `background_subtraction` | `mode` | `implemented_external_validation_pending` |
+| `MultiplayDivide` | `image` | `OImageArithmetic` | `multiply_divide` | `mode` | `implemented_external_validation_pending` |
+| `Normalize` | `image` | `OImageColor` | `normalize` | `mode` | `implemented_external_validation_pending` |
+| `PencilSketch` | `image` | `OImageFilter` | `pencil_sketch` | `mode` | `implemented_external_validation_pending` |
+| `PixelThresholdIfConditionNodeData` | `image` | `OImageThreshold` | `pixel_condition` | `mode` | `implemented_external_validation_pending` |
+| `Pow` | `image` | `OImageArithmetic` | `pow` | `mode` | `implemented_external_validation_pending` |
+| `Repeat` | `image` | `OImageTransform` | `repeat` | `mode` | `implemented_external_validation_pending` |
+| `Resize` | `image` | `OImageTransform` | `resize` | `mode` | `implemented_external_validation_pending` |
+| `Rotate` | `image` | `OImageTransform` | `rotate` | `mode` | `implemented_external_validation_pending` |
+| `SeamlessCloneBackground` | `image` | `OImageComposition` | `background` | `mode` | `implemented_external_validation_pending` |
+| `SplitBGR` | `image` | `OImageColor` | `split_bgr` | `mode` | `implemented_external_validation_pending` |
+| `Stitching` | `image` | `OImageComposition` | `stitching` | `mode` | `implemented_external_validation_pending` |
+| `Stylization` | `image` | `OImageFilter` | `stylization` | `mode` | `implemented_external_validation_pending` |
+| `Subdiv2D` | `image` | `OImageAnalysis` | `subdiv2d` | `mode` | `implemented_external_validation_pending` |
+| `SVM` | `image` | `OImageModel` | `svm` | `mode` | `implemented_external_validation_pending` |
+| `Threshold` | `image` | `OImageThreshold` | `threshold` | `mode` | `implemented_external_validation_pending` |
+| `Transpose` | `image` | `OImageTransform` | `transpose` | `mode` | `implemented_external_validation_pending` |
+| `WarpAffineTransform` | `image` | `OImageTransform` | `warp_affine` | `mode` | `implemented_external_validation_pending` |
+| `WarpPerspectiveTransform` | `image` | `OImageTransform` | `warp_perspective` | `mode` | `implemented_external_validation_pending` |
+| `Yolov3` | `image` | `NObjectDetection` | `yolov3` | `alias` | `implemented_external_validation_pending` |
+| `BlackHat` | `morphology` | `OMorphology` | `black_hat` | `mode` | `implemented_external_validation_pending` |
+| `Close` | `morphology` | `OMorphology` | `close` | `mode` | `implemented_external_validation_pending` |
+| `Dilate` | `morphology` | `OMorphology` | `dilate` | `mode` | `implemented_external_validation_pending` |
+| `Erode` | `morphology` | `OMorphology` | `erode` | `mode` | `implemented_external_validation_pending` |
+| `Gradient` | `morphology` | `OMorphology` | `gradient` | `mode` | `implemented_external_validation_pending` |
+| `Open` | `morphology` | `OMorphology` | `open` | `mode` | `implemented_external_validation_pending` |
+| `TopHat` | `morphology` | `OMorphology` | `top_hat` | `mode` | `implemented_external_validation_pending` |
+| `BlobDetector` | `detection` | `ORegionDetector` | `blob` | `mode` | `implemented_external_validation_pending` |
+| `FindContours` | `detection` | `ORegionDetector` | `contours` | `mode` | `implemented_external_validation_pending` |
+| `HoughCircles` | `detection` | `ORegionDetector` | `hough_circles` | `mode` | `implemented_external_validation_pending` |
+| `QRCode` | `detection` | `OCodeDetector` | `qr_code` | `role` | `implemented_external_validation_pending` |
+| `RenderBlobs` | `detection` | `ORegionDetector` | `render_blobs` | `mode` | `implemented_external_validation_pending` |
+| `CornerHarris` | `feature` | `OPointFeature` | `harris` | `mode` | `implemented_external_validation_pending` |
+| `CornerSubPix` | `feature` | `OPointFeature` | `subpixel` | `mode` | `implemented_external_validation_pending` |
+| `HoughLines` | `detection` | `ORegionDetector` | `hough_lines` | `mode` | `implemented_external_validation_pending` |
+| `HoughLinesP` | `detection` | `ORegionDetector` | `hough_lines_p` | `mode` | `implemented_external_validation_pending` |
+| `AKazeFeatureDetector` | `feature` | `OPointFeature` | `akaze` | `mode` | `implemented_external_validation_pending` |
+| `BriskFeatureDetector` | `feature` | `OPointFeature` | `brisk` | `mode` | `implemented_external_validation_pending` |
+| `FastFeatureDetector` | `feature` | `OPointFeature` | `fast` | `mode` | `implemented_external_validation_pending` |
+| `FreakFeatureDetector` | `feature` | `OPointFeature` | `freak` | `mode` | `implemented_external_validation_pending` |
+| `KazeFeatureDetector` | `feature` | `OPointFeature` | `kaze` | `mode` | `implemented_external_validation_pending` |
+| `MserFeatureDetector` | `feature` | `OPointFeature` | `mser` | `mode` | `implemented_external_validation_pending` |
+| `StarFeatureDetector` | `feature` | `OPointFeature` | `star` | `mode` | `implemented_external_validation_pending` |
+| `HaarCascade` | `detection` | `OCascadeDetector` | `haar` | `mode` | `implemented_external_validation_pending` |
+| `LbpCascade` | `detection` | `OCascadeDetector` | `lbp` | `mode` | `implemented_external_validation_pending` |
+| `SeamlessClone` | `detection` | `OImageComposition` | `seamless_clone` | `mode` | `implemented_external_validation_pending` |
+| `SrcImageFilesNodeData` | `source` | `ImageAcquisition` | `image_files` | `preset` | `covered` |
+| `OpenCVSrcImageFilesNodeData` | `source` | `ImageAcquisition` | `opencv_image_files` | `preset` | `covered` |
+| `OpenCVBitholderSrcImageFilesNodeData` | `source` | `ImageAcquisition` | `bitholder_samples` | `preset` | `covered` |
+| `OpenCVBoardSrcImageFilesNodeData` | `source` | `ImageAcquisition` | `board_samples` | `preset` | `covered` |
+| `OpenCVCardoorSrcImageFilesNodeData` | `source` | `ImageAcquisition` | `cardoor_samples` | `preset` | `covered` |
+| `OpenCVHalconSrcImageFilesNodeData` | `source` | `ImageAcquisition` | `halcon_samples` | `preset` | `covered` |
+| `OpenCVPillbagSrcImageFilesNodeData` | `source` | `ImageAcquisition` | `pillbag_samples` | `preset` | `covered` |
+| `OpenCVPillMagnesiumSrcImageFilesNodeData` | `source` | `ImageAcquisition` | `pill_magnesium_samples` | `preset` | `covered` |
+| `OpenCVPipeJointsSrcImageFilesNodeData` | `source` | `ImageAcquisition` | `pipe_joints_samples` | `preset` | `covered` |
+| `OpenCVRadiusGaugesSrcImageFilesNodeData` | `source` | `ImageAcquisition` | `radius_gauges_samples` | `preset` | `covered` |
+| `OpenCVWoodSrcImageFilesNodeData` | `source` | `ImageAcquisition` | `wood_samples` | `preset` | `covered` |
+| `PersonSrcImageFilesNodeData` | `source` | `ImageAcquisition` | `person_samples` | `preset` | `covered` |
+| `CameraCaptureNodeData` | `source` | `ImageAcquisition` | `camera_capture` | `alias` | `implemented_external_validation_pending` |
+| `SrcVideoFilesNodeData` | `source` | `ImageAcquisition` | `video_files` | `mode` | `implemented_external_validation_pending` |
+| `OKOutputNodeData` | `output` | `NotificationOutput` | `ok` | `alias` | `implemented_external_validation_pending` |
+| `NGOutputNodeData` | `output` | `NotificationOutput` | `ng` | `alias` | `implemented_external_validation_pending` |
+| `ShowInfoNotifyMessageOutputNodeData` | `output` | `NotificationOutput` | `info` | `alias` | `implemented_external_validation_pending` |
+| `ShowSuccessNotifyMessageOutputNodeData` | `output` | `NotificationOutput` | `success` | `alias` | `implemented_external_validation_pending` |
+| `ShowWarnNotifyMessageOutputNodeData` | `output` | `NotificationOutput` | `warning` | `alias` | `implemented_external_validation_pending` |
+| `ShowErrorNotifyMessageOutputNodeData` | `output` | `NotificationOutput` | `error` | `alias` | `implemented_external_validation_pending` |
+| `ShowFatalNotifyMessageOutputNodeData` | `output` | `NotificationOutput` | `fatal` | `alias` | `implemented_external_validation_pending` |
+| `ShowDialogNotifyMessageOutputNodeData` | `output` | `NotificationOutput` | `dialog` | `alias` | `implemented_external_validation_pending` |
+| `OpenCVConditionNodeData` | `flow` | `ConditionalFlow` | `image_condition` | `role` | `implemented_external_validation_pending` |
+| `ForNodeData` | `flow` | `LoopFlow` | `for` | `mode` | `implemented_external_validation_pending` |
+| `ForeachSplitResultImageNodeData` | `flow` | `LoopFlow` | `foreach_images` | `mode` | `implemented_external_validation_pending` |
+| `CreateShapeNodeData` | `measurement` | `GeometryCreate` | `shape` | `role` | `implemented_external_validation_pending` |
+| `CircleToCircleMesauseNodeData` | `measurement` | `GeometryMeasure` | `circle_circle` | `mode` | `implemented_external_validation_pending` |
+| `LineToCircleMesauseNodeData` | `measurement` | `GeometryMeasure` | `line_circle` | `mode` | `implemented_external_validation_pending` |
+| `LineToLineAngleMesauseNodeData` | `measurement` | `GeometryMeasure` | `line_line_angle` | `mode` | `implemented_external_validation_pending` |
+| `LineToLineMesauseNodeData` | `measurement` | `GeometryMeasure` | `line_line` | `mode` | `implemented_external_validation_pending` |
+| `PointToCircleMesauseNodeData` | `measurement` | `GeometryMeasure` | `point_circle` | `mode` | `implemented_external_validation_pending` |
+| `PointToLineMesauseNodeData` | `measurement` | `GeometryMeasure` | `point_line` | `mode` | `implemented_external_validation_pending` |
+| `PointToPointMesauseNodeData` | `measurement` | `GeometryMeasure` | `point_point` | `mode` | `implemented_external_validation_pending` |
+| `ObjDetectOnnxNodeData` | `onnx` | `NObjectDetection` | `generic` | `mode` | `implemented_external_validation_pending` |
+| `Yolov5OnnxNodeData` | `onnx` | `NObjectDetection` | `yolov5` | `alias` | `implemented_external_validation_pending` |
+| `Yolov5FaceOnnxNodeData` | `onnx` | `NObjectDetection` | `yolov5_face` | `alias` | `implemented_external_validation_pending` |
+| `ClsOnnxNodeData` | `onnx` | `NClassification` | `generic` | `mode` | `implemented_external_validation_pending` |
+| `GenderClsOnnxNodeData` | `onnx` | `NClassification` | `gender` | `alias` | `implemented_external_validation_pending` |
+| `InferOnnxNodeData` | `onnx` | `NInference` | `generic` | `mode` | `implemented_external_validation_pending` |
+| `AgeInferOnnxNodeData` | `onnx` | `NInference` | `age` | `alias` | `implemented_external_validation_pending` |
+| `SemSegOnnxNodeData` | `onnx` | `NSemanticSegmentation` | `generic` | `mode` | `implemented_external_validation_pending` |
+| `HumanSemSegOnnxNodeData` | `onnx` | `NSemanticSegmentation` | `human` | `alias` | `implemented_external_validation_pending` |
+| `DetectRecordNodeData` | `record` | `DetectRecord` | `record` | `mode` | `implemented_external_validation_pending` |
+| `ClassDetectRecordNodeData` | `record` | `DetectRecord` | `class_record` | `mode` | `implemented_external_validation_pending` |
+| `ObjectDetectRecordNodeData` | `record` | `DetectRecord` | `object_record` | `mode` | `implemented_external_validation_pending` |
+| `HasDetectRecordNodeData` | `record` | `DetectRecord` | `has_record` | `mode` | `implemented_external_validation_pending` |
+| `HttpReadJsonNodeData` | `communication` | `HttpJson` | `read` | `mode` | `implemented_external_validation_pending` |
+| `HttpWriteJsonNodeData` | `communication` | `HttpJson` | `write` | `mode` | `implemented_external_validation_pending` |
+| `IntReadableModbusNodeData` | `communication` | `ModbusRegister` | `read_int32` | `mode` | `implemented_external_validation_pending` |
+| `ShortWriteableModbusNodeData` | `communication` | `ModbusRegister` | `write_int16` | `mode` | `implemented_external_validation_pending` |
+| `TcpReadStringNodeData` | `communication` | `TcpText` | `read` | `mode` | `implemented_external_validation_pending` |
+| `TcpWriteStringNodeData` | `communication` | `TcpText` | `write` | `mode` | `implemented_external_validation_pending` |
+| `UdpReadStringNodeData` | `communication` | `UdpText` | `read` | `mode` | `implemented_external_validation_pending` |
+| `UdpWriteStringNodeData` | `communication` | `UdpText` | `write` | `mode` | `implemented_external_validation_pending` |
+| `SerialReadByteNodeData` | `communication` | `SerialData` | `read_bytes` | `mode` | `implemented_external_validation_pending` |
+| `SerialReadStringNodeData` | `communication` | `SerialData` | `read_text` | `mode` | `implemented_external_validation_pending` |
+| `SerialWriteByteNodeData` | `communication` | `SerialData` | `write_bytes` | `mode` | `implemented_external_validation_pending` |
+| `SerialWriteStringNodeData` | `communication` | `SerialData` | `write_text` | `mode` | `implemented_external_validation_pending` |
+| `CameraNodeData` | `source` | `ImageAcquisition` | `industrial_camera` | `alias` | `implemented_external_validation_pending` |
+| `Base64TemplateMatchNodeData` | `template` | `OTemplateMatch` | `base64` | `mode` | `implemented_external_validation_pending` |
+| `FeaturePointTemplateMatch` | `template` | `OTemplateMatch` | `feature` | `mode` | `implemented_external_validation_pending` |
+| `ShapeTemplateMatch` | `template` | `OTemplateMatch` | `shape` | `mode` | `implemented_external_validation_pending` |
+| `HSVTemplateMatch` | `template` | `OTemplateMatch` | `hsv` | `mode` | `implemented_external_validation_pending` |
+| `ForegroundRotatedRectRectification` | `rectification` | `ORectification` | `foreground_rotated_rect` | `mode` | `implemented_external_validation_pending` |
+| `TakeoffForegroundInfo` | `rectification` | `ORectification` | `foreground_extract` | `mode` | `implemented_external_validation_pending` |
+| `RotatedRectRectification` | `rectification` | `ORectification` | `rotated_rect` | `mode` | `implemented_external_validation_pending` |

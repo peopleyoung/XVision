@@ -1,0 +1,107 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 21,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "windows-msvc2019-base",
+      "hidden": true,
+      "generator": "Visual Studio 16 2019",
+      "architecture": "x64",
+      "cacheVariables": {
+        "BUILD_TESTING": "ON",
+        "XVISION_BUILD_COMMON_USING": "ON",
+        "CMAKE_PREFIX_PATH": "$env{QTDIR}"
+      }
+    },
+    {
+      "name": "windows-msvc2019-debug",
+      "displayName": "Windows MSVC2019 Debug",
+      "inherits": "windows-msvc2019-base",
+      "binaryDir": "${sourceDir}/build/windows-msvc2019-debug"
+    },
+    {
+      "name": "windows-msvc2019-release",
+      "displayName": "Windows MSVC2019 Release",
+      "inherits": "windows-msvc2019-base",
+      "binaryDir": "${sourceDir}/build/windows-msvc2019-release"
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "windows-msvc2019-debug",
+      "configurePreset": "windows-msvc2019-debug",
+      "configuration": "Debug",
+      "targets": [
+        "XVision",
+        "XvFuncSystem",
+        "XvCorePersistenceTests",
+        "XvCameraTests",
+        "XvSystemPluginTests",
+        "XvVisionMasterDataTests",
+        "XvVisionBackendBoundaryTests",
+        "XvOpenCvImageOperatorTests",
+        "XvOpenCvMorphologyDetectorTests",
+        "XvOpenCvTemplatingTests",
+        "XvGeometryMeasurementTests",
+        "XvDetectRecordTests",
+        "XvCommunicationOperatorTests",
+        "XvSourceNotificationTests",
+        "XvOnnxOperatorTests"
+      ]
+    },
+    {
+      "name": "windows-msvc2019-release",
+      "configurePreset": "windows-msvc2019-release",
+      "configuration": "Release",
+      "targets": [
+        "XVision",
+        "XvFuncSystem",
+        "XvCorePersistenceTests",
+        "XvCameraTests",
+        "XvSystemPluginTests",
+        "XvVisionMasterDataTests",
+        "XvVisionBackendBoundaryTests",
+        "XvOpenCvImageOperatorTests",
+        "XvOpenCvMorphologyDetectorTests",
+        "XvOpenCvTemplatingTests",
+        "XvGeometryMeasurementTests",
+        "XvDetectRecordTests",
+        "XvCommunicationOperatorTests",
+        "XvSourceNotificationTests",
+        "XvOnnxOperatorTests"
+      ]
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "windows-msvc2019-debug",
+      "configurePreset": "windows-msvc2019-debug",
+      "configuration": "Debug",
+      "output": {
+        "outputOnFailure": true
+      },
+      "filter": {
+        "include": {
+          "name": "^(projectxml|camera|systemplugin|visionmaster_matrix|visionmaster_matrix_document|visionmaster_data|visionmaster_sdk_cmake|visionmaster_backend_boundary|opencv_image_operators|opencv_morphology_detectors|opencv_template_rectification|geometry_measurement|detect_record|communication_operators|source_notification|onnx_operators)$"
+        }
+      }
+    },
+    {
+      "name": "windows-msvc2019-release",
+      "configurePreset": "windows-msvc2019-release",
+      "configuration": "Release",
+      "output": {
+        "outputOnFailure": true
+      },
+      "filter": {
+        "include": {
+          "name": "^(projectxml|camera|systemplugin|visionmaster_matrix|visionmaster_matrix_document|visionmaster_data|visionmaster_sdk_cmake|visionmaster_backend_boundary|opencv_image_operators|opencv_morphology_detectors|opencv_template_rectification|geometry_measurement|detect_record|communication_operators|source_notification|onnx_operators)$"
+        }
+      }
+    }
+  ]
+}

@@ -122,7 +122,7 @@ protected:
             rx=_rx;
             ry=_ry;
             thickness=_thickness;
-            data.area.clear();
+            data.area = QPainterPath();
             data.area.addPath(genEllipseRing(ptCenter,rx,ry,thickness));
         }
     };

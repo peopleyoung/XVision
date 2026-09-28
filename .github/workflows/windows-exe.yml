@@ -1,0 +1,57 @@
+name: Windows EXE
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [build/windows-exe]
+
+permissions:
+  contents: read
+
+jobs:
+  windows-exe:
+    runs-on: windows-2022
+    timeout-minutes: 180
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install build helpers
+        run: python -m pip install cmake==3.28.4 aqtinstall==3.1.18
+      - name: Restore SDK cache
+        id: sdk-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ runner.temp }}/xvision-sdk
+          key: xvision-win64-vs2019-qt640-opencv4100-contrib-onnx1181-v1
+      - name: Install Windows toolchain and SDKs
+        run: ./XVision/scripts/Prepare-WindowsBuild.ps1 -SdkDirectory "$env:RUNNER_TEMP/xvision-sdk"
+      - name: Save installed SDK cache
+        if: steps.sdk-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ runner.temp }}/xvision-sdk
+          key: xvision-win64-vs2019-qt640-opencv4100-contrib-onnx1181-v1
+      - name: Build, test, and package full-feature Release
+        run: ./XVision/scripts/Package-WindowsBuild.ps1 -Configuration Release -KeepStaging
+      - name: Upload Windows executable package
+        uses: actions/upload-artifact@v4
+        with:
+          name: XVision-Release-win64
+          path: XVision/dist/XVision-Release-win64.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload build diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: XVision-Windows-build-diagnostics
+          path: |
+            XVision/build/windows-msvc2019-release/Testing/Temporary/*.log
+            XVision/build/windows-msvc2019-release/CMakeFiles/CMakeConfigureLog.yaml
+          if-no-files-found: ignore
+          retention-days: 7

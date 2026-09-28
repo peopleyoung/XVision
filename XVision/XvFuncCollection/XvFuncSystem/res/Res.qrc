@@ -13,5 +13,7 @@
         <file>images/ImageAcquisitionWdgDirNext.svg</file>
         <file>images/LogOutput.svg</file>
         <file>images/HModelMatch.svg</file>
+        <file>images/HObjectDetection.svg</file>
+        <file>images/OpenCvImage.svg</file>
     </qresource>
 </RCC>

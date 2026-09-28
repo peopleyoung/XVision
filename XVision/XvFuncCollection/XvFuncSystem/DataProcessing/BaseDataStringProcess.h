@@ -63,7 +63,7 @@ class XVFUNCSYSTEM_EXPORT BaseDataStringProcess:public XvFunc
 {
     Q_OBJECT
     Q_PROPERTY(BaseDataStringProcess::EStringProcessType stringProcessType WRITE setStringProcessType READ stringProcessType)
-    friend class BaseDataStringProcessWdg;
+    friend class ::BaseDataStringProcessWdg;
 public:
     Q_INVOKABLE explicit BaseDataStringProcess(QObject *parent = nullptr);
     ~BaseDataStringProcess();
@@ -98,6 +98,10 @@ public:
     Q_ENUMS(EStringProcessType);
     EStringProcessType stringProcessType() const {return m_stringProcessType;}
     void setStringProcessType(EStringProcessType type){ m_stringProcessType=type;}
+    QStringList persistentPropertyNames() const override
+    {
+        return {"stringProcessType"};
+    }
 public slots:
     void onShowFunc() override;
 protected:

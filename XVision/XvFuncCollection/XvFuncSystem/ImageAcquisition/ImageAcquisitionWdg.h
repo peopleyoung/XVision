@@ -10,6 +10,10 @@ namespace Ui {
 class ImageAcquisitionWdg;
 }
 class XMatTabs;
+class QLineEdit;
+class QSpinBox;
+class QCheckBox;
+class QWidget;
 class ImageAcquisitionWdg : public BaseSystemFuncWdg
 {
     Q_OBJECT
@@ -20,6 +24,7 @@ public:
 
 protected:
     void initFrm() override;
+    void refreshCameraDevices();
 protected slots:
     void onShow() override;
 
@@ -27,6 +32,12 @@ protected slots:
 private:
     Ui::ImageAcquisitionWdg *ui;
     XMatTabs* m_tabs=nullptr;
+    QWidget* m_videoPage=nullptr;
+    QLineEdit* m_videoPath=nullptr;
+    QSpinBox* m_videoStart=nullptr;
+    QSpinBox* m_videoEnd=nullptr;
+    QSpinBox* m_videoStep=nullptr;
+    QCheckBox* m_videoLoop=nullptr;
 };
 
 #endif // IMAGEACQUISITIONWDG_H

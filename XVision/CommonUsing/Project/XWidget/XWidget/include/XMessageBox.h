@@ -2,6 +2,8 @@
 #define XMESSAGEBOX_H
 
 #include "XFramelessDialog.h"
+#include <memory>
+#include <QMap>
 
 class QAbstractButton;
 

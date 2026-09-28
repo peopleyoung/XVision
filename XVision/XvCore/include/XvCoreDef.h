@@ -5,6 +5,8 @@
 #include <qglobal.h>
 #include <qmetaobject.h>
 #include <QPixmap>
+#include <QStringList>
+#include <QVariantMap>
 
 #include "XvError.h"
 
@@ -52,7 +54,11 @@
 /*-----------------------------*********-----------------------------*/
 namespace XvCore
 {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 Q_NAMESPACE_EXPORT(XVCORE_EXPORT)
+#else
+Q_NAMESPACE
+#endif
 
 /*-----------------------------算子定义-----------------------------*/
 ///算子类型
@@ -95,7 +101,7 @@ typedef struct S_XVFUNC_TYPE_INFO
 
     }
     ///是否有效
-    bool isValid()
+    bool isValid() const
     {
         return type!=XvCore::EXvFuncType::Null;//NULL类型无效
     }
@@ -109,29 +115,68 @@ typedef struct S_XVFUNC_TYPE_INFO
 typedef struct S_XVFUNC_INFO
 {
     S_XVFUNC_INFO()
+        :type(XvCore::EXvFuncType::Null),preset(false)
     {
-
     }
     S_XVFUNC_INFO(const QString& _role,
                        const XvCore::EXvFuncType& _type,
                        const QString& _name,
                        const QPixmap& _icon,
                        const QMetaObject& _meta):
-        role(_role),type(_type), name(_name), icon(_icon), meta(_meta)
+        role(_role),canonicalRole(_role),type(_type),name(_name),icon(_icon),meta(_meta),
+        preset(false)
     {
 
     }
     ///是否有效
-    bool isValid()
+    bool isValid() const
     {
         return !role.isEmpty();//role为空无效
     }
     QString role;  //算子功能
+    QString canonicalRole; //预设别名最终创建的规范角色
     XvCore::EXvFuncType type;//算子分类
     QString name;  //算子名称
     QPixmap icon;  //算子图标
     QMetaObject meta;//算子元数据
+    bool preset;//是否为创建预设别名
 }XvFuncInfo,*PXvFuncInfo;
+
+///算子创建预设。创建完成后算子仍使用canonicalRole。
+struct XVCORE_EXPORT XvFuncPreset
+{
+    QString alias;
+    QString displayName;
+    QString canonicalRole;
+    QVariantMap properties;
+    QVariantMap parameters;
+
+    bool isValid() const
+    {
+        return !alias.trimmed().isEmpty() && !canonicalRole.trimmed().isEmpty();
+    }
+};
+
+///算子完成一次运行后交给流程调度器的控制指令。
+struct XVCORE_EXPORT XvExecutionDirective
+{
+    static constexpr int MaximumIterationCount=10000;
+
+    enum Kind
+    {
+        Continue,
+        SelectPorts,
+        Repeat,
+        Stop,
+        Error
+    };
+
+    Kind kind=Continue;
+    QStringList selectedPorts;
+    QString bodyPort;
+    QString donePort;
+    int iterationCount=0;
+};
 
 
 ///算子状态

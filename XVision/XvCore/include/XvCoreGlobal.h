@@ -2,7 +2,7 @@
 #define XVCOREGLOBAL_H
 
 #include <qglobal.h>
-#include <QMetaobject>
+#include <QMetaObject>
 #include <QPixmap>
 
 #if defined(XVCORE_LIBRARY)

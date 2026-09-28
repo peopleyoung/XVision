@@ -1,4 +1,5 @@
 ﻿#include "XThread.h"
+#include <QElapsedTimer>
 #include <QTimer>
 
 /**************************************************************/
@@ -205,7 +206,6 @@ void XThread::setName(const QString &name)
     Q_D(XThread);
     d->name=name;
 }
-
 
 
 

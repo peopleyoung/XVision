@@ -2,7 +2,7 @@
 #define XFLOWGRAPHICSITEM_H
 
 #include <QtCore>
-#include <QGraphicsitem>
+#include <QGraphicsItem>
 #include <QPainter>
 #include "XFlowGraphicsGlobal.h"
 

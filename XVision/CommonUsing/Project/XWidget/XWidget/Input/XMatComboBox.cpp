@@ -9,7 +9,7 @@
 #include <QBitmap>
 #include <QPainterPath>
 #include <QIcon>
-#include "XMatRippleoverlay.h"
+#include "XMatRippleOverlay.h"
 #include "XMatRipple.h"
 
 #include "XMatComboBox_internal.h"
@@ -370,7 +370,11 @@ void XMatComboBox::wheelEvent(QWheelEvent *event)
         if (XMatCommonDef::CenteredRipple == d->rippleStyle) {
             pos = rect().center();
         } else {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
             pos = event->position().toPoint();
+#else
+            pos = event->pos();
+#endif
         }
 
         radiusEndValue = static_cast<qreal>(width())/2;

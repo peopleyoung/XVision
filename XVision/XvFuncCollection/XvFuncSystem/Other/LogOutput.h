@@ -27,7 +27,7 @@ public:
 class XVFUNCSYSTEM_EXPORT LogOutput:public XvFunc
 {
     Q_OBJECT
-    friend class LogOutputWdg;
+    friend class ::LogOutputWdg;
 public:
     Q_INVOKABLE explicit LogOutput(QObject *parent = nullptr);
     ~LogOutput();

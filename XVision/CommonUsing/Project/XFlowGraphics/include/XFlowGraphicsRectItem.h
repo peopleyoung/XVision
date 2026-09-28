@@ -105,7 +105,7 @@ protected:
         {
             data.key=_key;
             data.pt=_pt;
-            data.area.clear();
+            data.area = QPainterPath();
             data.area.addRect(_rect);
         }
         ///连接数据

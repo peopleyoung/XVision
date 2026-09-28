@@ -34,10 +34,22 @@ public:
 
 
 //*[算子]*
+    ///注册算子元对象
+    bool registerXvFunc(const QMetaObject &funcMeta);
+    ///原子注册一个插件的规范角色与创建预设
+    bool registerPlugin(const QList<QMetaObject> &funcMetas,
+                        const QList<XvFuncPreset> &presets,
+                        QString *error=nullptr);
     ///通过标识符创建一个算子
     XvFunc* createNewXvFunc(QString role);
     ///通过标识符获取算子信息
     XvFuncInfo getXvFuncInfo(QString role);
+    ///通过别名或规范角色获取规范角色
+    QString canonicalRole(const QString &role) const;
+    ///获取已注册预设
+    QList<XvFuncPreset> getXvFuncPresets() const;
+    ///获取最后错误信息（读取后清空）
+    QString lastErrorMsg();
     ///通过信息创建一个算子
     inline XvFunc* createNewXvFunc(const XvFuncInfo &info);
 
@@ -58,6 +70,8 @@ protected:
     /// 1-QString:算子功能Role
     /// 2-XvFuncInfo:算子信息
     QMap<QString,XvFuncInfo> m_mapXvFuncInfo;
+    QMap<QString,XvFuncPreset> m_mapXvFuncPreset;
+    QString m_lastErrorMsg;
 };
 
 inline XvFunc *XvFuncAssembly::createNewXvFunc(const XvFuncInfo &info)

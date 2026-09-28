@@ -12,15 +12,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 include (../CommonCMake/CommonProjectOutputSet.cmake)
 
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Widgets XML)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Widgets XML)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Widgets Xml)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Widgets Xml)
 
 #[[**************添加包含目录**************]]
 
 #添加工程包含目录
 list(APPEND INCLUDE_DIR
     ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/Src
     ${CMAKE_CURRENT_SOURCE_DIR}/Data
 
 )
@@ -35,7 +35,7 @@ list(APPEND LINK_LIBS
 )
 
 file(GLOB INCLUDE     include/*)
-file(GLOB SRC     src/*.*)
+file(GLOB SRC     Src/*.*)
 file(GLOB DATA     Data/*.*)
 file(GLOB XOBJECT     XObject/*.*)
 

@@ -2,8 +2,12 @@
 #define XVFUNC_H
 
 #include "XvCoreGlobal.h"
+#include <QMap>
 #include <QObject>
+#include <QPointF>
+#include <QStringList>
 #include "IXvTokenMsgAble.h"
+#include "XmlSerializable.h"
 #include "XvCoreDef.h"
 #include "XvFuncData.h"
 
@@ -12,17 +16,19 @@
 namespace XvCore
 {
 class XvFuncAssembly;
+class XvCoreManager;
 class XvProject;
 class XvFlow;
-class XVCORE_EXPORT XvFunc:public QObject,public IXvTokenMsgAble
+class XVCORE_EXPORT XvFunc:public QObject,public IXvTokenMsgAble,public XmlSerializable
 {
     Q_OBJECT
     Q_PROPERTY(QString funcId READ funcId)
     Q_PROPERTY(QString funcName READ funcName WRITE setFuncName NOTIFY funcNameChanged)
-    friend class XvFunc;
+    Q_PROPERTY(QPointF canvasPosition READ canvasPosition WRITE setCanvasPosition)
     friend class XvFlow;
     friend class XvProject;
     friend class XvFuncAssembly;
+    friend class XvCoreManager;
 public:
     Q_INVOKABLE explicit XvFunc(QObject *parent = nullptr);
     virtual ~XvFunc();
@@ -55,6 +61,10 @@ public:
     ///设置名称
     void setFuncName(const QString &name);
 
+    ///流程画布位置
+    QPointF canvasPosition() const { return _canvasPosition; }
+    void setCanvasPosition(const QPointF &position) { _canvasPosition=position; }
+
     ///算子图标
     virtual QPixmap funcIcon();
 
@@ -63,9 +73,14 @@ public:
 
     ///父流程
     XvFlow* parFlow() const {return m_parFlow;}
+
+    ///获取最后错误信息
+    QString lastErrorMsg();
 protected:
     ///设置父流程
     virtual void setParFlow(XvFlow* flow);
+    ///设置最后错误信息
+    void setLastErrorMsg(const QString &msg);
 signals:
     void funcNameChanged(const QString &name);
 protected:
@@ -83,6 +98,12 @@ protected:
 
     ///父流程
     XvFlow* m_parFlow=nullptr;
+
+    ///流程画布位置
+    QPointF _canvasPosition;
+
+    ///最后错误信息
+    QString _lastErrorMsg;
 /********************************************************/
 
 
@@ -96,9 +117,20 @@ public:
     virtual QList<XvFunc*> fatherFuncs() const;
     ///获取子连接算子
     virtual QList<XvFunc*> sonFuncs() const;
+    ///获取实际保存的子连接(不受算子运行调度重写影响)
+    QList<XvFunc*> linkedSonFuncs() const { return _lstSonFunc; }
+
+    ///算子声明的输出端口。普通算子只有default端口。
+    virtual QStringList outputPorts() const;
 
     ///添加子连接算子
     virtual bool addSonFunc(XvFunc* sonFunc);
+    ///通过指定输出端口添加子连接算子
+    bool addSonFunc(XvFunc* sonFunc,const QString &port);
+    ///修改既有子连接的输出端口
+    bool setSonFuncPort(XvFunc* sonFunc,const QString &port);
+    ///获取既有子连接的输出端口；连接不存在时返回空字符串
+    QString sonFuncPort(XvFunc* sonFunc) const;
     ///删除子连接算子
     virtual bool delSonFunc(XvFunc* sonFunc);
     ///是否存在该子连接算子
@@ -138,12 +170,19 @@ signals:
     void sgSonFuncDel(XvFunc* sonFunc);
     ///子连接算子修改(添加删除信号)
     void sgSonFuncChanged(XvFunc* changedFunc);
+    ///子连接输出端口修改信号
+    void sgSonFuncPortChanged(XvFunc* sonFunc,const QString &port);
 
 protected:
+    ///未显式指定端口时使用的输出端口
+    virtual QString defaultOutputPortForNewLink() const;
+    bool isOutputPortDeclared(const QString &port) const;
     ///父连接算子列表
     QList<XvFunc*> _lstFatherFunc;
     ///子连接算子列表
     QList<XvFunc*> _lstSonFunc;
+    ///子连接到输出端口的映射
+    QMap<XvFunc*,QString> _mapSonFuncPort;
 protected slots:
     ///父连接算子delete事件
     void onFatherFuncDestroyed(XvFunc* func);
@@ -157,6 +196,11 @@ protected slots:
 public:
     ///算子运行接口
     virtual EXvFuncRunStatus runXvFunc();
+
+    ///本次运行后的流程调度指令。普通算子继续所有输出端口。
+    virtual XvExecutionDirective executionDirective() const;
+    ///循环调度前准备指定迭代的数据。普通算子不支持循环。
+    virtual bool prepareIteration(int iteration,QString &error);
 
     ///获取运行信息
     XvFuncRunInfo getXvFuncRunInfo() const
@@ -183,11 +227,15 @@ signals:
     void sgFuncRunStart(XvFunc* func);
     ///算子运行结束
     void sgFuncRunEnd(XvFunc* func);
+    ///算子在一次运行内发布了新的结果值
+    void sgFuncResultUpdate(XvFunc* func);
 
 public slots:
     ///算子显示界面
     virtual void onShowFunc() {};
 protected:
+    ///通知订阅者重新读取当前结果
+    void publishResultUpdate();
     ///算子运行虚接口
     virtual EXvFuncRunStatus run()
     {
@@ -217,6 +265,21 @@ public:
 
     ///获取算子输出结果
     virtual XvBaseResult* getResult() const { return nullptr; }
+
+    ///需要持久化的算子属性名称
+    virtual QStringList persistentPropertyNames() const { return QStringList(); }
+
+    ///作为用户配置持久化的结果名称
+    virtual QStringList persistentResultNames() const { return QStringList(); }
+
+    ///旧文件中允许缺省并使用构造默认值的持久化参数名称
+    virtual QStringList optionalPersistentParameterNames() const { return QStringList(); }
+
+    ///算子私有持久化扩展。默认算子不写入扩展节点。
+    virtual bool appendPersistentData(QDomDocument &doc,QDomElement &functionElement,
+                                      QString &error) const;
+    ///读取算子私有持久化扩展。没有扩展节点时传入空元素。
+    virtual bool readPersistentData(const QDomElement &dataElement,QString &error);
 
     ///更新参数
     virtual bool updataParam(const QString &paramName,XObject* object);
@@ -283,6 +346,11 @@ public:
    ///算子资源释放(删除前必需调用进行判断)
    /// t:能删除 f:不可删除
     virtual bool release();
+
+/**********************XML序列化**********************/
+public:
+    QDomElement toXmlElement(QDomDocument &doc) override;
+    bool fromXmlElement(QDomElement &xmlEle) override;
 };
 
 }

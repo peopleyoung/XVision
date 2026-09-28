@@ -20,7 +20,12 @@ public:
 protected:
     void initFrm() override;
 protected slots:
+    void onFuncRunUpdate() override;
     void onShow() override;
+private:
+    void updateRoiValue();
+    void updateRoiControlsEnabled();
+    void updateStatus();
 private:
     Ui::HModelMatchWdg *ui;
 

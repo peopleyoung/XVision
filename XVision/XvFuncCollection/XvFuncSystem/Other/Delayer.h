@@ -25,7 +25,7 @@ public:
 class XVFUNCSYSTEM_EXPORT Delayer:public XvFunc
 {
     Q_OBJECT
-    friend class DelayerWdg;
+    friend class ::DelayerWdg;
 public:
     Q_INVOKABLE explicit Delayer(QObject *parent = nullptr);
     ~Delayer();

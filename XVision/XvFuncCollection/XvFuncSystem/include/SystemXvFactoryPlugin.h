@@ -20,6 +20,7 @@ public:
 public:
     QString name() const override;
     QList<QMetaObject> getPlgXvFunc() override;
+    QList<XvFuncPreset> getPlgXvFuncPresets() override;
 
 };
 }

@@ -2,7 +2,7 @@
 #define XMATSLIDER_INTERNAL_H
 
 #include <QStateMachine>
-#include "XMatOverlaywidget.h"
+#include "XMatOverlayWidget.h"
 
 class XMatSlider;
 class XMatSliderThumb;

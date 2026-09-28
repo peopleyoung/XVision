@@ -1,6 +1,7 @@
 ﻿#include "XvWorkManager.h"
 //Qt
 #include <QMutexLocker>
+#include <QPointer>
 
 //XFlowGraphics
 #include "XFlowGraphicsScene.h"
@@ -10,6 +11,8 @@
 #include "LangDef.h"
 #include "XvViewManager.h"
 #include "UiXvWorkManager.h"
+#include "UiXvDisplayManager.h"
+#include "FrmXvFuncResult.h"
 
 //XvCore
 #include "XvCoreManager.h"
@@ -72,6 +75,7 @@ void XvWorkManager::init()
     //初始化核心管理器
     XvCoreMgr->init();
     //连接槽
+    connect(XvCoreMgr,&XvCore::XvCoreManager::sgXvProjectAboutToReplace,this,&XvWorkManager::onXvProjectAboutToReplace);
     connect(XvCoreMgr,&XvCore::XvCoreManager::sgUpdateXvProject,this,&XvWorkManager::onUpdateXvProject);
 
 }
@@ -227,14 +231,60 @@ bool XvWorkManager::stopRunXvFlow(const QString &id)
 
 /*********[项目]*********/
 
+void XvWorkManager::onXvProjectAboutToReplace(XvCore::XvProject *project)
+{
+    if(!project) return;
+
+    disconnect(project,nullptr,this,nullptr);
+    for(XvFlow *flow:project->getXvFlows())
+    {
+        if(flow) disconnect(flow,nullptr,this,nullptr);
+    }
+
+    if(auto displayManager=XvViewMgr->uiXvDisplayManager())
+    {
+        displayManager->clearXvFuncBinding();
+    }
+    UiXvFuncResult->clearXvFunc();
+    if(auto workManager=XvViewMgr->uiXvWorkManager())
+    {
+        workManager->clearProject(project);
+    }
+}
+
 void XvWorkManager::onUpdateXvProject(XvCore::XvProject *project)
 {
+    if(!project) return;
     auto str=  QString("UpdateXvProject:Prj<Id-%1> Prj<Name-%2>").arg(project->projectId()).arg(project->projectName());
     Log_Trace(str);
     connect(project,&XvProject::destroyed,this,&XvWorkManager::onXvProjectDestroyed);
     connect(project,&XvProject::sgXvFlowCreated,this,&XvWorkManager::onXvFlowCreated);
     connect(project,&XvProject::sgRemoveXvFlowStart,this,&XvWorkManager::onRemoveXvFlowStart);
     connect(project,&XvProject::sgRemoveXvFlowEnd,this,&XvWorkManager::onRemoveXvFlowEnd);
+    connect(project,&XvProject::sgProjectRunStart,this,[]()
+    {
+        if(auto manager=XvViewMgr->uiXvWorkManager())
+            manager->setProjectRunning(true);
+    });
+    const QPointer<XvProject> projectGuard(project);
+    connect(project,&XvProject::sgProjectRunEnd,this,[projectGuard]()
+    {
+        if(auto manager=XvViewMgr->uiXvWorkManager())
+            manager->setProjectRunning(projectGuard && projectGuard->isRunning());
+    });
+
+    auto workManager=XvViewMgr->uiXvWorkManager();
+    for(XvFlow *flow:project->getXvFlows())
+    {
+        if(!flow) continue;
+        connect(flow,&XvFlow::sgXvFuncCreated,this,&XvWorkManager::onXvFuncCreated);
+        connect(flow,&XvFlow::sgRemoveXvFuncStart,this,&XvWorkManager::onRemoveXvFuncStart);
+        connect(flow,&XvFlow::sgRemoveXvFuncEnd,this,&XvWorkManager::onRemoveXvFuncEnd);
+        if(workManager && !workManager->restoreFlowScene(flow))
+        {
+            Log_Error(QString("Restore flow scene failed: %1").arg(flow->flowName()));
+        }
+    }
 }
 
 void XvWorkManager::onXvProjectDestroyed(QObject* obj)
@@ -276,7 +326,18 @@ void XvWorkManager::onXvFlowCreated(XvCore::XvFlow *flow)
         prj->removeXvFlow(flow->flowId());
         return;
     }
-    auto scene=flowDockMgr->createFlowScene(flow);
+    XFlowGraphicsScene *scene=nullptr;
+    if(flow->xvFuncCount()>0)
+    {
+        if(flowDockMgr->restoreFlowScene(flow))
+        {
+            scene=flowDockMgr->getFlowScene(flow->flowId());
+        }
+    }
+    else
+    {
+        scene=flowDockMgr->createFlowScene(flow);
+    }
     if(scene==nullptr)
     {
         Log_Error(getLang(App_XvWorkMgr_CreateXvFlowError3,"创建流程失败,当前流程界面为空"));
@@ -345,4 +406,3 @@ void XvWorkManager::onRemoveXvFuncEnd(const QString &funcId)
 {
 
 }
-

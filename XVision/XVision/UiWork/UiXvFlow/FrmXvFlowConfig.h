@@ -2,6 +2,7 @@
 #define FRMXVFLOWCONFIG_H
 
 #include "XFramelessWidget.h"
+#include <QPointer>
 
 namespace Ui {
 class FrmXvFlowConfig;
@@ -26,7 +27,7 @@ protected:
     void closeEvent(QCloseEvent *event) override;
 private:
     Ui::FrmXvFlowConfig *ui;
-    XvFlow* m_flow=nullptr;
+    QPointer<XvFlow> m_flow;
 
 
 };

@@ -42,12 +42,7 @@ bool XObjectList::getData(XObject *object)
     {
         return false;
     }
-    temp->clear();
-    foreach (auto obj, _lst)
-    {
-        temp->addValue(obj->clone());
-    }
-    return true;
+    return temp->copyValuesFrom(*this);
 }
 
 bool XObjectList::setData(XObject *object)
@@ -69,12 +64,19 @@ bool XObjectList::setData(XObject *object)
     {
         return false;
     }
-    clear();
-    foreach (auto obj, temp->_lst)
+    return copyValuesFrom(*temp);
+}
+
+XObject *XObjectList::clone()
+{
+    auto result=new XObjectList(objectName(),valueType(),nullptr,dispalyName());
+    result->setTips(tips());
+    if(!result->copyValuesFrom(*this))
     {
-        addValue(obj->clone());
+        delete result;
+        return nullptr;
     }
-    return true;
+    return result;
 }
 
 XObject *XObjectList::value(qsizetype idx)
@@ -92,7 +94,10 @@ bool XObjectList::addValue(XObject *object)
     {
         return false;
     }
-    object->setParObjectSet(this);
+    if(!object->setParObjectSet(this))
+    {
+        return false;
+    }
     _lst.append(object);
     return true;
 }
@@ -122,13 +127,13 @@ bool XObjectList::removeValue(XObject *object,bool del)
 
 void XObjectList::clear(bool del)
 {
-    foreach (auto obj, _lst)
+    const QList<XObject*> valuesToRemove=_lst;
+    _lst.clear();
+    foreach (auto obj, valuesToRemove)
     {
-        bool bRet= _lst.removeOne(obj);
         if(del)
         {
             delete obj;
-            obj=nullptr;
         }
     }
 }
@@ -136,4 +141,30 @@ void XObjectList::clear(bool del)
 qsizetype XObjectList::count() const
 {
     return _lst.count();
+}
+
+bool XObjectList::copyValuesFrom(const XObjectList &source)
+{
+    QList<XObject*> clones;
+    for(XObject *object:source._lst)
+    {
+        XObject *copy=object?object->clone():nullptr;
+        if(!copy || copy->typeName()!=valueType())
+        {
+            delete copy;
+            for(XObject *created:clones) delete created;
+            return false;
+        }
+        if(!copy->setParObjectSet(this))
+        {
+            delete copy;
+            for(XObject *created:clones) delete created;
+            return false;
+        }
+        clones.append(copy);
+    }
+
+    clear();
+    _lst=clones;
+    return true;
 }

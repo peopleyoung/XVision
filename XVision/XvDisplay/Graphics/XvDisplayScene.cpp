@@ -134,9 +134,11 @@ bool XvDisplayScene::removeRoi(XvDisplayBaseRoiItem *roi)
 
 void XvDisplayScene::clearRoi()
 {
-    foreach (auto roi, m_lstRoiItems)
+    while(!m_lstRoiItems.isEmpty())
     {
-        this->removeRoi(roi);
+        XvDisplayBaseRoiItem *roi=m_lstRoiItems.takeLast();
+        this->removeItem(roi);
+        delete roi;
     }
 }
 
@@ -189,4 +191,3 @@ void XvDisplayScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     emit sgMouseRelease(event);
     return QGraphicsScene::mouseReleaseEvent(event);
 }
-

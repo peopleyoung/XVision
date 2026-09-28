@@ -2,6 +2,7 @@
 #define XVDISPLAYROTATERECTROI_H
 
 #include "XvDisplayBaseRoiItem.h"
+#include "XRotateRectRoi.h"
 #define RotateArrowLen        30
 #define RoiTypeRotateRect     2
 
@@ -10,6 +11,9 @@ class XVDISPLAY_EXPORT XvDisplayRotateRectRoi:public XvDisplayBaseRoiItem
     Q_OBJECT
 public:
    explicit XvDisplayRotateRectRoi(QPointF centerPos,double len1=200,double len2=150,double angle=0, QObject* parent=nullptr);
+
+    XRotateRectRoi geometry() const;
+    bool setGeometry(const XRotateRectRoi &geometry);
 
     // QGraphicsItem interface
 public:
@@ -20,6 +24,7 @@ public:
     // XvDisplayBaseRoiItem interface
 protected:
    bool updateRoi(XvDisplayControlItem *controlItem) override;
+   void updateControlGeometry();
 protected:
     double  m_len1;
     double  m_len2;

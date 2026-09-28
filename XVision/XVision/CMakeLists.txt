@@ -8,10 +8,10 @@ set(CMAKE_INCLUDE_CURRENT_DIR OFF)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(ENABLE_BREAKPAD ON)#使能软件崩溃生成dump文件
+option(XVISION_ENABLE_BREAKPAD "Build the Breakpad crash reporter" ON)
 
 include (../CommonCMake/CommonProjectOutputSet.cmake)
 include (../CommonUsing/CommonUsing.cmake)
@@ -23,7 +23,7 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Xml Concurrent)
 
 set(XVAPPLICATION_CLASS QApplication)
 add_subdirectory(SingleApplication)
-if(ENABLE_BREAKPAD)
+if(XVISION_ENABLE_BREAKPAD)
     add_subdirectory(QBreakpad)
 endif()
 
@@ -39,7 +39,7 @@ list(APPEND APP_LIBS
     Qt${QT_VERSION_MAJOR}::Xml
     Qt${QT_VERSION_MAJOR}::Concurrent
 )
-if(ENABLE_BREAKPAD)
+if(XVISION_ENABLE_BREAKPAD)
     list(APPEND APP_LIBS QBreakpad)
 endif()
 
@@ -65,7 +65,7 @@ list(APPEND APP_LIBS
 
 
 #[[**************添加包含目录**************]]
-if(ENABLE_BREAKPAD)
+if(XVISION_ENABLE_BREAKPAD)
     list(APPEND APP_INCLUDE_DIR QBreakpad/handler)
 endif()
 #添加工程包含目录
@@ -176,7 +176,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE ${APP_LIBS})
 #    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
 #    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 #)
-if(ENABLE_BREAKPAD)
+if(XVISION_ENABLE_BREAKPAD)
     target_compile_definitions(XVision PRIVATE QBREAKPAD_ENABLE)
 endif()
 
@@ -192,16 +192,17 @@ endif()
 
 add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 
-#此处需要将引用的CommonUsing库复制到exe目录中
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${CMAKE_CURRENT_SOURCE_DIR}/../${COMMON_USING_LINK_DIR}/XWidget.dll
-        ${CMAKE_CURRENT_SOURCE_DIR}/../${COMMON_USING_LINK_DIR}/XLog.dll
-        ${CMAKE_CURRENT_SOURCE_DIR}/../${COMMON_USING_LINK_DIR}/XLanguage.dll
-        ${CMAKE_CURRENT_SOURCE_DIR}/../${COMMON_USING_LINK_DIR}/AdsDocking.dll
-        ${CMAKE_CURRENT_SOURCE_DIR}/../${COMMON_USING_LINK_DIR}/XFlowGraphics.dll
-        ${CMAKE_CURRENT_SOURCE_DIR}/../${COMMON_USING_LINK_DIR}/XConcurrent.dll
-
-        $<TARGET_FILE_DIR:${PROJECT_NAME}>
-)
-
+# CommonUsing targets emit into CommonUsing/Lib[D]/msvc, so copy their runtime
+# DLLs beside the application after either a source or prebuilt build.
+if(WIN32)
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            ${CMAKE_CURRENT_SOURCE_DIR}/../${COMMON_USING_LINK_DIR}/XWidget.dll
+            ${CMAKE_CURRENT_SOURCE_DIR}/../${COMMON_USING_LINK_DIR}/XLog.dll
+            ${CMAKE_CURRENT_SOURCE_DIR}/../${COMMON_USING_LINK_DIR}/XLanguage.dll
+            ${CMAKE_CURRENT_SOURCE_DIR}/../${COMMON_USING_LINK_DIR}/AdsDocking.dll
+            ${CMAKE_CURRENT_SOURCE_DIR}/../${COMMON_USING_LINK_DIR}/XFlowGraphics.dll
+            ${CMAKE_CURRENT_SOURCE_DIR}/../${COMMON_USING_LINK_DIR}/XConcurrent.dll
+            $<TARGET_FILE_DIR:${PROJECT_NAME}>
+    )
+endif()

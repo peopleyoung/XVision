@@ -23,6 +23,14 @@
 
 class HardWareInfo
 {
+ private:
+     double m_recv_bytes__ = 0.0;
+     double m_send_bytes__ = 0.0;
+     double m_cpu_total__ = 0.0;
+     double m_cpu_use__ = 0.0;
+     double m_disk_read__ = 0.0;
+     double m_disk_write__ = 0.0;
+
  public:
      explicit HardWareInfo();
  public:

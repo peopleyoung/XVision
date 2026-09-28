@@ -8,9 +8,13 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core StateMachine UiPlugin)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core UiPlugin)
 if(${QT_VERSION_MAJOR} EQUAL 5)
-    find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Gui Widgets Network WinExtras REQUIRED StateMachine)
+    if(WIN32)
+        find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Gui Widgets Network WinExtras REQUIRED)
+    else()
+        find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Gui Widgets Network REQUIRED)
+    endif()
 else(${QT_VERSION_MAJOR} EQUAL 5)
     find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Gui Widgets Network REQUIRED StateMachine)
 endif(${QT_VERSION_MAJOR} EQUAL 5)
@@ -53,7 +57,6 @@ if(WIN32)
             Qt${QT_VERSION_MAJOR}::Network
             Qt${QT_VERSION_MAJOR}::WinExtras
             Qt${QT_VERSION_MAJOR}::WidgetsPrivate
-            Qt${QT_VERSION_MAJOR}::StateMachine
         )
     else(${QT_VERSION_MAJOR} EQUAL 5)
         target_link_libraries(XWidget PUBLIC dwmapi PRIVATE
@@ -72,7 +75,6 @@ else ()
         Qt${QT_VERSION_MAJOR}::Widgets
         Qt${QT_VERSION_MAJOR}::Network
         Qt${QT_VERSION_MAJOR}::WidgetsPrivate
-        Qt${QT_VERSION_MAJOR}::StateMachine
     )
 endif(WIN32)
 

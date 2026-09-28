@@ -336,8 +336,13 @@ void XvDisplayView::wheelEvent(QWheelEvent *event)
         }
         zoomByValue(tmp);
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
         qreal x=event->position().x()-this->width()/2;
         qreal y=event->position().y()-this->height()/2;
+#else
+        qreal x=event->posF().x()-this->width()/2;
+        qreal y=event->posF().y()-this->height()/2;
+#endif
         //缩放时 鼠标位置跟随
         if(deltaY > 0)
         {
@@ -373,7 +378,6 @@ void XvDisplayView::drawBackground(QPainter *painter, const QRectF &rect)
     Q_D(XvDisplayView);
     painter->drawTiledPixmap(rect,d->backgroundPixmap);
 }
-
 
 
 

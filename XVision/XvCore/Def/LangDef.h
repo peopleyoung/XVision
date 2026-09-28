@@ -8,6 +8,25 @@
 #define Core_XvFunc_RegSuccess         "Core_XvFunc_RegSuccess"               //算子注册成功
 
 #define Core_XvCoreMgr_CreateProjectError1       "Core_XvCoreMgr_CreateProjectError1" //创建项目失败,项目无法释放
+#define Core_XvCoreMgr_ProjectRunning            "Core_XvCoreMgr_ProjectRunning"
+#define Core_XvCoreMgr_ValidateProjectError      "Core_XvCoreMgr_ValidateProjectError"
+#define Core_XvCoreMgr_LoadProjectError          "Core_XvCoreMgr_LoadProjectError"
+#define Core_XvCoreMgr_LoadProjectSuccess        "Core_XvCoreMgr_LoadProjectSuccess"
+#define Core_XvCoreMgr_ProjectIsNull             "Core_XvCoreMgr_ProjectIsNull"
+#define Core_XvCoreMgr_ProjectPathEmpty          "Core_XvCoreMgr_ProjectPathEmpty"
+#define Core_XvCoreMgr_SaveProjectError          "Core_XvCoreMgr_SaveProjectError"
+#define Core_XvCoreMgr_SaveProjectSuccess        "Core_XvCoreMgr_SaveProjectSuccess"
+#define Core_XvCoreMgr_ValidateFlowError         "Core_XvCoreMgr_ValidateFlowError"
+#define Core_XvCoreMgr_ImportFlowError           "Core_XvCoreMgr_ImportFlowError"
+#define Core_XvCoreMgr_ImportFlowSuccess         "Core_XvCoreMgr_ImportFlowSuccess"
+#define Core_XvCoreMgr_ExportFlowError           "Core_XvCoreMgr_ExportFlowError"
+#define Core_XvCoreMgr_ExportFlowSuccess         "Core_XvCoreMgr_ExportFlowSuccess"
+#define Core_XvCoreMgr_CurrentProjectIsNull      "Core_XvCoreMgr_CurrentProjectIsNull"
+#define Core_XvCoreMgr_ProjectStateChanged       "Core_XvCoreMgr_ProjectStateChanged"
+#define Core_XvCoreMgr_AdoptFlowFailed           "Core_XvCoreMgr_AdoptFlowFailed"
+#define Core_XvCoreMgr_FlowUiRestoreFailed       "Core_XvCoreMgr_FlowUiRestoreFailed"
+#define Core_XvCoreMgr_FlowNotFound              "Core_XvCoreMgr_FlowNotFound"
+#define Core_XvCoreMgr_FlowPathEmpty              "Core_XvCoreMgr_FlowPathEmpty"
 
 //XvFuncType
 #define Core_XvFuncType_Null                                "Core_XvFuncType_Null"                      //无
@@ -30,6 +49,12 @@
 //XvProject
 #define Core_XvProject_RemoveXvFuncError1                        "Core_XvProject_RemoveXvFuncError1"                      //移除流程[%1]错误，流程无法释放
 #define Core_XvProject_RemoveXvFuncError2                        "Core_XvProject_RemoveXvFuncError2"                      //移除流程错误，流程Id[%1]不存在
+#define Core_XvProject_RunStatusRunning                          "Core_XvProject_RunStatusRunning"
+#define Core_XvProject_RunStatusOk                               "Core_XvProject_RunStatusOk"
+#define Core_XvProject_RunStatusFail                             "Core_XvProject_RunStatusFail"
+#define Core_XvProject_RunStatusError                            "Core_XvProject_RunStatusError"
+#define Core_XvProject_RunStatusStopped                          "Core_XvProject_RunStatusStopped"
+#define Core_XvProject_RunThreadError                            "Core_XvProject_RunThreadError"
 //XvFlow
 #define Core_XvFlow_CreateXvFuncError1                        "Core_XvFlow_CreateXvFuncError1"                      //创建算子错误，标识符[%1]无效
 #define Core_XvFlow_RemoveXvFuncError1                        "Core_XvFlow_RemoveXvFuncError1"                      //移除算子[%1]错误，算子无法释放

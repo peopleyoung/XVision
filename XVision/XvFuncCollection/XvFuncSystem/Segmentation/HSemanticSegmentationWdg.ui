@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>HSemanticSegmentationWdg</class>
+ <widget class="QWidget" name="HSemanticSegmentationWdg">
+  <property name="geometry">
+   <rect><x>0</x><y>0</y><width>560</width><height>390</height></rect>
+  </property>
+  <property name="windowTitle"><string>Semantic segmentation</string></property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="leftMargin"><number>12</number></property>
+   <property name="topMargin"><number>12</number></property>
+   <property name="rightMargin"><number>12</number></property>
+   <property name="bottomMargin"><number>12</number></property>
+   <item>
+    <layout class="QFormLayout" name="formLayout">
+     <property name="fieldGrowthPolicy"><enum>QFormLayout::AllNonFixedFieldsGrow</enum></property>
+     <item row="0" column="0"><widget class="QLabel" name="lbInputImage"><property name="text"><string>Input image</string></property></widget></item>
+     <item row="0" column="1"><widget class="QComboBox" name="cmbInputImage"/></item>
+     <item row="1" column="0"><widget class="QLabel" name="lbModel"><property name="text"><string>Model</string></property></widget></item>
+     <item row="1" column="1">
+      <layout class="QHBoxLayout" name="modelLayout">
+       <item><widget class="QLineEdit" name="letModel"><property name="readOnly"><bool>true</bool></property></widget></item>
+       <item><widget class="QToolButton" name="btnModel"><property name="text"><string>...</string></property></widget></item>
+      </layout>
+     </item>
+     <item row="2" column="0"><widget class="QLabel" name="lbPreprocess"><property name="text"><string>Preprocess</string></property></widget></item>
+     <item row="2" column="1">
+      <layout class="QHBoxLayout" name="preprocessLayout">
+       <item><widget class="QLineEdit" name="letPreprocess"><property name="readOnly"><bool>true</bool></property></widget></item>
+       <item><widget class="QToolButton" name="btnPreprocess"><property name="text"><string>...</string></property></widget></item>
+      </layout>
+     </item>
+     <item row="3" column="0"><widget class="QLabel" name="lbRuntime"><property name="text"><string>Runtime</string></property></widget></item>
+     <item row="3" column="1"><widget class="QComboBox" name="cmbRuntime"/></item>
+     <item row="4" column="0"><widget class="QLabel" name="lbOpacity"><property name="text"><string>Opacity</string></property></widget></item>
+     <item row="4" column="1"><widget class="QDoubleSpinBox" name="dsbOpacity"/></item>
+     <item row="5" column="0"><widget class="QLabel" name="lbAssetState"><property name="text"><string>Asset state</string></property></widget></item>
+     <item row="5" column="1"><widget class="QLabel" name="lbAssetStateVal"><property name="text"><string>-</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+     <item row="6" column="0"><widget class="QLabel" name="lbClasses"><property name="text"><string>Classes</string></property></widget></item>
+     <item row="6" column="1"><widget class="QPlainTextEdit" name="ptxClasses"><property name="readOnly"><bool>true</bool></property><property name="maximumBlockCount"><number>256</number></property></widget></item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

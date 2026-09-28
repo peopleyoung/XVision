@@ -1,0 +1,290 @@
+﻿param(
+    [ValidateSet("Debug", "Release")]
+    [string]$Configuration = "Release",
+    [string]$OpenCvRoot = $env:XVISION_OPENCV_ROOT,
+    [string]$OnnxRuntimeRoot = $env:XVISION_ONNXRUNTIME_ROOT,
+    [string]$OutputDirectory = "",
+    [switch]$SkipBuild,
+    [switch]$SkipTests,
+    [switch]$KeepStaging
+)
+
+$ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot 'WindowsBuild.Common.ps1')
+
+$SourceDir = Split-Path -Parent $PSScriptRoot
+$Preset = if ($Configuration -eq "Debug") {
+    "windows-msvc2019-debug"
+} else {
+    "windows-msvc2019-release"
+}
+$BinDirName = if ($Configuration -eq "Debug") { "BinD" } else { "Bin" }
+$QtDebugSuffix = if ($Configuration -eq "Debug") { "d" } else { "" }
+$BuildDir = Join-Path $SourceDir "build/$Preset"
+$BinDir = Join-Path $BuildDir $BinDirName
+$PackageName = "XVision-$Configuration-win64"
+
+if ([string]::IsNullOrWhiteSpace($OutputDirectory)) {
+    $OutputDirectory = Join-Path $SourceDir "dist"
+}
+$OutputDirectory = [System.IO.Path]::GetFullPath($OutputDirectory)
+$PackageDirectory = Join-Path $OutputDirectory $PackageName
+$ArchivePath = Join-Path $OutputDirectory "$PackageName.zip"
+
+function Assert-File {
+    param([string]$Path, [string]$Description)
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+        throw "Missing ${Description}: $Path"
+    }
+}
+
+function Invoke-Checked {
+    param(
+        [string]$Command,
+        [string[]]$Arguments,
+        [string]$FailureMessage
+    )
+    & $Command @Arguments
+    if ($LASTEXITCODE -ne 0) {
+        throw $FailureMessage
+    }
+}
+
+if ($env:OS -ne "Windows_NT") {
+    throw "This packaging entry requires Windows x64 with the MSVC toolchain."
+}
+if (-not (Get-Command cmake -ErrorAction SilentlyContinue)) {
+    throw "CMake 3.21 or newer is required."
+}
+$CMakeVersionText = (& cmake --version | Select-Object -First 1)
+if ($CMakeVersionText -notmatch "([0-9]+\.[0-9]+\.[0-9]+)") {
+    throw "Unable to determine the CMake version."
+}
+$CMakeVersion = [version]$Matches[1]
+if ($CMakeVersion -lt [version]"3.21.0") {
+    throw "CMake 3.21 or newer is required; found $CMakeVersion."
+}
+
+if ([string]::IsNullOrWhiteSpace($env:QTDIR)) {
+    throw "Set QTDIR to the Qt 6.4 MSVC2019 x64 CMake prefix."
+}
+Assert-File (Join-Path $env:QTDIR "lib/cmake/Qt6/Qt6Config.cmake") "Qt6 CMake configuration"
+$QMake = Join-Path $env:QTDIR "bin/qmake.exe"
+$Windeployqt = Join-Path $env:QTDIR "bin/windeployqt.exe"
+Assert-File $QMake "Qt qmake"
+Assert-File $Windeployqt "Qt windeployqt"
+$QtVersion = (& $QMake -query QT_VERSION).Trim()
+if ($LASTEXITCODE -ne 0 -or $QtVersion -notmatch "^6\.4\.") {
+    throw "Qt 6.4.x MSVC2019 x64 is required; found '$QtVersion'."
+}
+$env:PATH = (Join-Path $env:QTDIR "bin") + ";" + $env:PATH
+
+$RequiredHalconFiles = @(
+    "3rdparty/halcon/lib/halcon.dll",
+    "3rdparty/halcon/lib/halcon.lib",
+    "3rdparty/halcon/lib/halconcpp.dll",
+    "3rdparty/halcon/lib/halconcpp.lib"
+)
+foreach ($RelativePath in $RequiredHalconFiles) {
+    Assert-File (Join-Path $SourceDir $RelativePath) "Halcon dependency $RelativePath"
+}
+$HalconVersionHeader = Join-Path $SourceDir "3rdparty/halcon/include/HVersNum.h"
+Assert-File $HalconVersionHeader "Halcon version header"
+$HalconVersionText = Get-Content -Raw $HalconVersionHeader
+if ($HalconVersionText -notmatch "(?m)^\s*#\s*define\s+HLIB_MAJOR_NUM\s+19\s*$" -or
+    $HalconVersionText -notmatch "(?m)^\s*#\s*define\s+HLIB_MINOR_NUM\s+11\s*$") {
+    throw "The bundled Halcon headers are not version 19.11."
+}
+
+if (-not $SkipBuild) {
+    $FullFeatureArguments = @(Get-XVisionFullFeatureArguments $OpenCvRoot $OnnxRuntimeRoot)
+    $OpenCvRoot = (Resolve-Path -LiteralPath $OpenCvRoot).ProviderPath
+    $OnnxRuntimeRoot = (Resolve-Path -LiteralPath $OnnxRuntimeRoot).ProviderPath
+    $VerifyScript = Join-Path $PSScriptRoot "Verify-WindowsBuild.ps1"
+    $VerifyArguments = @(
+        "-Configuration", $Configuration, "-FullFeatures",
+        "-OpenCvRoot", $OpenCvRoot, "-OnnxRuntimeRoot", $OnnxRuntimeRoot
+    )
+    if ($SkipTests) {
+        Push-Location $SourceDir
+        try {
+            Invoke-Checked "cmake" (@("--preset", $Preset) + $FullFeatureArguments) "CMake configure failed."
+            Invoke-Checked "cmake" @("--build", "--preset", $Preset) "CMake build failed."
+        } finally {
+            Pop-Location
+        }
+    } else {
+        & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $VerifyScript @VerifyArguments
+        if ($LASTEXITCODE -ne 0) {
+            throw "Windows build or first-party tests failed."
+        }
+    }
+}
+
+# SkipBuild reuses binaries, but must never accept a reduced-feature cache.
+$BuildCache = Assert-XVisionFullFeatureCache $BuildDir
+if ($SkipBuild -and -not $SkipTests) {
+    $VerifyScript = Join-Path $PSScriptRoot "Verify-WindowsBuild.ps1"
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $VerifyScript `
+        -Configuration $Configuration -FullFeatures -SkipBuild
+    if ($LASTEXITCODE -ne 0) {
+        throw "First-party tests for the existing Windows build failed."
+    }
+}
+$SdkRuntimeNames = @(
+    [System.IO.Path]::GetFileName($BuildCache['XVISION_OPENCV_RUNTIME_DLL']),
+    [System.IO.Path]::GetFileName($BuildCache['XVISION_ONNXRUNTIME_RUNTIME_DLL'])
+)
+foreach ($RuntimeName in $SdkRuntimeNames) {
+    Assert-File (Join-Path $BinDir $RuntimeName) "enabled backend runtime $RuntimeName"
+}
+
+Assert-File (Join-Path $BinDir "XVision.exe") "XVision executable"
+Assert-File (Join-Path $BinDir "XvCamera.dll") "XvCamera runtime"
+Assert-File (Join-Path $BinDir "XvFuncCollection/XvFuncSystem.dll") "system operator plugin"
+Assert-File (Join-Path $BinDir "halcon.dll") "Halcon runtime"
+Assert-File (Join-Path $BinDir "halconcpp.dll") "Halcon C++ runtime"
+
+$RequiredCommonDlls = @(
+    "XWidget.dll",
+    "XLog.dll",
+    "XLanguage.dll",
+    "AdsDocking.dll",
+    "XFlowGraphics.dll",
+    "XConcurrent.dll"
+)
+foreach ($DllName in $RequiredCommonDlls) {
+    Assert-File (Join-Path $BinDir $DllName) "CommonUsing runtime $DllName"
+}
+
+if (Test-Path -LiteralPath $PackageDirectory) {
+    Remove-Item -LiteralPath $PackageDirectory -Recurse -Force
+}
+if (Test-Path -LiteralPath $ArchivePath) {
+    Remove-Item -LiteralPath $ArchivePath -Force
+}
+New-Item -ItemType Directory -Path $PackageDirectory -Force | Out-Null
+
+# Keep every application DLL in the root and preserve the plugin directory.
+# OpenCV and ONNX Runtime are required by this full-feature package entry.
+Get-ChildItem -LiteralPath $BinDir -File -Filter "*.dll" |
+    Copy-Item -Destination $PackageDirectory -Force
+$PluginSource = Join-Path $BinDir "XvFuncCollection"
+$PluginDestination = Join-Path $PackageDirectory "XvFuncCollection"
+New-Item -ItemType Directory -Path $PluginDestination -Force | Out-Null
+Get-ChildItem -LiteralPath $PluginSource -File -Filter "*.dll" |
+    Copy-Item -Destination $PluginDestination -Force
+Copy-Item -LiteralPath (Join-Path $BinDir "XVision.exe") -Destination $PackageDirectory -Force
+
+$WindeployqtArguments = @(Get-XVisionQtDeploymentArguments $Configuration $PackageDirectory)
+Invoke-Checked $Windeployqt $WindeployqtArguments "Qt runtime deployment failed."
+
+$PackageReadmePath = Join-Path $PackageDirectory "PACKAGE-README.txt"
+@(
+    "XVision Windows x64",
+    "",
+    "Start the application with XVision.exe.",
+    "Keep XvFuncCollection beside XVision.exe; it contains the operator plugin.",
+    "This package requires a valid Halcon 19.11 runtime license on the target machine.",
+    "Camera drivers and real serial/Modbus devices are deployment-machine dependencies."
+) | Set-Content -LiteralPath $PackageReadmePath -Encoding UTF8
+
+# windeployqt handles Qt dependencies; these checks cover the project-specific
+# deployment contract and the plugin lookup path used by XvPluginManager.
+$RequiredPackageFiles = @(
+    "XVision.exe",
+    "XvCore.dll",
+    "XvData.dll",
+    "XvDisplay.dll",
+    "XvTokenMsg.dll",
+    "XvUtils.dll",
+    "XvCamera.dll",
+    "XvFuncCollection/XvFuncSystem.dll",
+    "halcon.dll",
+    "halconcpp.dll"
+) + $RequiredCommonDlls + $SdkRuntimeNames + @(Get-XVisionQtRuntimeFiles $Configuration)
+foreach ($RelativePath in $RequiredPackageFiles) {
+    Assert-File (Join-Path $PackageDirectory $RelativePath) "packaged runtime file $RelativePath"
+}
+
+if (-not $SkipTests) {
+    # Run from the staging root with no build/Qt SDK directories on PATH.
+    # This catches DLLs that existed during CTest but were omitted from the ZIP.
+    $PluginTestSource = Join-Path $BuildDir "tests/$Configuration/XvSystemPluginTests.exe"
+    $QtTestSource = Join-Path $env:QTDIR "bin/Qt6Test${QtDebugSuffix}.dll"
+    Assert-File $PluginTestSource "plugin test executable"
+    Assert-File $QtTestSource "Qt Test runtime"
+    $PluginTest = Join-Path $PackageDirectory 'XvSystemPluginTests.exe'
+    $QtTestRuntime = Join-Path $PackageDirectory "Qt6Test${QtDebugSuffix}.dll"
+    $HadQtTestRuntime = Test-Path -LiteralPath $QtTestRuntime -PathType Leaf
+    $SavedPath = $env:PATH
+    $SavedPluginPath = $env:QT_PLUGIN_PATH
+    try {
+        Copy-Item -LiteralPath $PluginTestSource -Destination $PluginTest
+        if (-not $HadQtTestRuntime) {
+            Copy-Item -LiteralPath $QtTestSource -Destination $QtTestRuntime
+        }
+        $env:PATH = $PackageDirectory + ';' + (Join-Path $env:SystemRoot 'System32') + ';' + $env:SystemRoot
+        $env:QT_PLUGIN_PATH = $PackageDirectory
+        Push-Location $PackageDirectory
+        try {
+            $MatrixPath = Join-Path (Split-Path -Parent $SourceDir) 'doc/开发工作/VisionMaster算子兼容矩阵.csv'
+            Invoke-Checked $PluginTest @((Join-Path $PluginDestination 'XvFuncSystem.dll'), $MatrixPath) `
+                "Packaged plugin failed to load or validate its 42 roles / 126 presets."
+        } finally {
+            Pop-Location
+        }
+    } finally {
+        $env:PATH = $SavedPath
+        $env:QT_PLUGIN_PATH = $SavedPluginPath
+        if (Test-Path -LiteralPath $PluginTest) {
+            Remove-Item -LiteralPath $PluginTest -Force
+        }
+        if (-not $HadQtTestRuntime -and (Test-Path -LiteralPath $QtTestRuntime)) {
+            Remove-Item -LiteralPath $QtTestRuntime -Force
+        }
+    }
+}
+
+$GitCommit = "unknown"
+if (Get-Command git -ErrorAction SilentlyContinue) {
+    $GitCommit = (& git -C $SourceDir rev-parse HEAD 2>$null).Trim()
+    if ([string]::IsNullOrWhiteSpace($GitCommit)) {
+        $GitCommit = "unknown"
+    }
+}
+$ManifestPath = Join-Path $PackageDirectory "PACKAGE-MANIFEST.txt"
+$ManifestLines = @(
+    "Package: $PackageName",
+    "Configuration: $Configuration",
+    "Architecture: x64",
+    "Qt: $QtVersion",
+    "CMake: $CMakeVersion",
+    "Halcon headers: 19.11",
+    "OpenCV: enabled ($($SdkRuntimeNames[0]))",
+    "ONNX Runtime: enabled ($($SdkRuntimeNames[1]))",
+    "First-party tests: $(if ($SkipTests) { 'SKIPPED - package not runtime-verified' } else { 'passed' })",
+    "Packaged plugin test: $(if ($SkipTests) { 'SKIPPED' } else { 'passed (42 roles / 126 presets)' })",
+    "Git commit: $GitCommit",
+    "",
+    "Files and SHA256:"
+)
+foreach ($File in Get-ChildItem -LiteralPath $PackageDirectory -File -Recurse |
+    Sort-Object FullName) {
+    $Hash = (Get-FileHash -LiteralPath $File.FullName -Algorithm SHA256).Hash
+    $RelativePath = $File.FullName.Substring($PackageDirectory.Length + 1)
+    $ManifestLines += "$Hash  $RelativePath"
+}
+Set-Content -LiteralPath $ManifestPath -Value $ManifestLines -Encoding UTF8
+
+Compress-Archive -Path (Join-Path $PackageDirectory "*") -DestinationPath $ArchivePath -CompressionLevel Optimal
+
+Write-Host "Windows package created: $ArchivePath"
+Write-Host "Staged directory: $PackageDirectory"
+Write-Host "Qt: $QtVersion; CMake: $CMakeVersion; Git: $GitCommit"
+Write-Host "A valid Halcon 19.11 runtime license is required on the target machine."
+
+if (-not $KeepStaging) {
+    Remove-Item -LiteralPath $PackageDirectory -Recurse -Force
+    Write-Host "Staged directory removed; ZIP archive retained."
+}

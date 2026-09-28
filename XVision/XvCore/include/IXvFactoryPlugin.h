@@ -2,6 +2,7 @@
 #define IXVFACTORYBASEPLUGIN_H
 
 #include "XvCoreGlobal.h"
+#include "XvCoreDef.h"
 #include <QObject>
 #include <QList>
 
@@ -24,6 +25,8 @@ public:
     virtual bool uninit(){return true;}
     ///获取插件算子
     virtual QList<QMetaObject> getPlgXvFunc()=0;
+    ///获取插件算子创建预设。默认空实现保持现有插件源码兼容。
+    virtual QList<XvFuncPreset> getPlgXvFuncPresets() { return {}; }
     #define ADD_XVFUNC(lst,cls) lst.append(cls::staticMetaObject)
 
 };

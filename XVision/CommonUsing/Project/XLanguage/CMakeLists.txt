@@ -12,7 +12,7 @@ find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Widgets Xml)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Widgets Xml)
 
 file(GLOB INCLUDE include/*)
-file(GLOB SRC src/*.*)
+file(GLOB SRC Src/*.*)
 
 
 add_library(XLanguage SHARED
@@ -22,7 +22,7 @@ add_library(XLanguage SHARED
 
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/Src
 )
 target_link_libraries(XLanguage PRIVATE
     Qt${QT_VERSION_MAJOR}::Core

@@ -33,6 +33,9 @@ protected slots:
 
     ///更新算子结果
     void onUpdateXvFuncResult();
+public slots:
+    ///清除当前算子和结果表格
+    void clearXvFunc();
 private:
     Ui::FrmXvFuncResult *ui;
     static FrmXvFuncResult* s_Instance;

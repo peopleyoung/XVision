@@ -46,9 +46,10 @@ bool XvTokenMsgManager::registerTokenMsgAble(IXvTokenMsgAble *IXvTokenMsgAble)
 void XvTokenMsgManager::unRegisterTokenMsgAble(IXvTokenMsgAble *IXvTokenMsgAble)
 {
     if(!IXvTokenMsgAble) return;
-    if(m_mapTokenMsgAble.contains(IXvTokenMsgAble->tokenMsgId()))
+    const QString id=IXvTokenMsgAble->tokenMsgId();
+    if(m_mapTokenMsgAble.value(id,nullptr)==IXvTokenMsgAble)
     {
-       m_mapTokenMsgAble.remove(IXvTokenMsgAble->tokenMsgId());
+       m_mapTokenMsgAble.remove(id);
     }
 }
 
@@ -107,4 +108,3 @@ void XvTokenMsgManager::broadcastTokenMsg(const TokenMsg &tokenMsg, QList<QVaria
     }
 
 }
-

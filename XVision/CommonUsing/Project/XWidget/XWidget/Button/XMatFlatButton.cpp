@@ -6,7 +6,7 @@
 #include <QBitmap>
 #include <QPainterPath>
 #include <QIcon>
-#include "XMatRippleoverlay.h"
+#include "XMatRippleOverlay.h"
 #include "XMatRipple.h"
 
 #include "XMatFlatButton_internal.h"

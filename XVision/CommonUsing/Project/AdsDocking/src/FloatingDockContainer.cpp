@@ -53,7 +53,7 @@
 #endif
 #endif
 #ifdef Q_OS_LINUX
-#include "linux/FloatingWidgetTitleBar.h"
+#include "FloatingWidgetTitleBar.h"
 #include <xcb/xcb.h>
 #endif
 

@@ -5,6 +5,7 @@
 #include <QSettings>
 #include <QApplication>
 #include <QDomDocument>
+#include <QTextStream>
 
 ///简体中文
 #define CN_S    "cn_s"
@@ -55,7 +56,11 @@ public:
         QFile file(m_strLoadPath);
         file.open(QFile::WriteOnly|QFile::Truncate | QFile::Text);
         QTextStream stream( &file );
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
         stream.setEncoding(QStringConverter::Utf8);
+#else
+        stream.setCodec("UTF-8");
+#endif
         m_dom.save(stream,4,QDomNode::EncodingFromTextStream);
         file.close();
         qSetGlobalQHashSeed(-1);
@@ -337,4 +342,3 @@ bool XLanguage::switchLang(const QString &type)
     this->init();
     return true;
 }
-

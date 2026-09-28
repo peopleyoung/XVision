@@ -7,6 +7,7 @@
 using namespace XvCore;
 
 class QLabel;
+class QComboBox;
 class QLineEdit;
 class QPlainTextEdit;
 class BaseSystemFuncWdg: public XFramelessWidget

@@ -29,6 +29,7 @@ public:
     ~ElapsedTimer();
 
 public:
+    using XvFunc::addSonFunc;
     bool addSonFunc(XvFunc *sonFunc) override;
     bool addFatherFunc(XvFunc *fatherFunc) override;
     bool delSonFunc(XvFunc *sonFunc) override;

@@ -172,7 +172,10 @@ void UiXvDisplayManager::initToolBar()
     m_displayComboBox=new XMatComboBox(m_displayToolBar);
     m_displayComboBox->setFixedWidth(200);
     m_displayToolBar->addWidget(m_displayComboBox);
-    connect(m_displayComboBox,&QComboBox::currentIndexChanged,this,&UiXvDisplayManager::onUpdateXvFuncDisplay);
+    connect(m_displayComboBox,
+            QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this,
+            &UiXvDisplayManager::onUpdateXvFuncDisplay);
 //*[添加Spacer]*
     auto wdgSpacer=new QWidget(m_displayToolBar);
     wdgSpacer->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Minimum);
@@ -272,17 +275,25 @@ void UiXvDisplayManager::onBindXvFunc(XvFunc *func)
     {
         return;
     }
-    if(m_curBindFunc)
-    {
-        disconnect(m_curBindFunc,&XvFunc::sgFuncRunEnd,this,&UiXvDisplayManager::onUpdateXvFuncDisplay);
-    }
+    clearXvFuncBinding();
     m_curBindFunc=func;
     connect(m_curBindFunc,&XvFunc::sgFuncRunEnd,this,&UiXvDisplayManager::onUpdateXvFuncDisplay);
-    connect(m_curBindFunc,&XvFunc::destroyed,this,[=]()
+    connect(m_curBindFunc,&XvFunc::destroyed,this,[this,func]()
     {
+        if(m_curBindFunc!=func) return;
         m_curBindFunc=nullptr;
         onUpdateXvFunc();
     });
+    onUpdateXvFunc();
+}
+
+void UiXvDisplayManager::clearXvFuncBinding()
+{
+    if(m_curBindFunc)
+    {
+        disconnect(m_curBindFunc,nullptr,this,nullptr);
+        m_curBindFunc=nullptr;
+    }
     onUpdateXvFunc();
 }
 
@@ -322,15 +333,71 @@ void UiXvDisplayManager::onUpdateXvFuncDisplay()
         return;
     }
     auto objName=m_displayComboBox->itemData(nIdx).toString();
+    auto scene=m_displayView->getScene();
+    scene->clearRoi();
+    scene->clearDisplayText();
     auto imgObj=m_curBindFunc->getResultsByName(objName);
     if(imgObj)
     {
         auto img=imgObj->toObject<XImage>();
         if(img)
         {
-            m_displayView->getScene()->displayImage(img->value());
+            scene->displayImage(img->value());
         }
     }
 
-}
+    if(m_curBindFunc->funcRole()=="HModelMatch"
+            || m_curBindFunc->funcRole()=="OTemplateMatch")
+    {
+        auto templateRoi=dynamic_cast<XRotateRectRoi*>(
+                    m_curBindFunc->getResultsByName("templateRoi"));
+        auto matches=dynamic_cast<XObjectList*>(
+                    m_curBindFunc->getResultsByName("matches"));
+        if(!templateRoi || !matches
+                || matches->valueType()!=XMatchResult::type()) return;
+        for(XObject *object:matches->values())
+        {
+            auto match=dynamic_cast<XMatchResult*>(object);
+            if(!match) continue;
+            auto roi=new XvDisplayRotateRectRoi(QPointF(match->x(),match->y()),
+                                                templateRoi->length1(),
+                                                templateRoi->length2(),
+                                                templateRoi->angle()+match->angle());
+            roi->setMoveAble(false);
+            roi->setUpdateAble(false);
+            roi->setRoiColor(QColor(Qt::green));
+            scene->addRoi(roi);
+            scene->addDisplayText(QString::number(match->score(),'f',3),
+                                  QPointF(match->x()+4.0,match->y()+4.0),1.0,
+                                  QColor(Qt::green));
+        }
+        return;
+    }
 
+    if(m_curBindFunc->funcRole()!="HObjectDetection"
+            && m_curBindFunc->funcRole()!="NObjectDetection") return;
+    auto detections=dynamic_cast<XObjectList*>(
+                m_curBindFunc->getResultsByName("detections"));
+    if(!detections || detections->valueType()!=XDetectionResult::type()) return;
+    for(XObject *object:detections->values())
+    {
+        auto detection=dynamic_cast<XDetectionResult*>(object);
+        if(!detection) continue;
+        const quint32 seed=quint32(detection->classId())*2654435761u;
+        const QColor color=QColor::fromHsv(int(seed%360u),190,220);
+        auto roi=new XvDisplayRectRoi(
+                    QPointF(detection->x()+detection->width()/2.0,
+                            detection->y()+detection->height()/2.0),
+                    detection->width(),detection->height());
+        roi->setMoveAble(false);
+        roi->setUpdateAble(false);
+        roi->setFlagByDrawing(false);
+        roi->setRoiColor(color);
+        scene->addRoi(roi);
+        scene->addDisplayText(
+                    QString("%1 %2").arg(detection->className())
+                    .arg(static_cast<double>(detection->score()),0,'f',3),
+                    QPointF(detection->x()+4.0,detection->y()+4.0),1.0,
+                    color);
+    }
+}

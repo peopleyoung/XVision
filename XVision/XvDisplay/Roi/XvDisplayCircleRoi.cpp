@@ -1,5 +1,6 @@
 ﻿#include "XvDisplayCircleRoi.h"
 #include <QPen>
+#include <cmath>
 #include <QPainter>
 
 XvDisplayCircleRoi::XvDisplayCircleRoi(QPointF centerPos, double radius, QObject *parent)
@@ -31,6 +32,6 @@ bool XvDisplayCircleRoi::updateRoi(XvDisplayControlItem *controlItem)
         return false;
     }
     QPointF tmp=controlItem->getPos()-m_ptCenterPos;
-    m_rRadius=sqrt(tmp.x()*tmp.x()+tmp.y()*tmp.y());
+    m_rRadius=std::sqrt(tmp.x()*tmp.x()+tmp.y()*tmp.y());
     return true;
 }

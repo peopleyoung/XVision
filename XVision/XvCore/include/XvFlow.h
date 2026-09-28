@@ -3,16 +3,21 @@
 
 #include "XvCoreGlobal.h"
 #include <QObject>
+#include <QSet>
 #include "IXvTokenMsgAble.h"
+#include "XmlSerializable.h"
 #include "XvCoreDef.h"
+
+#include <atomic>
 
 namespace XvCore
 {
 
 class XvFunc;
+class XvCoreManager;
 class XvProject;
 class XvFlowPrivate;
-class XVCORE_EXPORT XvFlow : public QObject,public IXvTokenMsgAble
+class XVCORE_EXPORT XvFlow : public QObject,public IXvTokenMsgAble,public XmlSerializable
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(XvFlow)
@@ -21,6 +26,7 @@ class XVCORE_EXPORT XvFlow : public QObject,public IXvTokenMsgAble
 
     friend class XvFunc;
     friend class XvProject;
+    friend class XvCoreManager;
 public:
     explicit XvFlow(XvProject *project,const QString &name="Flow",QObject *parent = nullptr);
     ~XvFlow();
@@ -79,6 +85,10 @@ public slots:
 //*[增删]*
     ///通过标识符创建算子
     XvFunc* createXvFunc(const QString &role);
+protected:
+    ///通过标识符和指定ID创建算子(项目恢复使用)
+    XvFunc* createXvFunc(const QString &role,const QString &restoredId);
+public slots:
     ///通过ID移除算子
     bool removeXvFunc(const QString &id);
 
@@ -105,7 +115,9 @@ public:
     /// ms:等待事件 ms=0:无限等待
     RetXv wait(unsigned long ms=0);
     ///是否正在运行
-    bool isRunning() const { return _running;}
+    bool isRunning() const { return _running.load();}
+    ///流程及所属项目均未运行时允许结构编辑
+    bool isEditAllowed() const;
     ///获取运行信息
     XvFlowRunInfo getXvFuncRunInfo() const
     {
@@ -118,8 +130,16 @@ public:
         return _runInfo.runStatus;
     }
 protected:
+    ///项目顺序调度使用的同步单次运行入口
+    RetXv runOnceSynchronously();
     ///检查流程合法性(运行前调用)
     bool checkFlowLegal();
+    ///执行一次已验证的动态DAG
+    bool runGraphOnce(XvFlowConfig *config);
+    ///执行一个入口已选择的DAG子上下文
+    bool runGraphContext(const QSet<XvFunc*> &nodes,
+                         const QSet<XvFunc*> &entryNodes,
+                         XvFlowConfig *config);
     ///流程运行线程
     void _threadRun(bool bLoop=false);
 signals:
@@ -135,7 +155,7 @@ protected:
     ///流程运行信息
     XvFlowRunInfo _runInfo;
     ///流程是否在运行
-    bool    _running;
+    std::atomic_bool _running;
 
  /**********************流程操作**********************/
  //流程操作:运行释放
@@ -153,6 +173,11 @@ public:
 public:
     ///流程配置
     XvFlowConfig* getFlowConfig();
+
+/**********************XML序列化**********************/
+public:
+    QDomElement toXmlElement(QDomDocument &doc) override;
+    bool fromXmlElement(QDomElement &xmlEle) override;
 
 };
 

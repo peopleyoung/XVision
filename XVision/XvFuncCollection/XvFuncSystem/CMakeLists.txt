@@ -15,14 +15,19 @@ include (../../3rdparty/Common3rdparty.cmake)
 
 
 #寻找QT库
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Widgets)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Network SerialBus SerialPort Sql Widgets Xml)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Network SerialBus SerialPort Sql Widgets Xml)
 
 #[[**************添加链接库**************]]
 #添加QT库
 list(APPEND _LIBS
     Qt${QT_VERSION_MAJOR}::Core
+    Qt${QT_VERSION_MAJOR}::Network
+    Qt${QT_VERSION_MAJOR}::SerialBus
+    Qt${QT_VERSION_MAJOR}::SerialPort
+    Qt${QT_VERSION_MAJOR}::Sql
     Qt${QT_VERSION_MAJOR}::Widgets
+    Qt${QT_VERSION_MAJOR}::Xml
 )
 #添加工程库
 list(APPEND _LIBS
@@ -31,6 +36,7 @@ list(APPEND _LIBS
     XvDisplay #图像交互库
     XvTokenMsg #Token消息库
     XvUtils #工具库
+    XvCamera #通用相机接口
 )
 
 #添加公共库
@@ -44,6 +50,12 @@ list(APPEND _LIBS
 list(APPEND _LIBS
    ${HALCON_LIB}
 )
+if(XVISION_ENABLE_OPENCV)
+    list(APPEND _LIBS XVision::OpenCV)
+endif()
+if(XVISION_ENABLE_ONNXRUNTIME)
+    list(APPEND _LIBS XVision::ONNXRuntime)
+endif()
 #[[**************添加包含目录**************]]
 
 #添加工程包含目录
@@ -53,6 +65,7 @@ list(APPEND _INCLUDE_DIR
     ../../XvUtils/include
     ../../XvData/include
     ../../XvDisplay/include
+    ../../XvCamera/include
 )
 #添加第三方库
 list(APPEND _INCLUDE_DIR
@@ -82,10 +95,20 @@ file(GLOB SRC src/*.*)
 file(GLOB Model Model/*.*)
 file(GLOB Def Def/*.*)
 file(GLOB Helper Helper/*.*)
+file(GLOB Interop Interop/*.*)
 
 file(GLOB ImageAcquisition ImageAcquisition/*.*)
 file(GLOB DataProcessing DataProcessing/*.*)
 file(GLOB Location Location/*.*)
+file(GLOB Detection Detection/*.*)
+file(GLOB Segmentation Segmentation/*.*)
+file(GLOB ImageProcessing ImageProcessing/*.*)
+file(GLOB MorphologyDetection MorphologyDetection/*.*)
+file(GLOB Onnx Onnx/*.*)
+file(GLOB TemplateRectification TemplateRectification/*.*)
+file(GLOB Measurement Measurement/*.*)
+file(GLOB Record Record/*.*)
+file(GLOB Communication Communication/*.*)
 file(GLOB User User/*.*)
 file(GLOB Logic Logic/*.*)
 file(GLOB Other Other/*.*)
@@ -99,10 +122,20 @@ set(PROJECT_SOURCES
     ${Def}
     ${Model}
     ${Helper}
+    ${Interop}
 
     ${DataProcessing}
     ${ImageAcquisition}
     ${Location}
+    ${Detection}
+    ${Segmentation}
+    ${ImageProcessing}
+    ${MorphologyDetection}
+    ${Onnx}
+    ${TemplateRectification}
+    ${Measurement}
+    ${Record}
+    ${Communication}
     ${User}
     ${Logic}
     ${Other}
@@ -121,10 +154,20 @@ list(APPEND _INCLUDE_DIR
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/Model
     ${CMAKE_CURRENT_SOURCE_DIR}/Helper
+    ${CMAKE_CURRENT_SOURCE_DIR}/Interop
     ${CMAKE_CURRENT_SOURCE_DIR}/Def
 
     ${CMAKE_CURRENT_SOURCE_DIR}/ImageAcquisition
     ${CMAKE_CURRENT_SOURCE_DIR}/Location
+    ${CMAKE_CURRENT_SOURCE_DIR}/Detection
+    ${CMAKE_CURRENT_SOURCE_DIR}/Segmentation
+    ${CMAKE_CURRENT_SOURCE_DIR}/ImageProcessing
+    ${CMAKE_CURRENT_SOURCE_DIR}/MorphologyDetection
+    ${CMAKE_CURRENT_SOURCE_DIR}/Onnx
+    ${CMAKE_CURRENT_SOURCE_DIR}/TemplateRectification
+    ${CMAKE_CURRENT_SOURCE_DIR}/Measurement
+    ${CMAKE_CURRENT_SOURCE_DIR}/Record
+    ${CMAKE_CURRENT_SOURCE_DIR}/Communication
     ${CMAKE_CURRENT_SOURCE_DIR}/DataProcessing
     ${CMAKE_CURRENT_SOURCE_DIR}/User
     ${CMAKE_CURRENT_SOURCE_DIR}/Logic
@@ -141,15 +184,61 @@ target_link_libraries(${PROJECT_NAME} PRIVATE ${_LIBS})
 
 
 target_compile_definitions(XvFuncSystem PRIVATE XVFUNCSYSTEM_LIBRARY)
+if(XVISION_ENABLE_OPENCV)
+    target_compile_definitions(XvFuncSystem PRIVATE XVISION_ENABLE_OPENCV=1)
+endif()
+if(XVISION_ENABLE_ONNXRUNTIME)
+    target_compile_definitions(XvFuncSystem PRIVATE XVISION_ENABLE_ONNXRUNTIME=1)
+endif()
 
 add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 
-#此处需要将引用的halcon库复制到exe目录中，否则插件系统无法加载本dll
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${CMAKE_CURRENT_SOURCE_DIR}/../../${HALCON_LINK_DIR}/halcon.dll
-        ${CMAKE_CURRENT_SOURCE_DIR}/../../${HALCON_LINK_DIR}/halcon.lib
-        ${CMAKE_CURRENT_SOURCE_DIR}/../../${HALCON_LINK_DIR}/halconcpp.dll
-        ${CMAKE_CURRENT_SOURCE_DIR}/../../${HALCON_LINK_DIR}/halconcpp.lib
-        $<TARGET_FILE_DIR:${PROJECT_NAME}>/..
-)
+# Halcon is loaded by the operator plugin, so its Windows runtimes must be in
+# the application's binary directory. Import libraries remain link-time only.
+if(WIN32)
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            ${CMAKE_CURRENT_SOURCE_DIR}/../../${HALCON_LINK_DIR}/halcon.dll
+            ${CMAKE_CURRENT_SOURCE_DIR}/../../${HALCON_LINK_DIR}/halconcpp.dll
+            $<TARGET_FILE_DIR:${PROJECT_NAME}>/..
+    )
+    if(XVISION_ENABLE_OPENCV)
+        foreach(OPENCV_DLL IN LISTS XVISION_OPENCV_RUNTIME_DLLS)
+            add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    "${OPENCV_DLL}"
+                    $<TARGET_FILE_DIR:${PROJECT_NAME}>/..
+            )
+        endforeach()
+    endif()
+    if(XVISION_ENABLE_ONNXRUNTIME)
+        foreach(ONNXRUNTIME_DLL IN LISTS XVISION_ONNXRUNTIME_RUNTIME_DLLS)
+            add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    "${ONNXRUNTIME_DLL}"
+                    $<TARGET_FILE_DIR:${PROJECT_NAME}>/..
+            )
+        endforeach()
+    endif()
+    foreach(_qt_runtime_module Network SerialPort SerialBus)
+        if(TARGET Qt${QT_VERSION_MAJOR}::${_qt_runtime_module})
+            add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    $<TARGET_FILE:Qt${QT_VERSION_MAJOR}::${_qt_runtime_module}>
+                    $<TARGET_FILE_DIR:${PROJECT_NAME}>/..
+            )
+        endif()
+    endforeach()
+    if(TARGET Qt${QT_VERSION_MAJOR}::QSQLiteDriverPlugin)
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory
+                $<TARGET_FILE_DIR:${PROJECT_NAME}>/../sqldrivers
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                $<TARGET_FILE:Qt${QT_VERSION_MAJOR}::QSQLiteDriverPlugin>
+                $<TARGET_FILE_DIR:${PROJECT_NAME}>/../sqldrivers
+        )
+    else()
+        message(WARNING
+            "Qt QSQLiteDriverPlugin target is unavailable; deploy qsqlite manually")
+    endif()
+endif()

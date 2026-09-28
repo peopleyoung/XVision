@@ -1,7 +1,9 @@
 ﻿#include "FrmXvFlowConfig.h"
 #include "ui_FrmXvFlowConfig.h"
 #include "XvFlow.h"
+#include "XvProject.h"
 #include "LangDef.h"
+#include <QSignalBlocker>
 
 FrmXvFlowConfig::FrmXvFlowConfig(XvFlow *flow,QWidget *parent) :
     XFramelessWidget(parent),m_flow(flow),
@@ -28,13 +30,41 @@ void FrmXvFlowConfig::initFrm()
     ui->spbFlowLoopInterval->setMaximum(99999);
     ui->spbFlowLoopInterval->setValue(config->loopInterval);
     ui->ckbFuncErrorInterruptRun->setChecked(config->funcErrorInterruptRun);
-    connect(ui->ckbFuncErrorInterruptRun,&XMatCheckBox::toggled,this,[=]()
+    connect(m_flow,&XvFlow::destroyed,this,&FrmXvFlowConfig::close);
+    if(m_flow->parProject())
     {
+        connect(m_flow->parProject(),&XvProject::sgProjectRunStart,this,[this]()
+        {
+            if(ui) centralWidget()->setEnabled(false);
+        });
+        connect(m_flow->parProject(),&XvProject::sgProjectRunEnd,this,[this]()
+        {
+            if(ui && m_flow) centralWidget()->setEnabled(m_flow->isEditAllowed());
+        });
+    }
+    centralWidget()->setEnabled(m_flow->isEditAllowed());
+    connect(ui->ckbFuncErrorInterruptRun,&XMatCheckBox::toggled,this,[this,config]()
+    {
+        if(!m_flow || !m_flow->isEditAllowed())
+        {
+            QSignalBlocker blocker(ui->ckbFuncErrorInterruptRun);
+            ui->ckbFuncErrorInterruptRun->setChecked(config->funcErrorInterruptRun);
+            return;
+        }
         auto bRet=ui->ckbFuncErrorInterruptRun->isChecked();
         config->funcErrorInterruptRun=bRet;
     });
-    connect(ui->spbFlowLoopInterval,&QSpinBox::valueChanged,this,[=](int)
+    connect(ui->spbFlowLoopInterval,
+            QOverload<int>::of(&QSpinBox::valueChanged),
+            this,
+            [this,config](int)
     {
+        if(!m_flow || !m_flow->isEditAllowed())
+        {
+            QSignalBlocker blocker(ui->spbFlowLoopInterval);
+            ui->spbFlowLoopInterval->setValue(static_cast<int>(config->loopInterval));
+            return;
+        }
         auto nVal=ui->spbFlowLoopInterval->value();
         config->loopInterval=nVal;
     });

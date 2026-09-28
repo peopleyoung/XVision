@@ -79,6 +79,12 @@ public slots://公共调用槽
     /// funcId:算子ID
     /// flowId：流程ID
     bool removeXItemByFuncId(const QString &funcId,const QString &flowId);
+    ///清理指定项目的所有流程界面
+    void clearProject(XvCore::XvProject *project);
+    ///从已加载流程重建场景、图元和连线
+    bool restoreFlowScene(XvCore::XvFlow *flow);
+    ///项目运行期间统一锁定/解锁全部流程场景
+    void setProjectRunning(bool running);
 
 protected slots://Ui界面内部调用槽
 
@@ -134,6 +140,8 @@ protected slots://Ui界面内部调用槽
     bool onFlowSceneXItemRemoveStart(XFlowGraphicsItem* xItem);
     ///Flow-场景流程XItem连接判断
     bool onFlowSceneXItemConnectJudge(XFlowGraphicsItem* fatherXItem,const QString &startKey,XFlowGraphicsItem* sonXItem,const QString &sonKey);
+    ///Flow-场景流程XItem连接完成
+    void onFlowSceneConnectSuccess(XFlowGraphicsConnectLink* xLink);
     ////Flow-场景流程XItem连接删除事件(XItem删除则会联动XvFunc自动删除连接)
     void onFlowSceneConnectRemove(XFlowGraphicsConnectLink* xLink);
 //*[算子操作]*
@@ -161,6 +169,7 @@ private:
     XMatSlider* m_flowViewZoomSlider=nullptr;//流程图缩放条
     ///流程号:流程图
     QMap<QString,XFlowGraphicsScene*> m_mapFlowScene;
+    bool m_projectRunning=false;
 
 };
 

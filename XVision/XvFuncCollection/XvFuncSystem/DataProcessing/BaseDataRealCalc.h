@@ -40,7 +40,8 @@ public:
 class XVFUNCSYSTEM_EXPORT BaseDataRealCalc:public XvFunc
 {
     Q_OBJECT
-    friend class BaseDataRealCalcWdg;
+    Q_PROPERTY(BaseDataRealCalc::ERealCalaType realCalaType WRITE setRealCalaType READ realCalaType)
+    friend class ::BaseDataRealCalcWdg;
 public:
     Q_INVOKABLE explicit BaseDataRealCalc(QObject *parent = nullptr);
     ~BaseDataRealCalc();
@@ -55,6 +56,10 @@ public:
     Q_ENUMS(ERealCalaType);
     ERealCalaType realCalaType() const {return m_realCalaType;}
     void setRealCalaType(ERealCalaType type){ m_realCalaType=type;}
+    QStringList persistentPropertyNames() const override
+    {
+        return {"realCalaType"};
+    }
 public slots:
     void onShowFunc() override;
 protected:

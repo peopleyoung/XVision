@@ -41,7 +41,7 @@ class XVFUNCSYSTEM_EXPORT BaseDataBoolCalc:public XvFunc
 {
     Q_OBJECT
     Q_PROPERTY(BaseDataBoolCalc::EBoolCalaType boolCalaType WRITE setBoolCalaType READ boolCalaType)
-    friend class BaseDataBoolCalcWdg;
+    friend class ::BaseDataBoolCalcWdg;
 public:
     Q_INVOKABLE explicit BaseDataBoolCalc(QObject *parent = nullptr);
     ~BaseDataBoolCalc();
@@ -60,6 +60,10 @@ public:
     Q_ENUMS(EBoolCalaType);
     EBoolCalaType boolCalaType() const {return m_boolCalaType;}
     void setBoolCalaType(EBoolCalaType type){ m_boolCalaType=type;}
+    QStringList persistentPropertyNames() const override
+    {
+        return {"boolCalaType"};
+    }
 public slots:
     void onShowFunc() override;
 protected:

@@ -157,7 +157,7 @@ void XvDisplayImageItem::paint(QPainter *painter, const QStyleOptionGraphicsItem
         auto width=this->pixmap().width();
         auto height=this->pixmap().height();
         QPointF center=QPointF(width/2.0,height/2.0);
-        QList<QLineF> lst;
+        QVector<QLineF> lst;
         lst.append(QLineF(center,QPointF(0,center.ry())));
         lst.append(QLineF(center,QPointF(center.rx(),0)));
         lst.append(QLineF(center,QPointF(center.rx(),height)));

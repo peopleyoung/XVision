@@ -1,4 +1,4 @@
-﻿#include "XMatToolBar.h"
+#include "XMatToolBar.h"
 #include "XMatToolBar_p.h"
 #include <QPainter>
 #include <QMouseEvent>
@@ -6,7 +6,7 @@
 #include <QBitmap>
 #include <QPainterPath>
 #include <QIcon>
-#include "XMatRippleoverlay.h"
+#include "XMatRippleOverlay.h"
 #include "XMatRipple.h"
 
 #include "XMatStyleDef.h"

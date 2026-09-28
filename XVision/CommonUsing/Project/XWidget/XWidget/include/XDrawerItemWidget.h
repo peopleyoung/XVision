@@ -4,6 +4,7 @@
 #include "XWidgetGlobal.h"
 
 #include <QWidget>
+#include <memory>
 
 class XDrawerWidget;
 

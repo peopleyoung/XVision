@@ -15,11 +15,15 @@ struct XNavigationImageButton::Impl
     {
         auto st           = q->isChecked() ? QIcon::On : QIcon::Off;
         const auto& sizes = q->icon().availableSizes(QIcon::Mode::Normal, st);
-        if ((cache.isNull() || cache.size().grownBy(Margins) != size) && !sizes.isEmpty())
+        const QSize cacheSize(cache.width() + Margins.left() + Margins.right(),
+                              cache.height() + Margins.top() + Margins.bottom());
+        const QSize contentSize(size.width() - Margins.left() - Margins.right(),
+                                size.height() - Margins.top() - Margins.bottom());
+        if ((cache.isNull() || cacheSize != size) && !sizes.isEmpty())
         {
             cache = q->icon()
                         .pixmap(sizes.front(), QIcon::Normal, st)
-                        .scaledToHeight(qMin(size.shrunkBy(Margins).height(), sizes.front().height()),
+                        .scaledToHeight(qMin(contentSize.height(), sizes.front().height()),
                                         Qt::TransformationMode::SmoothTransformation);
             q->updateGeometry();
         }
@@ -91,7 +95,8 @@ QSize XNavigationImageButton::sizeHint() const
 {
     if (!m_impl->cache.isNull())
     {
-        return m_impl->cache.size().grownBy(Margins);
+        return QSize(m_impl->cache.width() + Margins.left() + Margins.right(),
+                     m_impl->cache.height() + Margins.top() + Margins.bottom());
     }
     return QSize(5, 5);
 }

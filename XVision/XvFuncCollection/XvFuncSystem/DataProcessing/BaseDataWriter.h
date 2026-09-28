@@ -31,12 +31,17 @@ public:
 class XVFUNCSYSTEM_EXPORT BaseDataWriter:public XvFunc
 {
     Q_OBJECT
-    friend class BaseDataWriterWdg;
+    friend class ::BaseDataWriterWdg;
 public:
     Q_INVOKABLE explicit BaseDataWriter(QObject *parent = nullptr);
     ~BaseDataWriter();
 public slots:
     void onShowFunc() override;
+public:
+    QStringList persistentResultNames() const override
+    {
+        return {"boolResult","intResult","realResult","stringResult"};
+    }
 protected:
     QPixmap funcIcon() override { return QPixmap(":/images/BaseDataWriter.svg");}
     EXvFuncRunStatus run() override;

@@ -4,6 +4,7 @@
 #include "XWidgetGlobal.h"
 
 #include <QInputDialog>
+#include <memory>
 
 class XTitleBar;
 

@@ -335,7 +335,15 @@ void XMessageBox::setIcon(Icon icon)
     \brief      返回图标.
     \sa         setIconPixmap
 */
-QPixmap XMessageBox::iconPixmap() const { return m_impl->iconLabel->pixmap(Qt::ReturnByValue); }
+QPixmap XMessageBox::iconPixmap() const
+{
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    return m_impl->iconLabel->pixmap(Qt::ReturnByValue);
+#else
+    const auto *pixmap = m_impl->iconLabel->pixmap();
+    return pixmap ? *pixmap : QPixmap();
+#endif
+}
 
 /*!
     \brief      设置自定义的图标 \a pixmap, 并且 \l icon 将被设置为 Icon::Custom.
