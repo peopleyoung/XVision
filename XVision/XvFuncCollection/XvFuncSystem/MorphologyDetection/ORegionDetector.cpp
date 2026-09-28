@@ -109,6 +109,7 @@ ORegionDetector::ORegionDetector(QObject *parent)
       m_result(new ORegionDetectorResult())
 {
     _funcRole="ORegionDetector";
+    _funcType=EXvFuncType::DefectDetection;
     _funcName=getUiText("OpenCV Region Detector");
 }
 

@@ -12,7 +12,7 @@ NInference::NInference(QObject *parent)
 {
     _funcRole="NInference";
     _funcName=getLang("XvFuncSystem_NInference_Name","ONNX通用推理");
-    _funcType=EXvFuncType::Other;
+    _funcType=EXvFuncType::MachineLearning;
 }
 
 NInference::~NInference()

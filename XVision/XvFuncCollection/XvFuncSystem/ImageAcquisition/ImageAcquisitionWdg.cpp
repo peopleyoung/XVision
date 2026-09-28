@@ -112,7 +112,7 @@ void ImageAcquisitionWdg::initFrm()
         func->setCameraDeviceId(ui->cmbCameraDevice->itemData(index).toString());
         refreshCameraDevices();
     });
-    connect(ui->spbCameraTimeout,&QSpinBox::valueChanged,this,[=](int value)
+    connect(ui->spbCameraTimeout,qOverload<int>(&QSpinBox::valueChanged),this,[=](int value)
     {
         if(m_bShowing) func->setCameraTimeoutMs(value);
     });

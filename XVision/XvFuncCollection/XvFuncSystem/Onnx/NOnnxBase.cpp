@@ -14,10 +14,60 @@
 #include <limits>
 #include <utility>
 
+#ifdef Q_OS_WIN
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#elif defined(Q_OS_LINUX)
+#include <sys/stat.h>
+#endif
+
 using namespace XvCore;
 
 namespace
 {
+// Native identity plus change time detects replacement and same-size rewrites,
+// including writes that restore the last-modified timestamp. Unsupported hosts
+// leave the stamp empty and keep full SHA-256 validation on every execution.
+struct ModelFileStamp
+{
+    QVector<quint64> identity;
+    bool operator==(const ModelFileStamp &other) const { return identity==other.identity; }
+};
+
+bool fileStamp(const QString &path,ModelFileStamp &stamp,QString &error)
+{
+#ifdef Q_OS_WIN
+    const std::wstring native=path.toStdWString();
+    HANDLE handle=CreateFileW(native.c_str(),FILE_READ_ATTRIBUTES,
+        FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,nullptr,OPEN_EXISTING,0,nullptr);
+    if(handle==INVALID_HANDLE_VALUE) { error="无法读取 ONNX 模型文件属性";return false; }
+    BY_HANDLE_FILE_INFORMATION info{};
+    FILE_BASIC_INFO basic{};
+    const bool ok=GetFileInformationByHandle(handle,&info)
+        && GetFileInformationByHandleEx(handle,FileBasicInfo,&basic,sizeof(basic));
+    CloseHandle(handle);
+    if(!ok || (info.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY))
+    { error="无法读取 ONNX 模型文件身份";return false; }
+    stamp.identity={info.dwVolumeSerialNumber,info.nFileIndexHigh,info.nFileIndexLow,
+        info.nFileSizeHigh,info.nFileSizeLow,quint64(basic.LastWriteTime.QuadPart),
+        quint64(basic.ChangeTime.QuadPart)};
+#elif defined(Q_OS_LINUX)
+    struct stat info{};
+    if(::stat(QFile::encodeName(path).constData(),&info)!=0 || !S_ISREG(info.st_mode))
+    { error="无法读取 ONNX 模型文件身份";return false; }
+    stamp.identity={quint64(info.st_dev),quint64(info.st_ino),quint64(info.st_size),
+        quint64(info.st_mtim.tv_sec),quint64(info.st_mtim.tv_nsec),
+        quint64(info.st_ctim.tv_sec),quint64(info.st_ctim.tv_nsec)};
+#else
+    Q_UNUSED(path)
+    Q_UNUSED(error)
+    stamp.identity.clear();
+#endif
+    return true;
+}
+
 bool hasNonWhitespaceText(const QDomElement &element)
 {
     for(QDomNode node=element.firstChild();!node.isNull();node=node.nextSibling())
@@ -27,7 +77,7 @@ bool hasNonWhitespaceText(const QDomElement &element)
 }
 
 bool modelFile(const QString &path,QString &normalized,qint64 &length,
-               QByteArray &digest,QString &error)
+               QByteArray &digest,QString &error,ModelFileStamp *validatedStamp=nullptr)
 {
     const QFileInfo info(path);
     if(path.trimmed().isEmpty() || !info.isAbsolute() || !info.isFile()
@@ -38,6 +88,8 @@ bool modelFile(const QString &path,QString &normalized,qint64 &length,
     }
     normalized=info.canonicalFilePath();
     if(normalized.isEmpty()) normalized=info.absoluteFilePath();
+    ModelFileStamp before;
+    if(!fileStamp(normalized,before,error)) return false;
     QFile file(normalized);
     if(!file.open(QIODevice::ReadOnly))
     {
@@ -67,6 +119,13 @@ bool modelFile(const QString &path,QString &normalized,qint64 &length,
         error="ONNX model must not be empty";
         return false;
     }
+    ModelFileStamp after;
+    if(!fileStamp(normalized,after,error) || !(before==after))
+    {
+        if(error.isEmpty()) error="ONNX model changed while its checksum was being read";
+        return false;
+    }
+    if(validatedStamp) *validatedStamp=after;
     digest=hash.result().toHex();
     return true;
 }
@@ -90,7 +149,7 @@ bool normalizationValues(const QString &text,bool requirePositive,
         error=QString("ONNX %1 values are too long").arg(name);
         return false;
     }
-    const QStringList parts=text.split(',',Qt::KeepEmptyParts);
+    const QStringList parts=text.split(',');
     if(parts.size()!=1 && parts.size()!=3)
     {
         error=QString("ONNX %1 requires one or three values").arg(name);
@@ -115,7 +174,10 @@ class NOnnxBase::Private
 {
 public:
     mutable QMutex mutex;
-    mutable OnnxSession session;
+    std::shared_ptr<OnnxSession> session;
+    QList<XOnnxTensorInfo> inputs;
+    QList<XOnnxTensorInfo> outputs;
+    mutable ModelFileStamp validatedStamp;
     qint64 modelLength=0;
     QByteArray modelDigest;
 };
@@ -128,12 +190,15 @@ NOnnxBase::~NOnnxBase()=default;
 
 void NOnnxBase::setModelPath(const QString &path)
 {
-    if(m_modelPath==path) return;
     QMutexLocker locker(&d->mutex);
+    if(m_modelPath==path) return;
     m_modelPath=path;
     d->modelLength=0;
     d->modelDigest.clear();
-    d->session.clear();
+    d->session.reset();
+    d->inputs.clear();
+    d->outputs.clear();
+    d->validatedStamp={};
 }
 
 QStringList NOnnxBase::commonPersistentPropertyNames() const
@@ -174,13 +239,14 @@ bool NOnnxBase::configureModel(const QString &path,QString &error)
     qint64 length=0;
     QByteArray digest;
     if(!modelFile(path,normalized,length,digest,error)) return false;
-    OnnxSession candidate;
+    auto candidate=std::make_shared<OnnxSession>();
+    ModelFileStamp validatedStamp;
 #if defined(XVISION_ENABLE_ONNXRUNTIME)
-    if(!candidate.load(normalized,&error)) return false;
+    if(!candidate->load(normalized,&error)) return false;
     QString loadedPath;
     qint64 loadedLength=0;
     QByteArray loadedDigest;
-    if(!modelFile(normalized,loadedPath,loadedLength,loadedDigest,error)
+    if(!modelFile(normalized,loadedPath,loadedLength,loadedDigest,error,&validatedStamp)
             || loadedPath!=normalized || loadedLength!=length
             || loadedDigest!=digest)
     {
@@ -192,6 +258,9 @@ bool NOnnxBase::configureModel(const QString &path,QString &error)
     m_modelPath=normalized;
     d->modelLength=length;
     d->modelDigest=digest;
+    d->inputs=candidate->inputs();
+    d->outputs=candidate->outputs();
+    d->validatedStamp=validatedStamp;
     d->session=std::move(candidate);
     return true;
 }
@@ -211,8 +280,8 @@ QString NOnnxBase::modelSummary() const
     return getLang("XvFuncSystem_NOnnx_ModelConfiguredBackendDisabled",
                    "模型已配置，ONNX Runtime后端未启用");
 #else
-    const QList<XOnnxTensorInfo> inputs=d->session.inputs();
-    const QList<XOnnxTensorInfo> outputs=d->session.outputs();
+    const QList<XOnnxTensorInfo> inputs=d->inputs;
+    const QList<XOnnxTensorInfo> outputs=d->outputs;
     return getLang("XvFuncSystem_NOnnx_ModelSummary","%1个输入，%2个输出")
             .arg(inputs.size()).arg(outputs.size());
 #endif
@@ -245,7 +314,7 @@ QList<XOnnxTensorInfo> NOnnxBase::modelInputs(QString &error) const
     error="ONNX Runtime backend is disabled; configure with XVISION_ENABLE_ONNXRUNTIME=ON";
     return {};
 #else
-    const QList<XOnnxTensorInfo> values=d->session.inputs();
+    const QList<XOnnxTensorInfo> values=d->inputs;
     if(values.isEmpty()) error="ONNX model has no tensor inputs";
     else error.clear();
     return values;
@@ -264,7 +333,7 @@ QList<XOnnxTensorInfo> NOnnxBase::modelOutputs(QString &error) const
     error="ONNX Runtime backend is disabled; configure with XVISION_ENABLE_ONNXRUNTIME=ON";
     return {};
 #else
-    const QList<XOnnxTensorInfo> values=d->session.outputs();
+    const QList<XOnnxTensorInfo> values=d->outputs;
     if(values.isEmpty()) error="ONNX model has no tensor outputs";
     else error.clear();
     return values;
@@ -290,23 +359,44 @@ bool NOnnxBase::executeModel(const QList<XOnnxTensorData> &inputs,
                              QList<XOnnxTensorData> &outputs,
                              QString &error) const
 {
-    QMutexLocker locker(&d->mutex);
-    if(m_modelPath.isEmpty() || d->modelLength<=0 || d->modelDigest.size()!=64)
+    error.clear();
+    std::shared_ptr<OnnxSession> session;
+    QString path;
+    qint64 expectedLength=0;
+    QByteArray expectedDigest;
+    ModelFileStamp previousStamp;
     {
-        error="ONNX model is not configured";
-        return false;
+        QMutexLocker locker(&d->mutex);
+        if(m_modelPath.isEmpty() || d->modelLength<=0 || d->modelDigest.size()!=64 || !d->session)
+        {
+            error="ONNX model is not configured";
+            return false;
+        }
+        session=d->session;
+        path=m_modelPath;
+        expectedLength=d->modelLength;
+        expectedDigest=d->modelDigest;
+        previousStamp=d->validatedStamp;
     }
-    QString normalized;
-    qint64 length=0;
-    QByteArray digest;
-    if(!modelFile(m_modelPath,normalized,length,digest,error)
-            || normalized!=m_modelPath || length!=d->modelLength
-            || digest!=d->modelDigest)
+    ModelFileStamp currentStamp;
+    if(!fileStamp(path,currentStamp,error)) return false;
+    if(currentStamp.identity.isEmpty() || !(currentStamp==previousStamp))
     {
-        if(error.isEmpty()) error="ONNX model file changed after configuration";
-        return false;
+        QString normalized;
+        qint64 length=0;
+        QByteArray digest;
+        if(!modelFile(path,normalized,length,digest,error,&currentStamp)
+                || normalized!=path || length!=expectedLength || digest!=expectedDigest)
+        {
+            if(error.isEmpty()) error="ONNX model file changed after configuration";
+            return false;
+        }
+        QMutexLocker locker(&d->mutex);
+        if(d->session==session) d->validatedStamp=currentStamp;
     }
-    return d->session.run(inputs,outputs,&error);
+    // A run owns its immutable session snapshot; metadata/UI reads never wait
+    // for inference. Session::run still serializes calls and owns output data.
+    return session->run(inputs,outputs,&error);
 }
 
 bool NOnnxBase::appendPersistentData(QDomDocument &doc,
@@ -358,7 +448,10 @@ bool NOnnxBase::readPersistentData(const QDomElement &dataElement,QString &error
         QMutexLocker locker(&d->mutex);
         d->modelLength=0;
         d->modelDigest.clear();
-        d->session.clear();
+        d->session.reset();
+        d->inputs.clear();
+        d->outputs.clear();
+        d->validatedStamp={};
         return true;
     }
     if(dataElement.isNull()
@@ -399,13 +492,14 @@ bool NOnnxBase::readPersistentData(const QDomElement &dataElement,QString &error
         if(error.isEmpty()) error="ONNX model metadata does not match the file";
         return false;
     }
-    OnnxSession candidate;
+    auto candidate=std::make_shared<OnnxSession>();
+    ModelFileStamp validatedStamp;
 #if defined(XVISION_ENABLE_ONNXRUNTIME)
-    if(!candidate.load(normalized,&error)) return false;
+    if(!candidate->load(normalized,&error)) return false;
     QString loadedPath;
     qint64 loadedLength=0;
     QByteArray loadedDigest;
-    if(!modelFile(normalized,loadedPath,loadedLength,loadedDigest,error)
+    if(!modelFile(normalized,loadedPath,loadedLength,loadedDigest,error,&validatedStamp)
             || loadedPath!=normalized || loadedLength!=length
             || loadedDigest!=digest)
     {
@@ -417,6 +511,9 @@ bool NOnnxBase::readPersistentData(const QDomElement &dataElement,QString &error
     m_modelPath=normalized;
     d->modelLength=length;
     d->modelDigest=digest;
+    d->inputs=candidate->inputs();
+    d->outputs=candidate->outputs();
+    d->validatedStamp=validatedStamp;
     d->session=std::move(candidate);
     return true;
 }

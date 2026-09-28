@@ -30,7 +30,7 @@ ModbusRegister::ModbusRegister(QObject *parent)
 {
     _funcRole="ModbusRegister";
     _funcName=getLang("XvFuncSystem_ModbusRegister_Name","Modbus寄存器");
-    _funcType=EXvFuncType::DataProcessing;
+    _funcType=EXvFuncType::Communication;
 }
 
 ModbusRegister::~ModbusRegister()

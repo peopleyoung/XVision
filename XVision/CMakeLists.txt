@@ -4,7 +4,7 @@ project(XVision VERSION 0.1 LANGUAGES CXX)
 
 option(BUILD_TESTING "Build XVision first-party tests" OFF)
 option(XVISION_BUILD_COMMON_USING "Build bundled CommonUsing libraries" ON)
-option(XVISION_BUILD_SYSTEM_PLUGIN "Build the Halcon-backed system operator plugin" ON)
+option(XVISION_BUILD_SYSTEM_PLUGIN "Build the built-in system operator plugin" ON)
 option(XVISION_ENABLE_OPENCV "Enable OpenCV-backed operator adapters" OFF)
 option(XVISION_ENABLE_ONNXRUNTIME "Enable ONNX Runtime-backed operator adapters" OFF)
 include(CTest)

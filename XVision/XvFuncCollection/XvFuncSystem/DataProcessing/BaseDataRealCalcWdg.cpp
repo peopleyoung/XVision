@@ -35,18 +35,18 @@ void BaseDataRealCalcWdg::initFrm()
     cmbType->addItem(getLang("XvFuncSystem_BaseDataRealCalc_ERealCalaTypeMul","乘法"),BaseDataRealCalc::ERealCalaType::Mul);
     cmbType->addItem(getLang("XvFuncSystem_BaseDataRealCalc_ERealCalaTypeDiv","除法"),BaseDataRealCalc::ERealCalaType::Div);
 
-    connect(ui->cmbType,&QComboBox::currentIndexChanged,this,[=]()
+    connect(ui->cmbType,qOverload<int>(&QComboBox::currentIndexChanged),this,[=]()
     {
        auto idx=ui->cmbType->currentIndex();
        func->setRealCalaType((BaseDataRealCalc::ERealCalaType)idx);
     });
 
-    connect(ui->cmbV1,&QComboBox::currentIndexChanged,this,[=]()
+    connect(ui->cmbV1,qOverload<int>(&QComboBox::currentIndexChanged),this,[=]()
     {
         setCmbWithLetEnable(ui->cmbV1,ui->letV1,p1->objectName());
     });
 
-    connect(ui->cmbV2,&QComboBox::currentIndexChanged,this,[=]()
+    connect(ui->cmbV2,qOverload<int>(&QComboBox::currentIndexChanged),this,[=]()
     {
         setCmbWithLetEnable(ui->cmbV2,ui->letV2,p2->objectName());
     });

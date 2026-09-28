@@ -1,0 +1,17 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/BaseDataWriter.svg</file>
+        <file>images/BaseDataIntCalc.svg</file>
+        <file>images/BaseDataBoolCalc.svg</file>
+        <file>images/BaseDataRealCalc.svg</file>
+        <file>images/BaseDataStringProcess.svg</file>
+        <file>images/XvFuncRun.svg</file>
+        <file>images/ElapsedTimer.svg</file>
+        <file>images/Delayer.svg</file>
+        <file>images/ImageAcquisition.svg</file>
+        <file>images/ImageAcquisitionWdgDirLast.svg</file>
+        <file>images/ImageAcquisitionWdgDirNext.svg</file>
+        <file>images/LogOutput.svg</file>
+        <file>images/OpenCvImage.svg</file>
+    </qresource>
+</RCC>

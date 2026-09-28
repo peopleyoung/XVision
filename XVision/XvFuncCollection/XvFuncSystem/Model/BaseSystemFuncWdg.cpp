@@ -11,6 +11,7 @@
 #include "XMatCheckBox.h"
 
 #include "XvFlow.h"
+#include "XvProject.h"
 
 BaseSystemFuncWdg::BaseSystemFuncWdg(XvFunc *func, QWidget *parent)
     :XFramelessWidget(parent),m_func(func)
@@ -18,7 +19,24 @@ BaseSystemFuncWdg::BaseSystemFuncWdg(XvFunc *func, QWidget *parent)
     this->initFrm();
     if(func)
     {
-        connect(func,&XvFunc::sgFuncRunEnd,this,[=](){ onFuncRunUpdate(); });
+        connect(func,&XvFunc::sgFuncRunEnd,this,[this]() {
+            if(isVisible()) onFuncRunUpdate();
+        });
+        if(auto flow=func->parFlow())
+        {
+            const auto updateEnabled=[this,flow]() {
+                const bool enabled=flow->isEditAllowed();
+                centralWidget()->setEnabled(enabled);
+                if(auto button=findChild<QToolButton*>("btnRun")) button->setEnabled(enabled);
+            };
+            connect(flow,&XvFlow::sgFlowRunStart,this,updateEnabled);
+            connect(flow,&XvFlow::sgFlowRunEnd,this,updateEnabled);
+            if(auto project=flow->parProject())
+            {
+                connect(project,&XvProject::sgProjectRunStart,this,updateEnabled);
+                connect(project,&XvProject::sgProjectRunEnd,this,updateEnabled);
+            }
+        }
     }
 }
 
@@ -205,7 +223,11 @@ void BaseSystemFuncWdg::initFrm()
     {
         if(m_func)
         {
-            m_func->runXvFunc();
+            if(auto flow=m_func->parFlow())
+            {
+                if(flow->runFunctionOnce(m_func->funcId())==Ret_Xv_Success)
+                    centralWidget()->setEnabled(false);
+            }
         }
 
     });
@@ -242,6 +264,8 @@ void BaseSystemFuncWdg::initFixedSize()
 
 void BaseSystemFuncWdg::showEvent(QShowEvent *event)
 {
+    if(m_func && m_func->parFlow())
+        centralWidget()->setEnabled(m_func->parFlow()->isEditAllowed());
     m_bShowing=false;
     onShow();
     m_bShowing=true;

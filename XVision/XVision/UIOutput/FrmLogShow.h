@@ -2,6 +2,7 @@
 #define FRMLOGSHOW_H
 
 #include "BaseWidget.h"
+#include <memory>
 
 #define LOG_MAX_COUNT 200
 #define UiLogShow FrmLogShow::getInstance()
@@ -33,6 +34,9 @@ protected slots:
     void onOpenLogDir();
 
 private:
+    struct PendingLogs;
+    std::shared_ptr<PendingLogs> m_pendingLogs;
+    void flushPendingLogs();
     Ui::FrmLogShow *ui;
     static FrmLogShow* s_Instance;
     QMap<XLogger::ELogType,QString> m_mapType;

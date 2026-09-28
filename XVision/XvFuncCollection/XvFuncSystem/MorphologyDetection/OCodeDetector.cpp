@@ -16,6 +16,7 @@ OCodeDetector::OCodeDetector(QObject *parent)
       m_result(new OCodeDetectorResult())
 {
     _funcRole="OCodeDetector";
+    _funcType=EXvFuncType::Recognition;
     _funcName=getUiText("OpenCV Code Detector");
 }
 

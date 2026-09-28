@@ -51,7 +51,9 @@
         "XvCommunicationOperatorTests",
         "XvSourceNotificationTests",
         "XvOnnxOperatorTests",
-        "XvUiAppearanceTests"
+        "XvUiAppearanceTests",
+        "XvUiResponsivenessTests",
+        "XvOnnxCpuBenchmark"
       ]
     },
     {
@@ -74,7 +76,9 @@
         "XvCommunicationOperatorTests",
         "XvSourceNotificationTests",
         "XvOnnxOperatorTests",
-        "XvUiAppearanceTests"
+        "XvUiAppearanceTests",
+        "XvUiResponsivenessTests",
+        "XvOnnxCpuBenchmark"
       ]
     }
   ],
@@ -88,7 +92,7 @@
       },
       "filter": {
         "include": {
-          "name": "^(projectxml|camera|systemplugin|visionmaster_matrix|visionmaster_matrix_document|visionmaster_data|visionmaster_sdk_cmake|visionmaster_backend_boundary|opencv_image_operators|opencv_morphology_detectors|opencv_template_rectification|geometry_measurement|detect_record|communication_operators|source_notification|onnx_operators|ui_appearance)$"
+          "name": "^(projectxml|camera|systemplugin|visionmaster_matrix|visionmaster_matrix_document|visionmaster_data|visionmaster_sdk_cmake|visionmaster_backend_boundary|opencv_image_operators|opencv_morphology_detectors|opencv_template_rectification|geometry_measurement|detect_record|communication_operators|source_notification|onnx_operators|ui_appearance|ui_responsiveness)$"
         }
       }
     },
@@ -101,7 +105,7 @@
       },
       "filter": {
         "include": {
-          "name": "^(projectxml|camera|systemplugin|visionmaster_matrix|visionmaster_matrix_document|visionmaster_data|visionmaster_sdk_cmake|visionmaster_backend_boundary|opencv_image_operators|opencv_morphology_detectors|opencv_template_rectification|geometry_measurement|detect_record|communication_operators|source_notification|onnx_operators|ui_appearance)$"
+          "name": "^(projectxml|camera|systemplugin|visionmaster_matrix|visionmaster_matrix_document|visionmaster_data|visionmaster_sdk_cmake|visionmaster_backend_boundary|opencv_image_operators|opencv_morphology_detectors|opencv_template_rectification|geometry_measurement|detect_record|communication_operators|source_notification|onnx_operators|ui_appearance|ui_responsiveness)$"
         }
       }
     }

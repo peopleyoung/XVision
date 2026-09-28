@@ -15,7 +15,7 @@ NSemanticSegmentation::NSemanticSegmentation(QObject *parent)
 {
     _funcRole="NSemanticSegmentation";
     _funcName=getLang("XvFuncSystem_NSemanticSegmentation_Name","ONNX语义分割");
-    _funcType=EXvFuncType::Other;
+    _funcType=EXvFuncType::MachineLearning;
 }
 
 NSemanticSegmentation::~NSemanticSegmentation()

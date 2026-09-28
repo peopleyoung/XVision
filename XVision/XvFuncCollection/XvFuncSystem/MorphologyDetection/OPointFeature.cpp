@@ -79,6 +79,7 @@ OPointFeature::OPointFeature(QObject *parent)
       m_result(new OPointFeatureResult())
 {
     _funcRole="OPointFeature";
+    _funcType=EXvFuncType::Location;
     _funcName=getUiText("OpenCV Point Feature");
 }
 

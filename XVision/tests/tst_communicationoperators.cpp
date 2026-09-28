@@ -477,7 +477,7 @@ private slots:
         std::thread receiver([&]()
         {
             QUdpSocket socket;
-            if(!socket.bind(QHostAddress::LocalHost,0))
+            if(!socket.bind(QHostAddress(QHostAddress::LocalHost),quint16(0)))
             {
                 portPromise.set_value(0);
                 dataPromise.set_value(QByteArray());
@@ -500,7 +500,7 @@ private slots:
         QCOMPARE(dataFuture.get(),QString::fromUtf8("h\xc3\xa9").toUtf8());
 
         QUdpSocket reservation;
-        QVERIFY(reservation.bind(QHostAddress::LocalHost,0));
+        QVERIFY(reservation.bind(QHostAddress(QHostAddress::LocalHost),quint16(0)));
         const quint16 readPort=reservation.localPort();
         reservation.close();
         std::thread sender([readPort]()
@@ -522,7 +522,7 @@ private slots:
         QCOMPARE(result<XString>(reader,"text")->value(),previous);
 
         QUdpSocket oversizedReservation;
-        QVERIFY(oversizedReservation.bind(QHostAddress::LocalHost,0));
+        QVERIFY(oversizedReservation.bind(QHostAddress(QHostAddress::LocalHost),quint16(0)));
         const quint16 oversizedPort=oversizedReservation.localPort();
         oversizedReservation.close();
         std::thread oversizedSender([oversizedPort]()

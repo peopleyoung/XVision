@@ -59,34 +59,34 @@ void BaseDataStringProcessWdg::initFrm()
     cmbType->addItem(getLang("XvFuncSystem_BaseDataStringProcess_EStringProcessTypeRealToString","浮点数转字符串"),BaseDataStringProcess::EStringProcessType::RealToString);
 
 
-    connect(ui->cmbProcessType,&QComboBox::currentIndexChanged,this,[=]()
+    connect(ui->cmbProcessType,qOverload<int>(&QComboBox::currentIndexChanged),this,[=]()
     {
        auto idx=ui->cmbProcessType->currentIndex();
        func->setStringProcessType((BaseDataStringProcess::EStringProcessType)idx);
     });
 
-    connect(ui->cmbS1,&QComboBox::currentIndexChanged,this,[=]()
+    connect(ui->cmbS1,qOverload<int>(&QComboBox::currentIndexChanged),this,[=]()
     {
         setCmbWithLetEnable(ui->cmbS1,ui->letS1,func->param->stringParam1->objectName());
     });
-    connect(ui->cmbS2,&QComboBox::currentIndexChanged,this,[=]()
+    connect(ui->cmbS2,qOverload<int>(&QComboBox::currentIndexChanged),this,[=]()
     {
         setCmbWithLetEnable(ui->cmbS2,ui->letS2,func->param->stringParam2->objectName());
     });
-    connect(ui->cmbI1,&QComboBox::currentIndexChanged,this,[=]()
+    connect(ui->cmbI1,qOverload<int>(&QComboBox::currentIndexChanged),this,[=]()
     {
         setCmbWithLetEnable(ui->cmbI1,ui->letI1,func->param->intParam1->objectName());
     });
-    connect(ui->cmbI2,&QComboBox::currentIndexChanged,this,[=]()
+    connect(ui->cmbI2,qOverload<int>(&QComboBox::currentIndexChanged),this,[=]()
     {
         setCmbWithLetEnable(ui->cmbI2,ui->letI2,func->param->intParam2->objectName());
     });
-    connect(ui->cmbR,&QComboBox::currentIndexChanged,this,[=]()
+    connect(ui->cmbR,qOverload<int>(&QComboBox::currentIndexChanged),this,[=]()
     {
         setCmbWithLetEnable(ui->cmbR,ui->letR,func->param->realParam->objectName());
     });
 
-    connect(ui->cmbB,&QComboBox::currentIndexChanged,this,[=]()
+    connect(ui->cmbB,qOverload<int>(&QComboBox::currentIndexChanged),this,[=]()
     {
         setCmbWithCmbEnable(ui->cmbB,ui->cmbBVal,func->param->boolParam->objectName());
     });
@@ -147,7 +147,7 @@ void BaseDataStringProcessWdg::initFrm()
          }
     });
 
-    connect(ui->cmbBVal,&QComboBox::currentIndexChanged,this,[=](){
+    connect(ui->cmbBVal,qOverload<int>(&QComboBox::currentIndexChanged),this,[=](){
          auto idx=ui->cmbB->currentIndex();
          if(idx==0)
          {

@@ -45,7 +45,7 @@ HttpJson::HttpJson(QObject *parent)
 {
     _funcRole="HttpJson";
     _funcName=getUiText(getLang("XvFuncSystem_HttpJson_Name","HTTP 数据通信"));
-    _funcType=EXvFuncType::DataProcessing;
+    _funcType=EXvFuncType::Communication;
 }
 
 HttpJson::~HttpJson()

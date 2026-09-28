@@ -45,9 +45,6 @@ list(APPEND _LIBS
     XConcurrent     #多线程管理库
 )
 #添加第三方库
-list(APPEND _LIBS
-   ${HALCON_LIB}
-)
 if(XVISION_ENABLE_OPENCV)
     list(APPEND _LIBS XVision::OpenCV)
 endif()
@@ -71,8 +68,6 @@ list(APPEND _INCLUDE_DIR
     ../../${XLog_Inc}
     ../../${XLanguage_Inc}
     ../../${XConcurrent_Inc}
-    ../../${HALCON_INC_DIR}
-    ../../${HALCONCPP_INC_DIR}
 )
 
 
@@ -81,7 +76,6 @@ list(APPEND _INCLUDE_DIR
 #添加依赖库目录
 list(APPEND _LINK_DIR
     ../../${COMMON_USING_LINK_DIR}
-    ../../${HALCON_LINK_DIR}
 )
 
 link_directories(${_LINK_DIR})
@@ -140,7 +134,7 @@ set(PROJECT_SOURCES
 
 )
 set(PROJECT_RES
-    res/Res.qrc
+    res/XvFuncSystemRes.qrc
 )
 add_library(XvFuncSystem SHARED
     ${PROJECT_SOURCES}
@@ -190,8 +184,7 @@ target_link_libraries(XvFuncSystem
 
 
 target_compile_definitions(XvFuncSystem PRIVATE XVFUNCSYSTEM_LIBRARY)
-# HalconCpp.h includes Windows.h; keep its macros out of std::numeric_limits.
-# Public propagation also protects consumers of the plugin's HALCON headers.
+# Keep Windows SDK macros out of public numeric-limits consumers.
 if(WIN32)
     target_compile_definitions(XvFuncSystem PUBLIC NOMINMAX)
 endif()
@@ -204,15 +197,8 @@ endif()
 
 add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 
-# Halcon is loaded by the operator plugin, so its Windows runtimes must be in
-# the application's binary directory. Import libraries remain link-time only.
+# Deploy enabled open-source backend runtimes beside the application.
 if(WIN32)
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            ${CMAKE_CURRENT_SOURCE_DIR}/../../${HALCON_LINK_DIR}/halcon.dll
-            ${CMAKE_CURRENT_SOURCE_DIR}/../../${HALCON_LINK_DIR}/halconcpp.dll
-            $<TARGET_FILE_DIR:${PROJECT_NAME}>/..
-    )
     if(XVISION_ENABLE_OPENCV)
         foreach(OPENCV_DLL IN LISTS XVISION_OPENCV_RUNTIME_DLLS)
             add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD

@@ -4,6 +4,14 @@
 #include <QScrollBar>
 #include <QMenu>
 #include <QDesktopServices>
+#include <QTimer>
+#include <deque>
+
+struct FrmLogShow::PendingLogs
+{
+    QMutex mutex;
+    std::deque<QPair<QString,XLogger::ELogType>> entries;
+};
 
 FrmLogShow *FrmLogShow::s_Instance = NULL;
 FrmLogShow *FrmLogShow::getInstance() {
@@ -37,7 +45,20 @@ void FrmLogShow::initFrm()
     this->setWindowIcon(QIcon(":/images/Ui/FrmLogShow.svg"));
     this->setWindowTitle(getLang(App_Ui_FrmLogShow,"日志显示"));
     ui->ptxtLog->setRippleStyle(XMatCommonDef::NoRipple);
-    connect(XLog,&XLogger::signalLog,this,&FrmLogShow::onSignalLog);
+    // Producers only enqueue text. No widget access or per-message GUI events.
+    m_pendingLogs=std::make_shared<PendingLogs>();
+    const auto pending=m_pendingLogs;
+    connect(XLog,&XLogger::signalLog,this,
+            [pending](const QString &message,const XLogger::ELogType &type) {
+        QMutexLocker lock(&pending->mutex);
+        if(pending->entries.size()>=LOG_MAX_COUNT) pending->entries.pop_front();
+        // The file logger keeps the complete message; bound presentation memory.
+        pending->entries.emplace_back(message.left(8192),type);
+    },Qt::DirectConnection);
+    auto timer=new QTimer(this);
+    timer->setInterval(50);
+    connect(timer,&QTimer::timeout,this,&FrmLogShow::flushPendingLogs);
+    timer->start();
     m_mapType[XLogger::Trace]=getLang(App_LogType_Trace,"追踪");
     m_mapType[XLogger::Debug]=getLang(App_LogType_Debug,"调试");
     m_mapType[XLogger::Info]=getLang(App_LogType_Info,"信息");
@@ -99,12 +120,25 @@ void FrmLogShow::onSignalLog(const QString &log, const XLogger::ELogType &logTyp
     ptxt->mergeCurrentCharFormat(fmt);
     QString logShow=m_mapType[logType]+":"+log;
     ptxt->appendPlainText(logShow);
-    //移动滚动条到底部
-    QScrollBar *scrollbar =  ptxt->verticalScrollBar();
-    if(scrollbar)
+
+}
+
+void FrmLogShow::flushPendingLogs()
+{
+    std::deque<QPair<QString,XLogger::ELogType>> entries;
     {
-       scrollbar->setSliderPosition(scrollbar->maximum());
+        QMutexLocker lock(&m_pendingLogs->mutex);
+        entries.swap(m_pendingLogs->entries);
     }
+    if(entries.empty()) return;
+    auto editor=ui->ptxtLog;
+    auto scrollbar=editor->verticalScrollBar();
+    const int previousPosition=scrollbar->value();
+    const bool followTail=previousPosition>=scrollbar->maximum();
+    editor->setUpdatesEnabled(false);
+    for(const auto &entry:entries) onSignalLog(entry.first,entry.second);
+    scrollbar->setValue(followTail?scrollbar->maximum():previousPosition);
+    editor->setUpdatesEnabled(true);
 }
 
 void FrmLogShow::onLogcustomContextMenuRequested(const QPoint &pos)
@@ -119,6 +153,10 @@ void FrmLogShow::onLogcustomContextMenuRequested(const QPoint &pos)
 
 void FrmLogShow::onClearLog()
 {
+    {
+        QMutexLocker lock(&m_pendingLogs->mutex);
+        m_pendingLogs->entries.clear();
+    }
     ui->ptxtLog->clear();
 }
 

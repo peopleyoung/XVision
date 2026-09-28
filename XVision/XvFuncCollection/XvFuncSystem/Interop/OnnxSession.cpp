@@ -3,6 +3,7 @@
 #include <QFileInfo>
 #include <QHash>
 #include <QSet>
+#include <QThread>
 
 #include <algorithm>
 #include <cstring>
@@ -190,8 +191,25 @@ bool OnnxSession::load(const QString &modelPath,QString *error)
     try
     {
         Ort::SessionOptions options;
-        options.SetIntraOpNumThreads(1);
-        options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_EXTENDED);
+        const QByteArray configuredThreads=qgetenv("XVISION_ONNX_THREADS");
+        int threads=qMin(4,qMax(1,QThread::idealThreadCount()-1));
+        if(!configuredThreads.isEmpty())
+        {
+            bool ok=false;
+            threads=configuredThreads.toInt(&ok);
+            if(!ok || threads<1 || threads>32)
+            {
+                setError(error,"XVISION_ONNX_THREADS must be an integer from 1 to 32");
+                return false;
+            }
+        }
+        options.SetIntraOpNumThreads(threads);
+        options.SetInterOpNumThreads(1);
+        options.SetExecutionMode(ExecutionMode::ORT_SEQUENTIAL);
+        options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
+        // Avoid idle CPU spinning competing with the GUI and other operators.
+        options.AddConfigEntry("session.intra_op.allow_spinning","0");
+        options.AddConfigEntry("session.inter_op.allow_spinning","0");
 #ifdef Q_OS_WIN
         const std::wstring nativePath=modelPath.toStdWString();
         auto candidate=std::make_unique<Ort::Session>(m_impl->env,nativePath.c_str(),options);

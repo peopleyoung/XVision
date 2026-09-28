@@ -6,9 +6,6 @@
 #include "BaseDataRealCalc.h"
 #include "BaseDataStringProcess.h"
 
-#include "HModelMatch.h"
-#include "HObjectDetection.h"
-#include "HSemanticSegmentation.h"
 
 #include "NClassification.h"
 #include "NInference.h"
@@ -107,9 +104,6 @@ QList<QMetaObject> SystemXvFactoryPlugin::getPlgXvFunc()
     ADD_XVFUNC(lst,BaseDataRealCalc);
     ADD_XVFUNC(lst,BaseDataStringProcess);
 
-    ADD_XVFUNC(lst,HModelMatch);
-    ADD_XVFUNC(lst,HObjectDetection);
-    ADD_XVFUNC(lst,HSemanticSegmentation);
 
     ADD_XVFUNC(lst,NInference);
     ADD_XVFUNC(lst,NClassification);

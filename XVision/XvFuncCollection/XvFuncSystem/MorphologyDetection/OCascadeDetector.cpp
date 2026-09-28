@@ -29,6 +29,7 @@ OCascadeDetector::OCascadeDetector(QObject *parent)
       m_param(new OCascadeDetectorParam()),m_result(new OCascadeDetectorResult())
 {
     _funcRole="OCascadeDetector";
+    _funcType=EXvFuncType::DefectDetection;
     _funcName=getUiText("OpenCV Cascade Detector");
 }
 

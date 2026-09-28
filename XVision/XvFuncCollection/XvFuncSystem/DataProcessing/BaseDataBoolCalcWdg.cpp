@@ -48,23 +48,23 @@ void BaseDataBoolCalcWdg::initFrm()
     initCmbByBool(cmbB2);
     initCmbByBool(cmbRet);
 
-    connect(ui->cmbType,&QComboBox::currentIndexChanged,this,[=]()
+    connect(ui->cmbType,qOverload<int>(&QComboBox::currentIndexChanged),this,[=]()
     {
        auto idx=ui->cmbType->currentIndex();
        func->setBoolCalaType((BaseDataBoolCalc::EBoolCalaType)idx);
     });
 
-    connect(ui->cmbV1,&QComboBox::currentIndexChanged,this,[=]()
+    connect(ui->cmbV1,qOverload<int>(&QComboBox::currentIndexChanged),this,[=]()
     {
         setCmbWithCmbEnable(ui->cmbV1,ui->cmbB1,p1->objectName());
     });
 
-    connect(ui->cmbV2,&QComboBox::currentIndexChanged,this,[=]()
+    connect(ui->cmbV2,qOverload<int>(&QComboBox::currentIndexChanged),this,[=]()
     {
         setCmbWithCmbEnable(ui->cmbV2,ui->cmbB2,p2->objectName());
     });
 
-    connect(ui->cmbB1,&QComboBox::currentIndexChanged,this,[=]()
+    connect(ui->cmbB1,qOverload<int>(&QComboBox::currentIndexChanged),this,[=]()
     {
          auto idx=ui->cmbV1->currentIndex();
          if(idx==0)
@@ -73,7 +73,7 @@ void BaseDataBoolCalcWdg::initFrm()
              p1->setValue((bool)idx);
          }
     });
-    connect(ui->cmbB2,&QComboBox::currentIndexChanged,this,[=]()
+    connect(ui->cmbB2,qOverload<int>(&QComboBox::currentIndexChanged),this,[=]()
     {
         auto idx=ui->cmbV2->currentIndex();
         if(idx==0)

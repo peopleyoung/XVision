@@ -12,7 +12,7 @@
 
 namespace
 {
-bool finite(double value)
+bool isFiniteValue(double value)
 {
     return std::isfinite(value);
 }
@@ -35,7 +35,7 @@ bool product(const QVector<qint64> &dimensions,qint64 &count,QString &error)
 bool parseValues(const QString &text,int channels,bool requirePositive,
                  QVector<double> &values,QString &error)
 {
-    const QStringList parts=text.split(',',Qt::KeepEmptyParts);
+    const QStringList parts=text.split(',');
     if(parts.size()!=1 && parts.size()!=channels)
     {
         error=QString("expected one or %1 comma-separated values").arg(channels);
@@ -47,7 +47,7 @@ bool parseValues(const QString &text,int channels,bool requirePositive,
     {
         bool ok=false;
         const double value=part.trimmed().toDouble(&ok);
-        if(part.trimmed().isEmpty() || !ok || !finite(value)
+        if(part.trimmed().isEmpty() || !ok || !isFiniteValue(value)
                 || (requirePositive && value<=0.0))
         {
             error=QString("invalid normalization value '%1'").arg(part.trimmed());
@@ -173,7 +173,7 @@ QStringList XvOnnx::parseClassNames(const QString &text)
     QString normalized=text;
     normalized.replace("\r\n","\n");
     normalized.replace('\r','\n');
-    QStringList names=normalized.split('\n',Qt::KeepEmptyParts);
+    QStringList names=normalized.split('\n');
     for(QString &name:names) name=name.trimmed();
     while(!names.isEmpty() && names.last().isEmpty()) names.removeLast();
     return names;
@@ -244,7 +244,7 @@ bool XvOnnx::tensorToDoubles(const XOnnxTensorData &tensor,
             value=static_cast<quint8>(source[index]);
         else
             value=static_cast<qint8>(source[index]);
-        if(!finite(value))
+        if(!isFiniteValue(value))
         {
             error=QString("tensor '%1' contains a non-finite value").arg(tensor.name);
             return false;
@@ -269,7 +269,7 @@ bool XvOnnx::softmax(const QVector<double> &values,QVector<double> &scores,
     double total=0.0;
     for(int index=0;index<values.size();++index)
     {
-        if(!finite(values.at(index)))
+        if(!isFiniteValue(values.at(index)))
         {
             error="softmax input contains a non-finite value";
             return false;
@@ -277,7 +277,7 @@ bool XvOnnx::softmax(const QVector<double> &values,QVector<double> &scores,
         candidate[index]=std::exp(values.at(index)-maximum);
         total+=candidate.at(index);
     }
-    if(!finite(total) || total<=0.0)
+    if(!isFiniteValue(total) || total<=0.0)
     {
         error="softmax normalization failed";
         return false;
@@ -301,7 +301,7 @@ bool XvOnnx::decodeAge(const XOnnxTensorData &tensor,double &age,QString &error)
         for(int index=0;index<scores.size();++index)
             candidate+=index*scores.at(index);
     }
-    if(!finite(candidate) || candidate<0.0)
+    if(!isFiniteValue(candidate) || candidate<0.0)
     {
         error="age output must decode to a finite non-negative value";
         return false;
@@ -394,7 +394,7 @@ bool XvOnnx::preprocessImage(const QImage &image,const XOnnxTensorInfo &inputInf
     int targetHeight=0;
     if(!resolvedSize(widthIndex,config.inputWidth,"width",targetWidth)
             || !resolvedSize(heightIndex,config.inputHeight,"height",targetHeight)) return false;
-    if(config.paddingValue<0 || config.paddingValue>255 || !finite(config.pixelScale))
+    if(config.paddingValue<0 || config.paddingValue>255 || !isFiniteValue(config.pixelScale))
     {
         error="ONNX image padding or scale is invalid";
         return false;
@@ -472,34 +472,52 @@ bool XvOnnx::preprocessImage(const QImage &image,const XOnnxTensorInfo &inputInf
             ?QVector<qint64>{1,channels,targetHeight,targetWidth}
            :QVector<qint64>{1,targetHeight,targetWidth,channels};
     candidate.bytes.resize(static_cast<int>(count*bytesPerElement));
+    // Normalize the 256 possible channel values once, keeping the original
+    // double arithmetic and float32 rounding. Check only pixels actually used.
+    float normalizedValues[3][256]{};
+    bool validValues[3][256]{};
+    const bool floatingPoint=inputInfo.elementType=="float32";
+    if(floatingPoint)
+    {
+        for(int channel=0;channel<channels;++channel)
+            for(int pixel=0;pixel<256;++pixel)
+            {
+                const double value=(pixel*config.pixelScale-means.at(channel))
+                        /standardDeviations.at(channel);
+                validValues[channel][pixel]=isFiniteValue(value)
+                        && qAbs(value)<=std::numeric_limits<float>::max();
+                if(validValues[channel][pixel]) normalizedValues[channel][pixel]=float(value);
+            }
+    }
+    // Premultiplied/high-depth formats use QColor's original rounding rules.
+    // Conversion routines can round their unpremultiplication differently.
+    const bool fastPixels=prepared.format()==QImage::Format_ARGB32
+        || prepared.format()==QImage::Format_RGB32 || prepared.format()==QImage::Format_RGB888
+        || prepared.format()==QImage::Format_Grayscale8 || prepared.format()==QImage::Format_Indexed8;
+    if(fastPixels) prepared=prepared.convertToFormat(QImage::Format_ARGB32);
+    if(prepared.isNull()) { error="ONNX image conversion failed";return false; }
+    char *destination=candidate.bytes.data();
+    const qint64 plane=static_cast<qint64>(targetWidth)*targetHeight;
     for(int y=0;y<targetHeight;++y)
     {
+        const auto row=reinterpret_cast<const QRgb*>(prepared.constScanLine(y));
         for(int x=0;x<targetWidth;++x)
         {
-            const QColor color=prepared.pixelColor(x,y);
-            const int rgb[3]={color.red(),color.green(),color.blue()};
+            const QRgb color=fastPixels?row[x]:prepared.pixelColor(x,y).rgb();
+            const int rgb[3]={qRed(color),qGreen(color),qBlue(color)};
+            const qint64 spatial=static_cast<qint64>(y)*targetWidth+x;
             for(int channel=0;channel<channels;++channel)
             {
-                int pixel=channels==1?qGray(color.rgb()):rgb[channel];
-                if(channels==3 && config.channelOrder==ChannelOrder::Bgr)
-                    pixel=rgb[2-channel];
-                const qint64 elementIndex=layout==TensorLayout::Nchw
-                        ?static_cast<qint64>(channel)*targetHeight*targetWidth+y*targetWidth+x
-                       :(static_cast<qint64>(y)*targetWidth+x)*channels+channel;
-                if(inputInfo.elementType=="uint8")
-                    candidate.bytes[static_cast<int>(elementIndex)]=static_cast<char>(pixel);
+                const int pixel=channels==1?qGray(color)
+                    :rgb[config.channelOrder==ChannelOrder::Bgr?2-channel:channel];
+                const qint64 index=layout==TensorLayout::Nchw
+                    ?channel*plane+spatial:spatial*channels+channel;
+                if(!floatingPoint) destination[index]=static_cast<char>(pixel);
                 else
                 {
-                    const double normalized=(pixel*config.pixelScale-means.at(channel))
-                            /standardDeviations.at(channel);
-                    if(!finite(normalized)
-                            || qAbs(normalized)>std::numeric_limits<float>::max())
-                    {
-                        error="ONNX image normalization overflowed float32";
-                        return false;
-                    }
-                    const float value=static_cast<float>(normalized);
-                    std::memcpy(candidate.bytes.data()+elementIndex*4,&value,4);
+                    if(!validValues[channel][pixel])
+                    { error="ONNX image normalization overflowed float32";return false; }
+                    std::memcpy(destination+index*4,&normalizedValues[channel][pixel],4);
                 }
             }
         }
@@ -516,7 +534,7 @@ bool XvOnnx::decodeClassification(const XOnnxTensorData &tensor,
                                   QVector<ClassificationValue> &values,
                                   QString &error)
 {
-    if(topK<=0 || !finite(minScore) || minScore<0.0 || minScore>1.0
+    if(topK<=0 || !isFiniteValue(minScore) || minScore<0.0 || minScore>1.0
             || (tensor.dimensions.size()!=1 && tensor.dimensions.size()!=2)
             || (tensor.dimensions.size()==2 && tensor.dimensions.first()!=1))
     {
@@ -534,7 +552,7 @@ bool XvOnnx::decodeClassification(const XOnnxTensorData &tensor,
     {
         for(double score:numbers)
         {
-            if(!finite(score) || score<0.0 || score>1.0)
+            if(!isFiniteValue(score) || score<0.0 || score>1.0)
             {
                 error="classification identity scores must be in [0,1]";
                 return false;
@@ -567,11 +585,11 @@ bool XvOnnx::decodeDetections(const QList<XOnnxTensorData> &outputs,
 {
     if(outputs.isEmpty() || transform.sourceWidth<=0 || transform.sourceHeight<=0
             || transform.modelWidth<=0 || transform.modelHeight<=0
-            || !finite(transform.scaleX) || transform.scaleX<=0.0
-            || !finite(transform.scaleY) || transform.scaleY<=0.0
-            || !finite(transform.padX) || !finite(transform.padY)
-            || !finite(confidenceThreshold) || confidenceThreshold<0.0
-            || confidenceThreshold>1.0 || !finite(iouThreshold)
+            || !isFiniteValue(transform.scaleX) || transform.scaleX<=0.0
+            || !isFiniteValue(transform.scaleY) || transform.scaleY<=0.0
+            || !isFiniteValue(transform.padX) || !isFiniteValue(transform.padY)
+            || !isFiniteValue(confidenceThreshold) || confidenceThreshold<0.0
+            || confidenceThreshold>1.0 || !isFiniteValue(iouThreshold)
             || iouThreshold<0.0 || iouThreshold>1.0 || maximumDetections<=0)
     {
         error="detection inputs or parameters are invalid";
@@ -598,7 +616,7 @@ bool XvOnnx::decodeDetections(const QList<XOnnxTensorData> &outputs,
         {
             const double *item=numbers.constData()+row*columns;
             for(int column=0;column<columns;++column)
-                if(!finite(item[column]))
+                if(!isFiniteValue(item[column]))
                 {
                     error=QString("output '%1' contains a non-finite detection").arg(output.name);
                     return false;
@@ -733,7 +751,7 @@ bool XvOnnx::decodeSegmentation(const XOnnxTensorData &output,
 {
     if(sourceWidth<=0 || sourceHeight<=0 || classNames.size()>100000
             || static_cast<qint64>(sourceWidth)*sourceHeight
-            >std::numeric_limits<int>::max() || !finite(binaryThreshold)
+            >std::numeric_limits<int>::max() || !isFiniteValue(binaryThreshold)
             || binaryThreshold<0.0 || binaryThreshold>1.0)
     {
         error="segmentation dimensions or threshold are invalid";

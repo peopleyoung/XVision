@@ -13,7 +13,7 @@ NClassification::NClassification(QObject *parent)
 {
     _funcRole="NClassification";
     _funcName=getLang("XvFuncSystem_NClassification_Name","ONNX图像分类");
-    _funcType=EXvFuncType::Other;
+    _funcType=EXvFuncType::MachineLearning;
 }
 
 NClassification::~NClassification()

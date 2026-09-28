@@ -107,6 +107,8 @@ signals:
 public:
     ///流程运行接口
     RetXv runOnce();
+    ///在线程中仅运行指定算子；保留流程编辑锁直到执行结束
+    RetXv runFunctionOnce(const QString &functionId);
     ///流程循环运行
     RetXv runLoop();
     ///流程停止运行
@@ -141,7 +143,8 @@ protected:
                          const QSet<XvFunc*> &entryNodes,
                          XvFlowConfig *config);
     ///流程运行线程
-    void _threadRun(bool bLoop=false);
+    RetXv startAsync(bool loop,const QString &functionId=QString());
+    void _threadRun(bool bLoop=false,const QString &functionId=QString());
 signals:
     ///流程运行开始
     void sgFlowRunStart();
@@ -156,6 +159,7 @@ protected:
     XvFlowRunInfo _runInfo;
     ///流程是否在运行
     std::atomic_bool _running;
+    std::atomic_bool _stopRequested{false};
 
  /**********************流程操作**********************/
  //流程操作:运行释放

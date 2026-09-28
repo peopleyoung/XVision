@@ -6,6 +6,8 @@
 #include <QPointer>
 #include <QSet>
 #include <QThread>
+#include <QWaitCondition>
+#include <QMutexLocker>
 //std
 #include <algorithm>
 #include <functional>
@@ -51,6 +53,8 @@ public:
     QMap<QString,XvFunc*>   mapFunc;
     ///运行线程
     QPointer<XThread>    runThread;
+    QMutex stopMutex;
+    QWaitCondition stopCondition;
     ///流程配置
     XvFlowConfig        *flowConfig;
 };
@@ -92,11 +96,9 @@ XvFlow::~XvFlow()
 RetXv XvFlow::release()
 {
     Q_D(XvFlow);
-    if(isRunning())
-    {
-        stop();
-        wait();
-    }
+    if(isRunning()) stop();
+    // The worker may still be delivering its final signal after clearing busy.
+    if(d->runThread && d->runThread->isRunning()) wait();
     foreach (auto func, d->mapFunc)
     {
        if(func->release())
@@ -468,83 +470,62 @@ void XvFlow::onUpdateAllXvFuncLink()
 }
 RetXv XvFlow::runOnce()
 {
-    Q_D(XvFlow);
-    if(m_parProject && m_parProject->isRunning())
-    {
-        return Ret_Xv_FlowRunning;
-    }
-    if(!checkFlowLegal())//验证流程合法性
-    {
-        return Ret_Xv_FlowIllegal;
-    }
-    bool expected=false;
-    if(!_running.compare_exchange_strong(expected,true))
-    {
-        return Ret_Xv_FlowRunning;
-    }
-    const QString threadName="FlowRunOnce_"+flowId();
-    d->runThread = XConcurrentMgr->getThreadsByGropuName(XvFlowThreadGroup,threadName);
-    if(!d->runThread)
-    {
-       d->runThread=XConcurrentMgr->createThreadByFunction(
-                   XvFlowThreadGroup,threadName,false,true,
-                   &XvFlow::_threadRun,this,false);
-    }
-    if(d->runThread)
-    {
-        d->runThread->start(QThread::HighPriority);
-        return Ret_Xv_Success;
-    }
-    _running.store(false);
-    setLastErrorMsg("无法创建流程单次运行线程");
-    return Ret_Xv_FlowIllegal;
+    return startAsync(false);
 }
 
 RetXv XvFlow::runLoop()
 {
+    return startAsync(true);
+}
+
+RetXv XvFlow::runFunctionOnce(const QString &functionId)
+{
+    if(functionId.isEmpty()) return Ret_Xv_FlowIllegal;
+    return startAsync(false,functionId);
+}
+
+RetXv XvFlow::startAsync(bool loop,const QString &functionId)
+{
     Q_D(XvFlow);
-    if(m_parProject && m_parProject->isRunning())
-    {
+    if(!isEditAllowed() || (d->runThread && d->runThread->isRunning()))
         return Ret_Xv_FlowRunning;
-    }
-    if(!checkFlowLegal())//验证流程合法性
+    if(functionId.isEmpty())
     {
+        if(!checkFlowLegal()) return Ret_Xv_FlowIllegal;
+    }
+    else if(!d->mapFunc.contains(functionId))
+    {
+        setLastErrorMsg("单步运行的算子不属于当前流程");
         return Ret_Xv_FlowIllegal;
     }
     bool expected=false;
-    if(!_running.compare_exchange_strong(expected,true))
-    {
-        return Ret_Xv_FlowRunning;
-    }
-    const QString threadName="FlowRunLoop_"+flowId();
-    d->runThread= XConcurrentMgr->getThreadsByGropuName(XvFlowThreadGroup,threadName);
-    if(!d->runThread)
-    {
-       d->runThread=XConcurrentMgr->createThreadByFunction(
-                   XvFlowThreadGroup,threadName,false,true,
-                   &XvFlow::_threadRun,this,true);
-    }
+    if(!_running.compare_exchange_strong(expected,true)) return Ret_Xv_FlowRunning;
+    _stopRequested.store(false);
+    // Never restart a thread awaiting deferred removal by the manager.
+    d->runThread=XConcurrentMgr->createThreadByFunction(
+        XvFlowThreadGroup,"FlowRun_"+flowId(),true,true,
+        &XvFlow::_threadRun,this,loop,functionId);
     if(d->runThread)
     {
-        d->runThread->start(QThread::HighPriority);
+        d->runThread->start(QThread::NormalPriority);
         return Ret_Xv_Success;
     }
     _running.store(false);
-    setLastErrorMsg("无法创建流程循环运行线程");
+    setLastErrorMsg("无法创建流程运行线程");
     return Ret_Xv_FlowIllegal;
 }
 
 RetXv XvFlow::stop()
 {
-    if(_running.exchange(false))
+    Q_D(XvFlow);
+    if(!_running.load()) return Ret_Xv_FlowNoRun;
     {
-        emit this->sgFlowRunStop();
-        return Ret_Xv_Success;
+        QMutexLocker locker(&d->stopMutex);
+        _stopRequested.store(true);
+        d->stopCondition.wakeAll();
     }
-    else
-    {
-        return Ret_Xv_FlowNoRun;
-    }
+    emit sgFlowRunStop();
+    return Ret_Xv_Success;
 }
 
 RetXv XvFlow::wait(unsigned long ms)
@@ -579,6 +560,7 @@ RetXv XvFlow::runOnceSynchronously()
     {
         return Ret_Xv_FlowRunning;
     }
+    _stopRequested.store(false);
     _threadRun(false);
     return Ret_Xv_Success;
 }
@@ -691,7 +673,7 @@ bool XvFlow::runGraphContext(const QSet<XvFunc*> &nodes,
     QSet<XvFunc*> resolved;
     while(resolved.count()<nodes.count())
     {
-        if(!_running.load()) return true;
+        if(_stopRequested.load()) return true;
 
         QList<XvFunc*> ready;
         QList<XvFunc*> skipped;
@@ -737,18 +719,18 @@ bool XvFlow::runGraphContext(const QSet<XvFunc*> &nodes,
             _runInfo.runStatus=EXvFlowRunStatus::Error;
             _runInfo.runMsg="流程调度失败，存在未解析的连接";
             setLastErrorMsg(_runInfo.runMsg);
-            _running.store(false);
+            _stopRequested.store(true);
             return false;
         }
 
         XvFunc *function=ready.first();
         const EXvFuncRunStatus status=function->runXvFunc();
-        if(!_running.load()) return true;
+        if(_stopRequested.load()) return true;
         if(config->funcErrorInterruptRun && status==EXvFuncRunStatus::Error)
         {
             _runInfo.runStatus=EXvFlowRunStatus::Error;
             _runInfo.runMsg=getLang(Core_XvFlow_RunStatusError,"运行错误");
-            _running.store(false);
+            _stopRequested.store(true);
             return false;
         }
 
@@ -769,7 +751,7 @@ bool XvFlow::runGraphContext(const QSet<XvFunc*> &nodes,
                     _runInfo.runMsg=QString("算子[%1]选择了无效或重复端口[%2]")
                             .arg(function->funcName(),port);
                     setLastErrorMsg(_runInfo.runMsg);
-                    _running.store(false);
+                    _stopRequested.store(true);
                     return false;
                 }
                 selectedPorts.insert(port);
@@ -789,7 +771,7 @@ bool XvFlow::runGraphContext(const QSet<XvFunc*> &nodes,
                 _runInfo.runMsg=QString("算子[%1]返回了无效循环指令")
                         .arg(function->funcName());
                 setLastErrorMsg(_runInfo.runMsg);
-                _running.store(false);
+                _stopRequested.store(true);
                 return false;
             }
 
@@ -807,7 +789,7 @@ bool XvFlow::runGraphContext(const QSet<XvFunc*> &nodes,
                 _runInfo.runMsg=QString("循环算子[%1]缺少body或done连接")
                         .arg(function->funcName());
                 setLastErrorMsg(_runInfo.runMsg);
-                _running.store(false);
+                _stopRequested.store(true);
                 return false;
             }
             for(XvFunc *doneTarget:doneTargets)
@@ -818,7 +800,7 @@ bool XvFlow::runGraphContext(const QSet<XvFunc*> &nodes,
                     _runInfo.runMsg=QString("循环算子[%1]的done越过当前执行上下文")
                             .arg(function->funcName());
                     setLastErrorMsg(_runInfo.runMsg);
-                    _running.store(false);
+                    _stopRequested.store(true);
                     return false;
                 }
             }
@@ -835,7 +817,7 @@ bool XvFlow::runGraphContext(const QSet<XvFunc*> &nodes,
                     _runInfo.runMsg=QString("循环算子[%1]的body越过当前执行上下文")
                             .arg(function->funcName());
                     setLastErrorMsg(_runInfo.runMsg);
-                    _running.store(false);
+                    _stopRequested.store(true);
                     return false;
                 }
                 if(bodyNodes.contains(candidate)) continue;
@@ -889,14 +871,14 @@ bool XvFlow::runGraphContext(const QSet<XvFunc*> &nodes,
                 _runInfo.runMsg=QString("循环算子[%1]的body子图不是封闭的done有界DAG")
                         .arg(function->funcName());
                 setLastErrorMsg(_runInfo.runMsg);
-                _running.store(false);
+                _stopRequested.store(true);
                 return false;
             }
 
             for(int iteration=0;iteration<directive.iterationCount;++iteration)
             {
                 QString error;
-                if(!_running.load()) return true;
+                if(_stopRequested.load()) return true;
                 if(!function->prepareIteration(iteration,error))
                 {
                     _runInfo.runStatus=EXvFlowRunStatus::Error;
@@ -905,7 +887,7 @@ bool XvFlow::runGraphContext(const QSet<XvFunc*> &nodes,
                              .arg(function->funcName()).arg(iteration)
                             :error;
                     setLastErrorMsg(_runInfo.runMsg);
-                    _running.store(false);
+                    _stopRequested.store(true);
                     return false;
                 }
                 function->publishResultUpdate();
@@ -935,7 +917,7 @@ bool XvFlow::runGraphContext(const QSet<XvFunc*> &nodes,
         else if(directive.kind==XvExecutionDirective::Stop)
         {
             resolved.insert(function);
-            _running.store(false);
+            _stopRequested.store(true);
             return true;
         }
         else
@@ -944,7 +926,7 @@ bool XvFlow::runGraphContext(const QSet<XvFunc*> &nodes,
             _runInfo.runMsg=QString("算子[%1]返回流程错误指令")
                     .arg(function->funcName());
             setLastErrorMsg(_runInfo.runMsg);
-            _running.store(false);
+            _stopRequested.store(true);
             return false;
         }
 
@@ -960,7 +942,7 @@ bool XvFlow::runGraphContext(const QSet<XvFunc*> &nodes,
     return true;
 }
 
-void XvFlow::_threadRun(bool bLoop)
+void XvFlow::_threadRun(bool bLoop,const QString &functionId)
 {
     Q_D(XvFlow);
     auto config=getFlowConfig();
@@ -971,23 +953,31 @@ void XvFlow::_threadRun(bool bLoop)
         _runInfo.runIdx++;
         _runInfo.runStatus=EXvFlowRunStatus::Running;
         _runInfo.runMsg=getLang(Core_XvFlow_RunStatusRunning,"正在运行");
-        emit this->sgFlowRunStart();
-        runGraphOnce(config);
-        if(_runInfo.runStatus!=EXvFlowRunStatus::Error)
+        emit sgFlowRunStart();
+        if(!_stopRequested.load())
         {
+            if(functionId.isEmpty()) runGraphOnce(config);
+            else
+            {
+                const auto status=d->mapFunc.value(functionId)->runXvFunc();
+                if(status==EXvFuncRunStatus::Error) _runInfo.runStatus=EXvFlowRunStatus::Error;
+                else if(status==EXvFuncRunStatus::Fail) _runInfo.runStatus=EXvFlowRunStatus::Fail;
+            }
+        }
+        if(_runInfo.runStatus==EXvFlowRunStatus::Running)
             _runInfo.runStatus=EXvFlowRunStatus::Ok;
-            _runInfo.runMsg=getLang(Core_XvFlow_RunStatusOk,"运行成功");
-        }
-        _runInfo.runElapsed= (timer.nsecsElapsed()*1.0)/1000/1000;
-        emit this->sgFlowRunEnd();
-        if(!_running)
-        {
-           break;
-        }
-        if(bLoop)
-        {
-            QThread::msleep(config->loopInterval);
-        }
-    }while(bLoop);
+        if(_runInfo.runStatus==EXvFlowRunStatus::Ok)
+            _runInfo.runMsg=_stopRequested.load()?QStringLiteral("运行已停止")
+                :getLang(Core_XvFlow_RunStatusOk,"运行成功");
+        else if(_runInfo.runMsg==getLang(Core_XvFlow_RunStatusRunning,"正在运行"))
+            _runInfo.runMsg=QStringLiteral("算子执行失败");
+        _runInfo.runElapsed=timer.nsecsElapsed()/1000000.0;
+        if(!bLoop || _stopRequested.load()) break;
+        emit sgFlowRunEnd();
+        QMutexLocker locker(&d->stopMutex);
+        if(!_stopRequested.load() && config->loopInterval>0)
+            d->stopCondition.wait(&d->stopMutex,config->loopInterval);
+    }while(!_stopRequested.load());
     _running.store(false);
+    emit sgFlowRunEnd();
 }

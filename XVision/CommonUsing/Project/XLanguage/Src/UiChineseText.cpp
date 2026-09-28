@@ -381,7 +381,7 @@ QString getUiText(const QString &text)
     {QStringLiteral("OpenCVBoardSrcImageFilesNodeData"), QStringLiteral("电路板图像采集")},
     {QStringLiteral("OpenCVCardoorSrcImageFilesNodeData"), QStringLiteral("车门图像采集")},
     {QStringLiteral("OpenCVConditionNodeData"), QStringLiteral("条件分支")},
-    {QStringLiteral("OpenCVHalconSrcImageFilesNodeData"), QStringLiteral("HALCON 图像采集")},
+    {QStringLiteral("OpenCVHalconSrcImageFilesNodeData"), QStringLiteral("工业示例图像采集")},
     {QStringLiteral("OpenCVPillMagnesiumSrcImageFilesNodeData"), QStringLiteral("药片图像采集")},
     {QStringLiteral("OpenCVPillbagSrcImageFilesNodeData"), QStringLiteral("药袋图像采集")},
     {QStringLiteral("OpenCVPipeJointsSrcImageFilesNodeData"), QStringLiteral("管接头图像采集")},

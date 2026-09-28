@@ -35,7 +35,7 @@ void BaseDataWriterWdg::initFrm()
     ui->cmbBool->addItem(getUiText("False"));
     ui->cmbBool->addItem(getUiText("True"));
 
-    connect(ui->cmbBool,&QComboBox::currentIndexChanged,this,[=](){
+    connect(ui->cmbBool,qOverload<int>(&QComboBox::currentIndexChanged),this,[=](){
         rBool->setValue(ui->cmbBool->currentIndex());
     });
     connect(ui->letInt,&QLineEdit::textChanged,this,[=]()

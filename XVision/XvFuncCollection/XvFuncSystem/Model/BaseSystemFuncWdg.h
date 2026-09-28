@@ -23,7 +23,8 @@ protected:
     {
         return dynamic_cast<T*>(m_func);
     }
-protected:
+public:
+    // QVariant payload; explicitly registered for both Qt 5 and Qt 6.
     struct SBindResultTag
     {
         SBindResultTag()
@@ -94,5 +95,7 @@ protected:
 
 
 };
+
+Q_DECLARE_METATYPE(BaseSystemFuncWdg::SBindResultTag)
 
 #endif // BASESYSTEMFUNCWDG_H

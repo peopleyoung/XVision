@@ -3,6 +3,7 @@
 #include <QColor>
 #include <QFile>
 #include <QTemporaryDir>
+#include <QFileInfo>
 
 #include <cmath>
 #include <cstring>
@@ -50,6 +51,8 @@ class OnnxOperatorTests:public QObject
     Q_OBJECT
 private slots:
     void preprocessLayoutsNormalizationAndLetterbox();
+    void cachedModelStillRejectsChangedFiles();
+    void preprocessingMatchesPixelReference();
     void classificationAndSoftmax();
     void detectionDecodersAndNms();
     void segmentationLogitsBinaryAndLabels();
@@ -137,6 +140,88 @@ void OnnxOperatorTests::preprocessLayoutsNormalizationAndLetterbox()
     config.meanValues="0";
     config.pixelScale=std::numeric_limits<double>::infinity();
     QVERIFY(!XvOnnx::preprocessImage(image,info,config,tensor,transform,error));
+}
+
+void OnnxOperatorTests::cachedModelStillRejectsChangedFiles()
+{
+#if !defined(XVISION_ENABLE_ONNXRUNTIME)
+    QSKIP("ONNX Runtime backend is disabled");
+#else
+    struct Probe: NInference { using NOnnxBase::executeModel; } operation;
+    QTemporaryDir directory;
+    QVERIFY(directory.isValid());
+    const QString path=directory.filePath("identity.onnx");
+    QVERIFY(QFile::copy(QStringLiteral(XVISION_ONNX_FIXTURE),path));
+    QFile file(path);QVERIFY(file.open(QIODevice::ReadOnly));
+    const QByteArray original=file.readAll();file.close();
+    const auto originalTime=QFileInfo(path).lastModified();
+    QString error;
+    QVERIFY2(operation.configureModel(path,error),qPrintable(error));
+    XOnnxTensorData input=floatTensor("input",{1,16,128,128},QVector<float>(16*128*128,0.25f));
+    QList<XOnnxTensorData> outputs;
+    for(int i=0;i<5;++i)
+    {
+        QVERIFY2(operation.executeModel({input},outputs,error),qPrintable(error));
+        QCOMPARE(outputs.first().bytes,input.bytes);
+    }
+    QByteArray changed=original;changed[changed.size()-1]=char(changed.back()^1);
+    QVERIFY(file.open(QIODevice::WriteOnly));
+    QCOMPARE(file.write(changed),qint64(original.size()));QVERIFY(file.flush());
+    QVERIFY(file.setFileTime(originalTime,QFileDevice::FileModificationTime));file.close();
+    QVERIFY(!operation.executeModel({input},outputs,error));
+    QCOMPARE(outputs.first().bytes,input.bytes); // failed runs do not publish outputs
+    QVERIFY(file.open(QIODevice::WriteOnly));QCOMPARE(file.write(original),qint64(original.size()));
+    file.close();
+    QVERIFY2(operation.executeModel({input},outputs,error),qPrintable(error));
+    const QString invalid=directory.filePath("invalid.onnx");
+    QFile bad(invalid);QVERIFY(bad.open(QIODevice::WriteOnly));bad.write("invalid model");bad.close();
+    QVERIFY(!operation.configureModel(invalid,error));
+    QVERIFY2(operation.executeModel({input},outputs,error),qPrintable(error));
+    // Atomic replacement with identical bytes remains valid but invalidates the stamp.
+    QVERIFY(QFile::rename(path,path+".old"));QVERIFY(QFile::copy(path+".old",path));
+    QVERIFY2(operation.executeModel({input},outputs,error),qPrintable(error));
+    QVERIFY(QFile::remove(path));
+    QVERIFY(!operation.executeModel({input},outputs,error));
+#endif
+}
+
+void OnnxOperatorTests::preprocessingMatchesPixelReference()
+{
+    const QList<QImage::Format> formats={QImage::Format_RGB888,QImage::Format_ARGB32,
+        QImage::Format_ARGB32_Premultiplied,QImage::Format_Grayscale8};
+    for(auto format:formats) for(int channels:{1,3}) for(bool nchw:{false,true})
+        for(bool bgr:{false,true}) for(bool floating:{false,true})
+    {
+        QImage image(5,3,QImage::Format_ARGB32);
+        for(int y=0;y<image.height();++y) for(int x=0;x<image.width();++x)
+            image.setPixelColor(x,y,QColor(x*47,y*81,(x+y)*31,30+x*41));
+        image=image.convertToFormat(format);
+        XOnnxTensorInfo info{"image",floating?"float32":"uint8",nchw
+            ?QVector<qint64>{1,channels,3,5}:QVector<qint64>{1,3,5,channels}};
+        XvOnnx::ImagePreprocessConfig config;
+        config.layout=nchw?XvOnnx::TensorLayout::Nchw:XvOnnx::TensorLayout::Nhwc;
+        config.channelOrder=bgr?XvOnnx::ChannelOrder::Bgr:XvOnnx::ChannelOrder::Rgb;
+        config.pixelScale=floating?1.0/255.0:1.0;
+        config.meanValues=floating?"0.13":"0";config.stdValues=floating?"0.7":"1";
+        XOnnxTensorData tensor;XvOnnx::ImageTransform transform;QString error;
+        QVERIFY2(XvOnnx::preprocessImage(image,info,config,tensor,transform,error),qPrintable(error));
+        QByteArray reference(tensor.bytes.size(),0);
+        for(int y=0;y<3;++y) for(int x=0;x<5;++x) for(int c=0;c<channels;++c)
+        {
+            const QColor color=image.pixelColor(x,y);
+            const int rgb[3]={color.red(),color.green(),color.blue()};
+            const int pixel=channels==1?qGray(color.rgb()):rgb[bgr?2-c:c];
+            const int index=nchw?c*15+y*5+x:(y*5+x)*channels+c;
+            if(floating)
+            {
+                const float value=float((pixel*config.pixelScale-0.13)/0.7);
+                std::memcpy(reference.data()+index*4,&value,4);
+            }
+            else reference[index]=char(pixel);
+        }
+        QVERIFY2(tensor.bytes==reference,qPrintable(QString("Pixel mismatch format=%1 channels=%2 nchw=%3 bgr=%4 float=%5")
+            .arg(int(format)).arg(channels).arg(nchw).arg(bgr).arg(floating)));
+    }
 }
 
 void OnnxOperatorTests::classificationAndSoftmax()

@@ -967,7 +967,7 @@ void UiXvWorkManager::onFlowRunEnd()
 
     auto scene=getFlowScene(flow->flowId());
     if(!scene) return;
-    scene->setEnabled(!m_projectRunning);
+    scene->setEnabled(!m_projectRunning && !flow->isRunning());
     auto par= scene->getView()->parent();
     if(par)
     {
@@ -989,7 +989,7 @@ void UiXvWorkManager::onFlowRunStop()
     Log_Event(QString(getLang(App_UiXvWorkMgr_XvFlowRunStop,"流程<%1>运行停止")).arg(flow->flowName()));
     auto scene=getFlowScene(flow->flowId());
     if(!scene) return;
-    scene->setEnabled(!m_projectRunning);
+    scene->setEnabled(!m_projectRunning && !flow->isRunning());
 }
 
 void UiXvWorkManager::flowShowConfig()
@@ -1421,7 +1421,7 @@ void UiXvWorkManager::funcRun(XFlowGraphicsItem *item)
     if(!qPtr) return;
     auto func=qobject_cast<XvFunc*>(qPtr);
     if(!func) return;
-    func->runXvFunc();
+    if(auto flow=func->parFlow()) flow->runFunctionOnce(func->funcId());
 }
 
 void UiXvWorkManager::funcRename()

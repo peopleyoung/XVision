@@ -74,7 +74,7 @@ SerialData::SerialData(QObject *parent)
 {
     _funcRole="SerialData";
     _funcName=getLang("XvFuncSystem_SerialData_Name","串口数据");
-    _funcType=EXvFuncType::DataProcessing;
+    _funcType=EXvFuncType::Communication;
 }
 
 SerialData::~SerialData()

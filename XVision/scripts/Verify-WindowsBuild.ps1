@@ -53,23 +53,6 @@ if ($LASTEXITCODE -ne 0 -or $QtVersion -notmatch "^6\.4\.") {
 }
 $env:PATH = (Join-Path $env:QTDIR "bin") + ";" + $env:PATH
 
-$RequiredHalconFiles = @(
-    "3rdparty/halcon/lib/halcon.dll",
-    "3rdparty/halcon/lib/halcon.lib",
-    "3rdparty/halcon/lib/halconcpp.dll",
-    "3rdparty/halcon/lib/halconcpp.lib"
-)
-foreach ($RelativePath in $RequiredHalconFiles) {
-    if (-not (Test-Path (Join-Path $SourceDir $RelativePath))) {
-        throw "Missing Halcon dependency: $RelativePath"
-    }
-}
-$HalconVersionHeader = Join-Path $SourceDir "3rdparty/halcon/include/HVersNum.h"
-$HalconVersionText = Get-Content -Raw $HalconVersionHeader
-if ($HalconVersionText -notmatch "(?m)^\s*#\s*define\s+HLIB_MAJOR_NUM\s+19\s*$" -or
-    $HalconVersionText -notmatch "(?m)^\s*#\s*define\s+HLIB_MINOR_NUM\s+11\s*$") {
-    throw "The bundled Halcon headers are not version 19.11."
-}
 
 $ConfigureArguments = @("--preset", $Preset)
 if ($FullFeatures -and -not $SkipBuild) {
@@ -118,11 +101,20 @@ try {
         "communication_operators",
         "source_notification",
         "onnx_operators",
-        "ui_appearance"
+        "ui_appearance",
+        "ui_responsiveness"
     )) {
         if ($DiscoveredTests -notcontains $ExpectedTest) {
             throw "Expected CTest entry is missing: $ExpectedTest"
         }
+    }
+
+    # Run the real CPU/ownership/persistence paths without private model assets.
+    if ([string]::IsNullOrWhiteSpace($env:XVISION_ONNX_TEST_MODEL)) {
+        $env:XVISION_ONNX_TEST_MODEL = Join-Path $SourceDir 'tests/fixtures/cpu-identity.onnx'
+    }
+    if ([string]::IsNullOrWhiteSpace($env:XVISION_ONNX_EXECUTION_TEST_MODEL)) {
+        $env:XVISION_ONNX_EXECUTION_TEST_MODEL = Join-Path $SourceDir 'tests/fixtures/cpu-identity.onnx'
     }
 
     & ctest --preset $Preset
@@ -149,8 +141,6 @@ $RequiredOutputs = @(
     (Join-Path $BinDir "XvCamera.dll"),
     (Join-Path $BinDir "XvFuncCollection/XvFuncSystem.dll"),
     (Join-Path $BinDir "sqldrivers/$SqliteDriverName"),
-    (Join-Path $BinDir "halcon.dll"),
-    (Join-Path $BinDir "halconcpp.dll"),
     (Join-Path $BinDir "Qt6Network$QtDebugSuffix.dll"),
     (Join-Path $BinDir "Qt6SerialPort$QtDebugSuffix.dll"),
     (Join-Path $BinDir "Qt6SerialBus$QtDebugSuffix.dll"),
@@ -168,5 +158,5 @@ foreach ($OutputPath in $RequiredOutputs) {
 }
 
 Write-Host "Windows $Configuration build and first-party tests passed."
-Write-Host "CMake: $CMakeVersion; Qt: $QtVersion; Halcon headers: 19.11."
+Write-Host "CMake: $CMakeVersion; Qt: $QtVersion; no HALCON dependency."
 Write-Host "Complete the manual persistence checklist in doc/开发工作/Windows构建与持久化验收.md."

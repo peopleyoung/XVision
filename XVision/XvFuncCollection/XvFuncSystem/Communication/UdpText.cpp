@@ -36,7 +36,7 @@ UdpText::UdpText(QObject *parent)
 {
     _funcRole="UdpText";
     _funcName=getLang("XvFuncSystem_UdpText_Name","UDP文本");
-    _funcType=EXvFuncType::DataProcessing;
+    _funcType=EXvFuncType::Communication;
 }
 
 UdpText::~UdpText()

@@ -93,26 +93,6 @@ void FrmXvFuncAsm::resizeEvent(QResizeEvent *event)
 
 void FrmXvFuncAsm::initFrm()
 {    
-    auto funcCreateFrmType=[&](QMap<XvCore::EXvFuncType,XMatDrawer*> &map,const XvCore::EXvFuncType &type)
-    {
-        if(map.contains(type)) return;
-        auto info=XvFuncAsm->getXvFuncTypeInfo(type);
-        auto lst=XvFuncAsm->getXvFuncInfos(type);
-        FrmXvFuncType *frmType=new FrmXvFuncType(info,lst);
-        auto drawer=  new XMatDrawer(m_drawerParWidget);
-        drawer->setClickOutsideToClose(true);
-        drawer->setOverlayMode(false);
-        auto layout= new QVBoxLayout();
-        drawer->setDrawerLayout(layout);
-        layout->addWidget(frmType);
-        layout->setContentsMargins(0,0,0,0);
-        drawer->setDrawerHeight(frmType->height());
-        drawer->setDrawerWidth(frmType->width());
-        drawer->installEventFilter(this);
-        connect(frmType,&FrmXvFuncType::closeDrawer,drawer,&XMatDrawer::closeDrawer);
-        map[type]=drawer;
-    };
-
     auto funcAddBtn=[&](QVBoxLayout *layout,QWidget *parent,QIcon icon,XvCore::EXvFuncType type,QString tip="",QString text="")
     {
         auto fmH=CS_XvFuncType_Btn_Size;
@@ -180,11 +160,13 @@ void FrmXvFuncAsm::initFrm()
         auto lstTemp=XvFuncAsm->getXvFuncInfos(info.type);
         if(lstTemp.count()==0)
         {
-            //continue;//xie.y test
+            continue; // Do not offer empty category drawers.
         }
 
-        funcAddBtn(vLayout,scAreaWcXvFuncAsm,info.icon,info.type,info.name,info.name);     
-        funcCreateFrmType(m_mapXMatDrawerType,info.type);
+        funcAddBtn(vLayout,scAreaWcXvFuncAsm,info.icon,info.type,
+                   getLang("XvFuncCategory_Count","%1（%2 个算子）")
+                       .arg(info.name).arg(lstTemp.count()),info.name);
+
     }
 
     vLayout->addSpacerItem(new QSpacerItem(20, 40, QSizePolicy::Minimum ,QSizePolicy::Expanding ));
@@ -199,7 +181,7 @@ void FrmXvFuncAsm::initFrm()
 
     btnShowXvFuncAsm->setVisible(false);
     ui->hLine2->setVisible(false);
-    m_drawerAllTypeXvFuncs=  new XMatDrawer(m_drawerParWidget);
+    m_drawerAllTypeXvFuncs=new XMatDrawer(m_drawerParWidget?m_drawerParWidget:this);
     m_drawerAllTypeXvFuncs->setClickOutsideToClose(true);
     m_drawerAllTypeXvFuncs->setOverlayMode(false);
     m_drawerAllTypeXvFuncs->installEventFilter(this);
@@ -242,6 +224,27 @@ void FrmXvFuncAsm::initFrm()
 
 void FrmXvFuncAsm::onShowXvFuncTypeDrawer(const QRect &rect,const XvCore::EXvFuncType &type)
 {
+    auto funcCreateFrmType=[&](QMap<XvCore::EXvFuncType,XMatDrawer*> &map,const XvCore::EXvFuncType &type)
+    {
+        if(map.contains(type)) return;
+        auto info=XvFuncAsm->getXvFuncTypeInfo(type);
+        auto lst=XvFuncAsm->getXvFuncInfos(type);
+        FrmXvFuncType *frmType=new FrmXvFuncType(info,lst);
+        auto drawer=new XMatDrawer(m_drawerParWidget?m_drawerParWidget:this);
+        drawer->setClickOutsideToClose(true);
+        drawer->setOverlayMode(false);
+        auto layout= new QVBoxLayout();
+        drawer->setDrawerLayout(layout);
+        layout->addWidget(frmType);
+        layout->setContentsMargins(0,0,0,0);
+        drawer->setDrawerHeight(frmType->height());
+        drawer->setDrawerWidth(frmType->width());
+        drawer->installEventFilter(this);
+        connect(frmType,&FrmXvFuncType::closeDrawer,drawer,&XMatDrawer::closeDrawer);
+        map[type]=drawer;
+    };
+
+    funcCreateFrmType(m_mapXMatDrawerType,type);
     auto drawer=m_mapXMatDrawerType[type];
     if(m_drawerCurSingleTypeXvFuncs)
     {

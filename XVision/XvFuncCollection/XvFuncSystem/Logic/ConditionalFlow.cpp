@@ -51,7 +51,7 @@ XvExecutionDirective ConditionalFlow::executionDirective() const
 {
     XvExecutionDirective directive;
     directive.kind=XvExecutionDirective::SelectPorts;
-    directive.selectedPorts={m_selectedValue?QString("true"):QString("false")};
+    directive.selectedPorts=QStringList{m_selectedValue?QString("true"):QString("false")};
     return directive;
 }
 

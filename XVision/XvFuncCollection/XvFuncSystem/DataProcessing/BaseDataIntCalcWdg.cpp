@@ -39,18 +39,18 @@ void BaseDataIntCalcWdg::initFrm()
     cmbType->addItem(getLang("XvFuncSystem_BaseDataIntCalc_EIntCalaTypeSelfSub","自减"),BaseDataIntCalc::EIntCalaType::SelfSub);
 
 
-    connect(ui->cmbType,&QComboBox::currentIndexChanged,this,[=]()
+    connect(ui->cmbType,qOverload<int>(&QComboBox::currentIndexChanged),this,[=]()
     {
        auto idx=ui->cmbType->currentIndex();
        func->setIntCalaType((BaseDataIntCalc::EIntCalaType)idx);
     });
 
-    connect(ui->cmbV1,&QComboBox::currentIndexChanged,this,[=]()
+    connect(ui->cmbV1,qOverload<int>(&QComboBox::currentIndexChanged),this,[=]()
     {
         setCmbWithLetEnable(ui->cmbV1,ui->letV1,p1->objectName());
     });
 
-    connect(ui->cmbV2,&QComboBox::currentIndexChanged,this,[=]()
+    connect(ui->cmbV2,qOverload<int>(&QComboBox::currentIndexChanged),this,[=]()
     {
         setCmbWithLetEnable(ui->cmbV2,ui->letV2,p2->objectName());
     });

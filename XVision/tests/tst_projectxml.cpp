@@ -29,10 +29,6 @@
 #include "GeometryCreate.h"
 #include "GeometryMeasure.h"
 #include "HttpJson.h"
-#include "HObjectDetection.h"
-#include "HModelMatch.h"
-#include "HSemanticSegmentation.h"
-#include "HalconImageInterop.h"
 #include "ImageAcquisition.h"
 #include "LogOutput.h"
 #include "NotificationOutput.h"
@@ -499,9 +495,6 @@ private slots:
         QVERIFY(assembly->registerXvFunc(ImageAcquisition::staticMetaObject));
         QVERIFY(assembly->registerXvFunc(ConditionalFlow::staticMetaObject));
         QVERIFY(assembly->registerXvFunc(LoopFlow::staticMetaObject));
-        QVERIFY(assembly->registerXvFunc(HModelMatch::staticMetaObject));
-        QVERIFY(assembly->registerXvFunc(HObjectDetection::staticMetaObject));
-        QVERIFY(assembly->registerXvFunc(HSemanticSegmentation::staticMetaObject));
         QVERIFY(assembly->registerXvFunc(Delayer::staticMetaObject));
         QVERIFY(assembly->registerXvFunc(ElapsedTimer::staticMetaObject));
         QVERIFY(assembly->registerXvFunc(LogOutput::staticMetaObject));
@@ -920,489 +913,6 @@ private slots:
         QCOMPARE(subscribed->labels(),labels);
     }
 
-    void semanticSegmentationUnconfiguredStateIsStrictAndTransactional()
-    {
-        QTemporaryDir directory;
-        QVERIFY(directory.isValid());
-        const QString path=directory.filePath("segmentation.xvproj");
-        const QString invalidPath=directory.filePath("segmentation-invalid.xvproj");
-
-        XvCoreManager *manager=XvCoreManager::getInstance();
-        XvProject *project=manager->createNewXvProject("Segmentation");
-        QVERIFY(project);
-        XvFlow *flow=project->createXvFlow("Inference");
-        QVERIFY(flow);
-        const QString flowId=flow->flowId();
-        auto function=qobject_cast<HSemanticSegmentation*>(
-                    flow->createXvFunc("HSemanticSegmentation"));
-        QVERIFY(function);
-        QCOMPARE(function->runtime(),HSemanticSegmentation::Cpu);
-        QCOMPARE(function->overlayOpacity(),0.45);
-        QVERIFY(!function->hasConfiguredAssets());
-
-        QImage input(3,2,QImage::Format_RGB888);
-        input.fill(Qt::red);
-        auto inputValue=dynamic_cast<XImage*>(
-                    function->getParamsByName("inputImage"));
-        auto segmentation=dynamic_cast<XSegmentationResult*>(
-                    function->getResultsByName("segmentation"));
-        auto colorMask=dynamic_cast<XImage*>(
-                    function->getResultsByName("colorMask"));
-        auto overlay=dynamic_cast<XImage*>(
-                    function->getResultsByName("overlayImage"));
-        auto confidence=dynamic_cast<XImage*>(
-                    function->getResultsByName("confidenceImage"));
-        QVERIFY(inputValue && segmentation && colorMask && overlay && confidence);
-        QVERIFY(segmentation->setValue(1,1,{0},{1.0f},{0},{"background"},
-                                         {qRgb(0,0,0)}));
-        QImage stale(1,1,QImage::Format_RGB888);
-        stale.fill(Qt::green);
-        colorMask->setValue(stale);
-        overlay->setValue(stale);
-        confidence->setValue(stale);
-        inputValue->setValue(input);
-        QCOMPARE(function->runXvFunc(),EXvFuncRunStatus::Error);
-        QVERIFY(!function->getXvFuncRunMsg().isEmpty());
-        QVERIFY(segmentation->isEmpty());
-        QVERIFY(colorMask->value().isNull());
-        QVERIFY(overlay->value().isNull());
-        QVERIFY(confidence->value().isNull());
-
-        function->setOverlayOpacity(-0.1);
-        QVERIFY(!manager->saveXvProject(path));
-        QVERIFY(!manager->lastErrorMsg().isEmpty());
-        function->setOverlayOpacity(0.35);
-        function->setRuntime(static_cast<HSemanticSegmentation::Runtime>(99));
-        QVERIFY(!manager->saveXvProject(path));
-        QVERIFY(!manager->lastErrorMsg().isEmpty());
-        function->setRuntime(HSemanticSegmentation::Cpu);
-        QVERIFY(manager->saveXvProject(path));
-        const QByteArray xml=readFile(path);
-        QVERIFY(!xml.contains("SemanticSegmentationAssets"));
-        QVERIFY(!xml.contains("colorMask"));
-        QVERIFY(manager->loadXvProject(path));
-
-        XvProject *restoredProject=manager->getXvProject();
-        QVERIFY(restoredProject);
-        auto restored=qobject_cast<HSemanticSegmentation*>(findFunctionByRole(
-                    restoredProject->getXvFlow(flowId),
-                    "HSemanticSegmentation"));
-        QVERIFY(restored);
-        QCOMPARE(restored->overlayOpacity(),0.35);
-        QVERIFY(!restored->hasConfiguredAssets());
-
-        QDomDocument invalid=parseDocument(path);
-        QDomNodeList functions=invalid.elementsByTagName("Function");
-        QDomElement segmentationFunction;
-        for(int index=0;index<functions.count();++index)
-        {
-            QDomElement candidate=functions.at(index).toElement();
-            if(candidate.attribute("role")=="HSemanticSegmentation")
-            {
-                segmentationFunction=candidate;
-                break;
-            }
-        }
-        QVERIFY(!segmentationFunction.isNull());
-        QDomElement data=invalid.createElement("PersistentData");
-        QDomElement assets=invalid.createElement("SemanticSegmentationAssets");
-        assets.setAttribute("format","halcon-dl-segmentation");
-        assets.setAttribute("version","1");
-        data.appendChild(assets);
-        segmentationFunction.appendChild(data);
-        QVERIFY(writeDocument(invalidPath,invalid));
-        expectLoadRejected(invalidPath,restoredProject);
-    }
-
-    void semanticSegmentationFixtureInferenceAndPersistence()
-    {
-        const QString modelPath=qEnvironmentVariable(
-                    "XVISION_SEGMENTATION_MODEL");
-        const QString preprocessPath=qEnvironmentVariable(
-                    "XVISION_SEGMENTATION_PREPROCESS");
-        const QString inputPath=qEnvironmentVariable(
-                    "XVISION_SEGMENTATION_INPUT");
-        const QString expectedPath=qEnvironmentVariable(
-                    "XVISION_SEGMENTATION_EXPECTED_LABELS");
-        if(modelPath.isEmpty() && preprocessPath.isEmpty()
-                && inputPath.isEmpty() && expectedPath.isEmpty())
-        {
-            QSKIP("Set XVISION_SEGMENTATION_MODEL, "
-                  "XVISION_SEGMENTATION_PREPROCESS, XVISION_SEGMENTATION_INPUT, "
-                  "and XVISION_SEGMENTATION_EXPECTED_LABELS to run inference");
-        }
-        QVERIFY2(!modelPath.isEmpty() && !preprocessPath.isEmpty()
-                 && !inputPath.isEmpty() && !expectedPath.isEmpty(),
-                 "All semantic-segmentation fixture variables are required");
-
-        const QImage input(inputPath);
-        const QImage expectedSource(expectedPath);
-        QVERIFY2(!input.isNull(),qPrintable(inputPath));
-        QVERIFY2(!expectedSource.isNull(),qPrintable(expectedPath));
-        QCOMPARE(expectedSource.size(),input.size());
-        const QImage expected=expectedSource.convertToFormat(
-                    QImage::Format_Grayscale8);
-        QVERIFY(!expected.isNull());
-
-        QTemporaryDir directory;
-        QVERIFY(directory.isValid());
-        const QString path=directory.filePath("segmentation-fixture.xvproj");
-        const QString invalidPath=directory.filePath(
-                    "segmentation-fixture-invalid.xvproj");
-        const QString fixtureModel=directory.filePath("fixture-model.hdl");
-        const QString fixturePreprocess=directory.filePath(
-                    "fixture-preprocess.hdict");
-        QVERIFY2(QFile::copy(modelPath,fixtureModel),qPrintable(modelPath));
-        QVERIFY2(QFile::copy(preprocessPath,fixturePreprocess),
-                 qPrintable(preprocessPath));
-        XvCoreManager *manager=XvCoreManager::getInstance();
-        XvProject *project=manager->createNewXvProject("Segmentation fixture");
-        QVERIFY(project);
-        XvFlow *flow=project->createXvFlow("Inference");
-        QVERIFY(flow);
-        const QString flowId=flow->flowId();
-        auto function=qobject_cast<HSemanticSegmentation*>(
-                    flow->createXvFunc("HSemanticSegmentation"));
-        QVERIFY(function);
-        QString error;
-        QVERIFY2(function->configureAssets(fixtureModel,fixturePreprocess,error),
-                 qPrintable(error));
-        const QString acceptedModel=function->modelPath();
-        const QString acceptedPreprocess=function->preprocessPath();
-        QVERIFY(!function->configureAssets(
-                    directory.filePath("missing.hdl"),fixturePreprocess,error));
-        QVERIFY(!error.isEmpty());
-        QCOMPARE(function->modelPath(),acceptedModel);
-        QCOMPARE(function->preprocessPath(),acceptedPreprocess);
-        auto inputValue=dynamic_cast<XImage*>(
-                    function->getParamsByName("inputImage"));
-        QVERIFY(inputValue);
-        inputValue->setValue(input);
-        QCOMPARE(function->runXvFunc(),EXvFuncRunStatus::Ok);
-
-        auto segmentation=dynamic_cast<XSegmentationResult*>(
-                    function->getResultsByName("segmentation"));
-        auto colorMask=dynamic_cast<XImage*>(
-                    function->getResultsByName("colorMask"));
-        auto overlay=dynamic_cast<XImage*>(
-                    function->getResultsByName("overlayImage"));
-        auto confidence=dynamic_cast<XImage*>(
-                    function->getResultsByName("confidenceImage"));
-        QVERIFY(segmentation && colorMask && overlay && confidence);
-        QCOMPARE(segmentation->width(),input.width());
-        QCOMPARE(segmentation->height(),input.height());
-        QCOMPARE(colorMask->value().size(),input.size());
-        QCOMPARE(overlay->value().size(),input.size());
-        QCOMPARE(confidence->value().size(),input.size());
-        for(int row=0;row<expected.height();++row)
-        {
-            const uchar *line=expected.constScanLine(row);
-            for(int column=0;column<expected.width();++column)
-            {
-                QCOMPARE(segmentation->labels().at(
-                             row*expected.width()+column),qint32(line[column]));
-            }
-        }
-        const QVector<qint32> baselineLabels=segmentation->labels();
-        const QVector<float> baselineConfidences=segmentation->confidences();
-
-        QVERIFY(manager->saveXvProject(path));
-        QDomDocument invalid=parseDocument(path);
-        QDomElement model=invalid.elementsByTagName("Model").at(0).toElement();
-        QVERIFY(!model.isNull());
-        model.setAttribute("sha256",QString(64,QLatin1Char('0')));
-        QVERIFY(writeDocument(invalidPath,invalid));
-        expectLoadRejected(invalidPath,project);
-
-        invalid=parseDocument(path);
-        model=invalid.elementsByTagName("Model").at(0).toElement();
-        QVERIFY(!model.isNull());
-        model.setAttribute("length","01");
-        QVERIFY(writeDocument(invalidPath,invalid));
-        expectLoadRejected(invalidPath,project);
-
-        invalid=parseDocument(path);
-        QDomElement assets=invalid.elementsByTagName(
-                    "SemanticSegmentationAssets").at(0).toElement();
-        QDomElement preprocess=assets.firstChildElement("Preprocess");
-        QVERIFY(!assets.isNull() && !preprocess.isNull());
-        assets.appendChild(preprocess.cloneNode(true));
-        QVERIFY(writeDocument(invalidPath,invalid));
-        expectLoadRejected(invalidPath,project);
-
-        QFile changedPreprocess(fixturePreprocess);
-        QVERIFY(changedPreprocess.open(QIODevice::Append));
-        QCOMPARE(changedPreprocess.write("x",1),qint64(1));
-        changedPreprocess.close();
-        expectLoadRejected(path,project);
-        QVERIFY(QFile::remove(fixturePreprocess));
-        QVERIFY2(QFile::copy(preprocessPath,fixturePreprocess),
-                 qPrintable(preprocessPath));
-
-        QVERIFY(manager->loadXvProject(path));
-        auto restored=qobject_cast<HSemanticSegmentation*>(findFunctionByRole(
-                    manager->getXvProject()->getXvFlow(flowId),
-                    "HSemanticSegmentation"));
-        QVERIFY(restored);
-        auto restoredInput=dynamic_cast<XImage*>(
-                    restored->getParamsByName("inputImage"));
-        QVERIFY(restoredInput);
-        restoredInput->setValue(input);
-        QCOMPARE(restored->runXvFunc(),EXvFuncRunStatus::Ok);
-        auto restoredSegmentation=dynamic_cast<XSegmentationResult*>(
-                    restored->getResultsByName("segmentation"));
-        QVERIFY(restoredSegmentation);
-        QCOMPARE(restoredSegmentation->labels(),baselineLabels);
-        QCOMPARE(restoredSegmentation->confidences(),baselineConfidences);
-    }
-
-    void objectDetectionUnconfiguredStateIsStrictAndClearsResults()
-    {
-        QTemporaryDir directory;
-        QVERIFY(directory.isValid());
-        const QString path=directory.filePath("detection.xvproj");
-        const QString invalidPath=directory.filePath("detection-invalid.xvproj");
-
-        XvCoreManager *manager=XvCoreManager::getInstance();
-        XvProject *project=manager->createNewXvProject("Detection");
-        QVERIFY(project);
-        XvFlow *flow=project->createXvFlow("Inference");
-        QVERIFY(flow);
-        const QString flowId=flow->flowId();
-        auto function=qobject_cast<HObjectDetection*>(
-                    flow->createXvFunc("HObjectDetection"));
-        QVERIFY(function);
-        QCOMPARE(function->runtime(),HObjectDetection::Cpu);
-        QVERIFY(!function->hasConfiguredAssets());
-
-        auto input=dynamic_cast<XImage*>(function->getParamsByName("inputImage"));
-        auto minConfidence=dynamic_cast<XReal*>(
-                    function->getParamsByName("minConfidence"));
-        auto count=dynamic_cast<XInt*>(
-                    function->getResultsByName("detectionCount"));
-        auto output=dynamic_cast<XImage*>(
-                    function->getResultsByName("outputImage"));
-        auto detections=dynamic_cast<XObjectList*>(
-                    function->getResultsByName("detections"));
-        QVERIFY(input && minConfidence && count && output && detections);
-        QCOMPARE(detections->valueType(),XDetectionResult::type());
-        QImage image(4,3,QImage::Format_RGB888);
-        image.fill(Qt::red);
-        input->setValue(image);
-        count->setValue(1);
-        output->setValue(image);
-        QVERIFY(detections->addValue(new XDetectionResult(
-                    "stale",0.0,0.0,1.0,1.0,0,"stale",0.9)));
-        QCOMPARE(function->runXvFunc(),EXvFuncRunStatus::Error);
-        QVERIFY(!function->getXvFuncRunMsg().isEmpty());
-        QCOMPARE(count->value(),0);
-        QVERIFY(output->value().isNull());
-        QCOMPARE(detections->count(),qsizetype(0));
-
-        minConfidence->setValue(1.1);
-        QCOMPARE(function->runXvFunc(),EXvFuncRunStatus::Error);
-        minConfidence->setValue(0.5);
-        function->setRuntime(static_cast<HObjectDetection::Runtime>(99));
-        QVERIFY(!manager->saveXvProject(path));
-        QVERIFY(!manager->lastErrorMsg().isEmpty());
-        function->setRuntime(HObjectDetection::Cpu);
-        QVERIFY(manager->saveXvProject(path));
-        const QByteArray xml=readFile(path);
-        QVERIFY(!xml.contains("ObjectDetectionAssets"));
-        QVERIFY(!xml.contains("detectionCount"));
-        QVERIFY(manager->loadXvProject(path));
-
-        XvProject *restoredProject=manager->getXvProject();
-        QVERIFY(restoredProject);
-        auto restored=qobject_cast<HObjectDetection*>(findFunctionByRole(
-                    restoredProject->getXvFlow(flowId),"HObjectDetection"));
-        QVERIFY(restored);
-        QVERIFY(!restored->hasConfiguredAssets());
-
-        QDomDocument invalid=parseDocument(path);
-        QDomElement detectionFunction=findFunctionElementByRole(
-                    invalid,"HObjectDetection");
-        QVERIFY(!detectionFunction.isNull());
-        QDomElement data=invalid.createElement("PersistentData");
-        QDomElement assets=invalid.createElement("ObjectDetectionAssets");
-        assets.setAttribute("format","halcon-dl-detection");
-        assets.setAttribute("version","1");
-        data.appendChild(assets);
-        detectionFunction.appendChild(data);
-        QVERIFY(writeDocument(invalidPath,invalid));
-        expectLoadRejected(invalidPath,restoredProject);
-    }
-
-    void objectDetectionFixtureInferenceAndPersistence()
-    {
-        const QString modelPath=qEnvironmentVariable("XVISION_DETECTION_MODEL");
-        const QString preprocessPath=qEnvironmentVariable(
-                    "XVISION_DETECTION_PREPROCESS");
-        const QString inputPath=qEnvironmentVariable("XVISION_DETECTION_INPUT");
-        const QString expectedPath=qEnvironmentVariable(
-                    "XVISION_DETECTION_EXPECTED");
-        if(modelPath.isEmpty() && preprocessPath.isEmpty()
-                && inputPath.isEmpty() && expectedPath.isEmpty())
-        {
-            QSKIP("Set XVISION_DETECTION_MODEL, XVISION_DETECTION_PREPROCESS, "
-                  "XVISION_DETECTION_INPUT, and XVISION_DETECTION_EXPECTED "
-                  "to run inference");
-        }
-        QVERIFY2(!modelPath.isEmpty() && !preprocessPath.isEmpty()
-                 && !inputPath.isEmpty() && !expectedPath.isEmpty(),
-                 "All object-detection fixture variables are required");
-
-        struct ExpectedDetection
-        {
-            int classId=0;
-            double x=0.0;
-            double y=0.0;
-            double width=0.0;
-            double height=0.0;
-            double score=0.0;
-        };
-        QVector<ExpectedDetection> expected;
-        QFile expectedFile(expectedPath);
-        QVERIFY2(expectedFile.open(QIODevice::ReadOnly|QIODevice::Text),
-                 qPrintable(expectedPath));
-        int lineNumber=0;
-        while(!expectedFile.atEnd())
-        {
-            ++lineNumber;
-            const QString line=QString::fromUtf8(expectedFile.readLine()).trimmed();
-            if(line.isEmpty() || line.startsWith('#')) continue;
-            const QStringList fields=line.split(',');
-            QVERIFY2(fields.size()==6,
-                     qPrintable(QString("invalid expected detection at line %1")
-                                .arg(lineNumber)));
-            ExpectedDetection item;
-            bool ok[6]={false,false,false,false,false,false};
-            item.classId=fields.at(0).trimmed().toInt(&ok[0]);
-            item.x=fields.at(1).trimmed().toDouble(&ok[1]);
-            item.y=fields.at(2).trimmed().toDouble(&ok[2]);
-            item.width=fields.at(3).trimmed().toDouble(&ok[3]);
-            item.height=fields.at(4).trimmed().toDouble(&ok[4]);
-            item.score=fields.at(5).trimmed().toDouble(&ok[5]);
-            QVERIFY2(ok[0] && ok[1] && ok[2] && ok[3] && ok[4] && ok[5],
-                     qPrintable(QString("non-numeric expected detection at line %1")
-                           .arg(lineNumber)));
-            expected.append(item);
-        }
-
-        const QImage inputImage(inputPath);
-        QVERIFY2(!inputImage.isNull(),qPrintable(inputPath));
-        QTemporaryDir directory;
-        QVERIFY(directory.isValid());
-        const QString projectPath=directory.filePath("detection-fixture.xvproj");
-        const QString fixtureModel=directory.filePath("fixture-model.hdl");
-        const QString fixturePreprocess=directory.filePath(
-                    "fixture-preprocess.hdict");
-        QVERIFY2(QFile::copy(modelPath,fixtureModel),qPrintable(modelPath));
-        QVERIFY2(QFile::copy(preprocessPath,fixturePreprocess),
-                 qPrintable(preprocessPath));
-
-        XvCoreManager *manager=XvCoreManager::getInstance();
-        XvProject *project=manager->createNewXvProject("Detection fixture");
-        QVERIFY(project);
-        XvFlow *flow=project->createXvFlow("Inference");
-        QVERIFY(flow);
-        const QString flowId=flow->flowId();
-        auto function=qobject_cast<HObjectDetection*>(
-                    flow->createXvFunc("HObjectDetection"));
-        QVERIFY(function);
-        QString error;
-        QVERIFY2(function->configureAssets(fixtureModel,fixturePreprocess,error),
-                 qPrintable(error));
-        const QString acceptedModel=function->modelPath();
-        const QString acceptedPreprocess=function->preprocessPath();
-        QVERIFY(!function->configureAssets(
-                    directory.filePath("missing.hdl"),fixturePreprocess,error));
-        QCOMPARE(function->modelPath(),acceptedModel);
-        QCOMPARE(function->preprocessPath(),acceptedPreprocess);
-
-        auto input=dynamic_cast<XImage*>(function->getParamsByName("inputImage"));
-        auto count=dynamic_cast<XInt*>(
-                    function->getResultsByName("detectionCount"));
-        auto output=dynamic_cast<XImage*>(
-                    function->getResultsByName("outputImage"));
-        auto detections=dynamic_cast<XObjectList*>(
-                    function->getResultsByName("detections"));
-        QVERIFY(input && count && output && detections);
-        input->setValue(inputImage);
-        QCOMPARE(function->runXvFunc(),EXvFuncRunStatus::Ok);
-        QCOMPARE(count->value(),int(expected.size()));
-        QCOMPARE(output->value().size(),inputImage.size());
-        QCOMPARE(detections->count(),qsizetype(expected.size()));
-        for(qsizetype index=0;index<detections->count();++index)
-        {
-            auto actual=dynamic_cast<XDetectionResult*>(detections->value(index));
-            QVERIFY(actual);
-            const ExpectedDetection &wanted=expected.at(index);
-            QCOMPARE(actual->classId(),wanted.classId);
-            QVERIFY(qAbs(actual->x()-wanted.x)<=1e-3);
-            QVERIFY(qAbs(actual->y()-wanted.y)<=1e-3);
-            QVERIFY(qAbs(actual->width()-wanted.width)<=1e-3);
-            QVERIFY(qAbs(actual->height()-wanted.height)<=1e-3);
-            QVERIFY(qAbs(actual->score()-wanted.score)<=1e-4);
-        }
-
-        QVERIFY(manager->saveXvProject(projectPath));
-        const QByteArray xml=readFile(projectPath);
-        QVERIFY(xml.contains("ObjectDetectionAssets"));
-        QVERIFY(!xml.contains("detectionCount"));
-
-        const QString invalidPath=directory.filePath(
-                    "detection-fixture-invalid.xvproj");
-        QDomDocument invalid=parseDocument(projectPath);
-        QDomElement model=invalid.elementsByTagName("Model").at(0).toElement();
-        QVERIFY(!model.isNull());
-        model.setAttribute("sha256",QString(64,QLatin1Char('0')));
-        QVERIFY(writeDocument(invalidPath,invalid));
-        expectLoadRejected(invalidPath,project);
-
-        invalid=parseDocument(projectPath);
-        QDomElement assets=invalid.elementsByTagName(
-                    "ObjectDetectionAssets").at(0).toElement();
-        QDomElement preprocess=assets.firstChildElement("Preprocess");
-        QVERIFY(!assets.isNull() && !preprocess.isNull());
-        assets.appendChild(preprocess.cloneNode(true));
-        QVERIFY(writeDocument(invalidPath,invalid));
-        expectLoadRejected(invalidPath,project);
-
-        QFile changedPreprocess(fixturePreprocess);
-        QVERIFY(changedPreprocess.open(QIODevice::Append));
-        QCOMPARE(changedPreprocess.write("x",1),qint64(1));
-        changedPreprocess.close();
-        expectLoadRejected(projectPath,project);
-        QVERIFY(QFile::remove(fixturePreprocess));
-        QVERIFY2(QFile::copy(preprocessPath,fixturePreprocess),
-                 qPrintable(preprocessPath));
-
-        QVERIFY(manager->loadXvProject(projectPath));
-        auto restored=qobject_cast<HObjectDetection*>(findFunctionByRole(
-                    manager->getXvProject()->getXvFlow(flowId),
-                    "HObjectDetection"));
-        QVERIFY(restored);
-        auto restoredInput=dynamic_cast<XImage*>(
-                    restored->getParamsByName("inputImage"));
-        QVERIFY(restoredInput);
-        restoredInput->setValue(inputImage);
-        QCOMPARE(restored->runXvFunc(),EXvFuncRunStatus::Ok);
-        auto restoredDetections=dynamic_cast<XObjectList*>(
-                    restored->getResultsByName("detections"));
-        QVERIFY(restoredDetections);
-        QCOMPARE(restoredDetections->count(),qsizetype(expected.size()));
-        for(qsizetype index=0;index<restoredDetections->count();++index)
-        {
-            auto actual=dynamic_cast<XDetectionResult*>(
-                        restoredDetections->value(index));
-            const ExpectedDetection &wanted=expected.at(index);
-            QVERIFY(actual);
-            QCOMPARE(actual->classId(),wanted.classId);
-            QVERIFY(qAbs(actual->score()-wanted.score)<=1e-4);
-        }
-    }
-
     void structuredValuesRoundTripAndRejectInvalidXml()
     {
         QTemporaryDir directory;
@@ -1615,334 +1125,31 @@ private slots:
         QVERIFY(qAbs(actual.angle()-1.5707963267948966)<1e-12);
     }
 
-    void halconImageInteropRoundTripsPixelsAndOwnsMemory()
+    void removedLicensedRolesAreRejectedTransactionally()
     {
-        HalconCpp::HImage grayHalcon;
-        {
-            QByteArray storage(10,'\0');
-            storage[0]=char(1); storage[1]=char(2); storage[2]=char(3);
-            storage[5]=char(4); storage[6]=char(5); storage[7]=char(6);
-            QImage gray(reinterpret_cast<uchar*>(storage.data()),3,2,5,
-                        QImage::Format_Grayscale8);
-            QString error;
-            QVERIFY2(XvHalconImageInterop::toHalcon(gray,grayHalcon,&error),
-                     qPrintable(error));
-        }
-        QImage grayResult;
-        QString error;
-        QVERIFY2(XvHalconImageInterop::toQImage(grayHalcon,grayResult,&error),
-                 qPrintable(error));
-        QCOMPARE(grayResult.format(),QImage::Format_Grayscale8);
-        QCOMPARE(grayResult.constScanLine(0)[0],uchar(1));
-        QCOMPARE(grayResult.constScanLine(1)[2],uchar(6));
-
-        const QList<QImage::Format> formats={QImage::Format_RGB888,QImage::Format_RGB32,
-                                             QImage::Format_RGBA8888,
-                                             QImage::Format_ARGB32};
-        for(QImage::Format format:formats)
-        {
-            HalconCpp::HImage halcon;
-            {
-                QImage source(3,2,format);
-                QVERIFY(!source.isNull());
-                source.setPixelColor(0,0,QColor(10,20,30,40));
-                source.setPixelColor(1,0,QColor(50,60,70,80));
-                source.setPixelColor(2,1,QColor(90,100,110,120));
-                QVERIFY2(XvHalconImageInterop::toHalcon(source,halcon,&error),
-                         qPrintable(error));
-            }
-            QImage result;
-            QVERIFY2(XvHalconImageInterop::toQImage(halcon,result,&error),
-                     qPrintable(error));
-            QCOMPARE(result.format(),QImage::Format_RGB888);
-            QCOMPARE(result.pixelColor(0,0),QColor(10,20,30));
-            QCOMPARE(result.pixelColor(1,0),QColor(50,60,70));
-            QCOMPARE(result.pixelColor(2,1),QColor(90,100,110));
-        }
-
-        QByteArray rgbStorage(16,'\0');
-        uchar *rgb=reinterpret_cast<uchar*>(rgbStorage.data());
-        rgb[0]=1; rgb[1]=2; rgb[2]=3; rgb[3]=4; rgb[4]=5; rgb[5]=6;
-        rgb[8]=7; rgb[9]=8; rgb[10]=9; rgb[11]=10; rgb[12]=11; rgb[13]=12;
-        QImage strided(rgb,2,2,8,QImage::Format_RGB888);
-        HalconCpp::HImage stridedHalcon;
-        QVERIFY2(XvHalconImageInterop::toHalcon(strided,stridedHalcon,&error),
-                 qPrintable(error));
-        QImage stridedResult;
-        QVERIFY2(XvHalconImageInterop::toQImage(stridedHalcon,stridedResult,&error),
-                 qPrintable(error));
-        QCOMPARE(stridedResult.pixelColor(1,1),QColor(10,11,12));
-
-        QImage unsupported(8,8,QImage::Format_Mono);
-        QVERIFY(!XvHalconImageInterop::toHalcon(unsupported,stridedHalcon,&error));
-        QVERIFY(!error.isEmpty());
-        HalconCpp::HImage empty;
-        QVERIFY(!XvHalconImageInterop::toQImage(empty,stridedResult,&error));
-        QVERIFY(!error.isEmpty());
-
-        QVector<qint32> labelStorage={0,1,2,3,-1,65536};
-        HalconCpp::HImage labelImage("int4",3,2,labelStorage.data());
-        QVector<qint32> labels={99};
-        int width=-1;
-        int height=-1;
-        QVERIFY2(XvHalconImageInterop::toInt32Pixels(
-                     labelImage,labels,width,height,&error),qPrintable(error));
-        QCOMPARE(width,3);
-        QCOMPARE(height,2);
-        QCOMPARE(labels,labelStorage);
-
-        QVector<float> confidenceStorage={0.0f,0.2f,0.4f,0.6f,0.8f,1.0f};
-        HalconCpp::HImage confidenceImage("real",3,2,confidenceStorage.data());
-        QVector<float> confidences={9.0f};
-        QVERIFY2(XvHalconImageInterop::toFloatPixels(
-                     confidenceImage,confidences,width,height,&error),qPrintable(error));
-        QCOMPARE(confidences,confidenceStorage);
-
-        QVector<float> invalidConfidence=confidenceStorage;
-        invalidConfidence[2]=qQNaN();
-        HalconCpp::HImage invalidConfidenceImage(
-                    "real",3,2,invalidConfidence.data());
-        const QVector<float> previousConfidences=confidences;
-        QVERIFY(!XvHalconImageInterop::toFloatPixels(
-                    invalidConfidenceImage,confidences,width,height,&error));
-        QCOMPARE(confidences,previousConfidences);
-        QCOMPARE(width,3);
-        QCOMPARE(height,2);
-
-        QVERIFY(!XvHalconImageInterop::toInt32Pixels(
-                    confidenceImage,labels,width,height,&error));
-        QCOMPARE(labels,labelStorage);
-
-        QVector<qint64> overflowStorage={
-            std::numeric_limits<qint64>::max()
-        };
-        HalconCpp::HImage overflowImage("int8",1,1,overflowStorage.data());
-        QVERIFY(!XvHalconImageInterop::toInt32Pixels(
-                    overflowImage,labels,width,height,&error));
-        QCOMPARE(labels,labelStorage);
-        QCOMPARE(width,3);
-        QCOMPARE(height,2);
-    }
-
-    void halconModelMatchCreatesFindsAndPersistsAsset()
-    {
-        QImage image(240,180,QImage::Format_RGB888);
-        image.fill(Qt::black);
-        {
-            QPainter painter(&image);
-            painter.setRenderHint(QPainter::Antialiasing,false);
-            painter.setPen(QPen(Qt::white,6));
-            painter.drawRect(QRect(70,45,72,58));
-            painter.drawLine(QPoint(70,45),QPoint(142,103));
-            painter.drawLine(QPoint(92,103),QPoint(142,72));
-            painter.setBrush(Qt::white);
-            painter.drawEllipse(QPoint(118,63),7,7);
-        }
-
         QTemporaryDir directory;
         QVERIFY(directory.isValid());
-        const QString projectPath=directory.filePath("model.xvproj");
-        const QString flowPath=directory.filePath("model.xvflow");
-        const QString invalidPath=directory.filePath("model-invalid.xvproj");
-        const QString imagePath=directory.filePath("model-source.png");
-        QVERIFY(image.save(imagePath));
-
-        XvCoreManager *manager=XvCoreManager::getInstance();
-        XvProject *project=manager->createNewXvProject("Model match");
+        auto manager=XvCoreManager::getInstance();
+        auto project=manager->createNewXvProject("License-free project");
         QVERIFY(project);
-        XvFlow *flow=project->createXvFlow("Match flow");
+        auto flow=project->createXvFlow("Available operators");
         QVERIFY(flow);
-        auto acquisition=qobject_cast<ImageAcquisition*>(
-                    flow->createXvFunc("ImageAcquisition"));
-        auto matcher=qobject_cast<HModelMatch*>(flow->createXvFunc("HModelMatch"));
-        auto logOutput=qobject_cast<LogOutput*>(flow->createXvFunc("LogOutput"));
-        QVERIFY(acquisition && matcher && logOutput);
-        acquisition->setAcqType(ImageAcquisition::File);
-        acquisition->setLocalFile(imagePath);
-        acquisition->setCanvasPosition(QPointF(20.0,40.0));
-        matcher->setCanvasPosition(QPointF(260.0,40.0));
-        logOutput->setCanvasPosition(QPointF(500.0,40.0));
-        dynamic_cast<XString*>(logOutput->getParamsByName("outputMsg"))
-                ->setValue("M1 offline match completed");
-        flow->getFlowConfig()->funcErrorInterruptRun=true;
-        const QString flowId=flow->flowId();
-        const QString matcherId=matcher->funcId();
-
-        auto input=dynamic_cast<XImage*>(matcher->getParamsByName("inputImage"));
-        auto roi=dynamic_cast<XRotateRectRoi*>(matcher->getParamsByName("templateRoi"));
-        auto useRoi=dynamic_cast<XBool*>(matcher->getParamsByName("useTemplateRoi"));
-        auto mode=dynamic_cast<XInt*>(matcher->getParamsByName("mode"));
-        auto minScore=dynamic_cast<XReal*>(matcher->getParamsByName("minScore"));
-        auto count=dynamic_cast<XInt*>(matcher->getResultsByName("matchCount"));
-        auto matches=dynamic_cast<XObjectList*>(matcher->getResultsByName("matches"));
-        QVERIFY(input && roi && useRoi && mode && minScore && count && matches);
-        input->setValue(image);
-        QVERIFY(roi->setValue(106.0,74.0,45.0,38.0,0.0));
-        minScore->setValue(0.2);
-        mode->setValue(HModelMatch::CreateTemplate);
-        useRoi->setValue(false);
-        QCOMPARE(matcher->runXvFunc(),EXvFuncRunStatus::Ok);
-        QVERIFY(matcher->hasTemplateModel());
-        useRoi->setValue(true);
-        QCOMPARE(matcher->runXvFunc(),EXvFuncRunStatus::Ok);
-        QVERIFY2(matcher->hasTemplateModel(),qPrintable(matcher->getXvFuncRunMsg()));
-        const QByteArray modelAsset=matcher->templateModelAsset();
-        QVERIFY(!modelAsset.isEmpty());
-
-        mode->setValue(HModelMatch::FindTemplate);
-        QCOMPARE(matcher->runXvFunc(),EXvFuncRunStatus::Ok);
-        QVERIFY2(count->value()>=1,qPrintable(matcher->getXvFuncRunMsg()));
-        QCOMPARE(matches->count(),qsizetype(count->value()));
-        auto firstMatch=dynamic_cast<XMatchResult*>(matches->value(0));
-        QVERIFY(firstMatch);
-        QVERIFY(firstMatch->x()>=0.0 && firstMatch->x()<image.width());
-        QVERIFY(firstMatch->y()>=0.0 && firstMatch->y()<image.height());
-        QVERIFY(firstMatch->score()>=minScore->value());
-
-        const int previousCount=count->value();
-        const double previousScore=firstMatch->score();
-        minScore->setValue(2.0);
-        QCOMPARE(matcher->runXvFunc(),EXvFuncRunStatus::Error);
-        QCOMPARE(count->value(),previousCount);
-        QCOMPARE(dynamic_cast<XMatchResult*>(matches->value(0))->score(),previousScore);
-        QCOMPARE(matcher->templateModelAsset(),modelAsset);
-        minScore->setValue(0.2);
-
-        QVERIFY(acquisition->addSonFunc(matcher));
-        QVERIFY(matcher->addSonFunc(logOutput));
-        QVERIFY(matcher->paramSubscribe("inputImage",acquisition,"outputImage"));
-        QCOMPARE(flow->runOnce(),Ret_Xv_Success);
-        QTRY_VERIFY_WITH_TIMEOUT(!flow->isRunning(),5000);
-        QVERIFY2(flow->getXvFuncRunStatus()==EXvFlowRunStatus::Ok,
-                 qPrintable(QString("acquisition: %1; matcher: %2; log: %3")
-                            .arg(acquisition->getXvFuncRunMsg(),matcher->getXvFuncRunMsg(),
-                                 logOutput->getXvFuncRunMsg())));
-        QVERIFY(count->value()>=1);
-        QCOMPARE(logOutput->getXvFuncRunStatus(),EXvFuncRunStatus::Ok);
-
-        QVERIFY(manager->saveXvProject(projectPath));
-        const QByteArray xml=readFile(projectPath);
-        QVERIFY(xml.contains("<PersistentData>"));
-        QVERIFY(xml.contains("format=\"halcon-shape-model\""));
-        QVERIFY(xml.contains("encoding=\"base64\""));
-        QVERIFY(manager->loadXvProject(projectPath));
-        XvProject *restoredProject=manager->getXvProject();
-        QVERIFY(restoredProject);
-        XvFlow *restoredFlow=restoredProject->getXvFlow(flowId);
-        QVERIFY(restoredFlow);
-        auto restoredMatcher=qobject_cast<HModelMatch*>(
-                    restoredFlow->getXvFunc(matcherId));
-        auto restoredAcquisition=qobject_cast<ImageAcquisition*>(
-                    findFunctionByRole(restoredFlow,"ImageAcquisition"));
-        QVERIFY(restoredMatcher);
-        QVERIFY(restoredAcquisition);
-        QVERIFY(restoredMatcher->hasTemplateModel());
-        QCOMPARE(restoredMatcher->templateModelAsset(),modelAsset);
-        QCOMPARE(restoredAcquisition->localFile(),imagePath);
-        QCOMPARE(restoredAcquisition->canvasPosition(),QPointF(20.0,40.0));
-        QCOMPARE(restoredMatcher->canvasPosition(),QPointF(260.0,40.0));
-        auto restoredLog=qobject_cast<LogOutput*>(
-                    findFunctionByRole(restoredFlow,"LogOutput"));
-        QVERIFY(restoredLog);
-        QCOMPARE(restoredLog->canvasPosition(),QPointF(500.0,40.0));
-        XvFunc::SubscribeInfo restoredSubscription;
-        QVERIFY(restoredMatcher->getParamSubscribe("inputImage",
-                                                   restoredSubscription));
-        QCOMPARE(restoredSubscription.first,
-                 static_cast<XvFunc*>(restoredAcquisition));
-        QCOMPARE(restoredFlow->runOnce(),Ret_Xv_Success);
-        QTRY_VERIFY_WITH_TIMEOUT(!restoredFlow->isRunning(),5000);
-        QVERIFY(dynamic_cast<XInt*>(restoredMatcher->getResultsByName("matchCount"))->value()>=1);
-
-        QVERIFY(manager->exportXvFlow(flowId,flowPath));
-        XvFlow *firstImported=manager->importXvFlow(flowPath);
-        XvFlow *secondImported=manager->importXvFlow(flowPath);
-        QVERIFY(firstImported && secondImported);
-        QVERIFY(firstImported->flowId()!=secondImported->flowId());
-        for(XvFlow *imported:{firstImported,secondImported})
+        QVERIFY(flow->createXvFunc("BaseDataWriter"));
+        const QString path=directory.filePath("current.xvproj");
+        QVERIFY(manager->saveXvProject(path));
+        for(const QString &role:QStringList({"HModelMatch","HObjectDetection",
+                                             "HSemanticSegmentation"}))
         {
-            auto importedMatcher=qobject_cast<HModelMatch*>(
-                        findFunctionByRole(imported,"HModelMatch"));
-            auto importedAcquisition=qobject_cast<ImageAcquisition*>(
-                        findFunctionByRole(imported,"ImageAcquisition"));
-            QVERIFY(importedMatcher && importedAcquisition);
-            QVERIFY(importedMatcher->hasTemplateModel());
-            QCOMPARE(importedMatcher->templateModelAsset(),modelAsset);
-            QCOMPARE(importedAcquisition->localFile(),imagePath);
-            QCOMPARE(importedAcquisition->canvasPosition(),QPointF(20.0,40.0));
-            QCOMPARE(importedMatcher->canvasPosition(),QPointF(260.0,40.0));
-            QCOMPARE(imported->runOnce(),Ret_Xv_Success);
-            QTRY_VERIFY_WITH_TIMEOUT(!imported->isRunning(),5000);
-            QCOMPARE(imported->getXvFuncRunStatus(),EXvFlowRunStatus::Ok);
-            QVERIFY(dynamic_cast<XInt*>(
-                        importedMatcher->getResultsByName("matchCount"))->value()>=1);
+            QVERIFY(!flow->createXvFunc(role));
+            QDomDocument legacy=parseDocument(path);
+            QDomElement function=findFunctionElementByRole(legacy,"BaseDataWriter");
+            QVERIFY(!function.isNull());
+            function.setAttribute("role",role);
+            const QString legacyPath=directory.filePath(role+".xvproj");
+            QVERIFY(writeDocument(legacyPath,legacy));
+            expectLoadRejected(legacyPath,project);
+            QCOMPARE(manager->getXvProject(),project);
         }
-
-        const auto rejectMutation=[&](const std::function<void(QDomDocument&)> &mutate)
-        {
-            QDomDocument document=parseDocument(projectPath);
-            mutate(document);
-            QVERIFY(writeDocument(invalidPath,document));
-            expectLoadRejected(invalidPath,restoredProject);
-        };
-        rejectMutation([](QDomDocument &document) {
-            document.elementsByTagName("ShapeModel").at(0).toElement()
-                    .setAttribute("version","2");
-        });
-        rejectMutation([](QDomDocument &document) {
-            document.elementsByTagName("ShapeModel").at(0).toElement()
-                    .setAttribute("encoding","hex");
-        });
-        rejectMutation([](QDomDocument &document) {
-            document.elementsByTagName("ShapeModel").at(0).toElement()
-                    .setAttribute("length","1");
-        });
-        rejectMutation([](QDomDocument &document) {
-            document.elementsByTagName("ShapeModel").at(0).toElement()
-                    .setAttribute("length","16777217");
-        });
-        rejectMutation([](QDomDocument &document) {
-            QDomElement model=document.elementsByTagName("ShapeModel").at(0).toElement();
-            model.firstChild().setNodeValue("@@@@");
-            model.setAttribute("length","3");
-        });
-        rejectMutation([](QDomDocument &document) {
-            QDomElement model=document.elementsByTagName("ShapeModel").at(0).toElement();
-            const QByteArray encoded=model.text().toLatin1();
-            QByteArray damaged(QByteArray::fromBase64(encoded).size(),'\0');
-            model.firstChild().setNodeValue(QString::fromLatin1(damaged.toBase64()));
-        });
-        rejectMutation([](QDomDocument &document) {
-            QDomElement data=document.elementsByTagName("PersistentData").at(0).toElement();
-            data.removeChild(data.firstChildElement("ShapeModel"));
-        });
-        rejectMutation([](QDomDocument &document) {
-            QDomElement function=ProjectXmlTest::findFunctionElementByRole(
-                        document,"HModelMatch");
-            QDomElement data=function.firstChildElement("PersistentData");
-            function.appendChild(data.cloneNode(true));
-        });
-
-        QDomDocument legacy=parseDocument(projectPath);
-        QDomElement legacyFunction=findFunctionElementByRole(legacy,"HModelMatch");
-        QVERIFY(!legacyFunction.isNull());
-        legacyFunction.removeChild(legacyFunction.firstChildElement("PersistentData"));
-        QDomElement parameters=legacyFunction.firstChildElement("Parameters");
-        while(!parameters.firstChild().isNull()) parameters.removeChild(parameters.firstChild());
-        QVERIFY(writeDocument(invalidPath,legacy));
-        QVERIFY(manager->loadXvProject(invalidPath));
-        auto legacyMatcher=qobject_cast<HModelMatch*>(findFunctionByRole(
-                    manager->getXvProject()->getXvFlow(flowId),"HModelMatch"));
-        QVERIFY(legacyMatcher);
-        QVERIFY(!legacyMatcher->hasTemplateModel());
-
-        HModelMatch emptyMatcher;
-        QCOMPARE(emptyMatcher.runXvFunc(),EXvFuncRunStatus::Error);
-        dynamic_cast<XImage*>(emptyMatcher.getParamsByName("inputImage"))->setValue(image);
-        dynamic_cast<XInt*>(emptyMatcher.getParamsByName("mode"))->setValue(
-                    HModelMatch::FindTemplate);
-        QCOMPARE(emptyMatcher.runXvFunc(),EXvFuncRunStatus::Error);
-        QVERIFY(!emptyMatcher.getXvFuncRunMsg().isEmpty());
     }
 
     void allCurrentRolesCanRoundTrip()
@@ -1953,7 +1160,6 @@ private slots:
         const QStringList roles={
             "ImageAcquisition","BaseDataWriter","BaseDataBoolCalc",
             "BaseDataIntCalc","BaseDataRealCalc","BaseDataStringProcess",
-            "HModelMatch","HObjectDetection","HSemanticSegmentation",
             "NInference","NClassification","NObjectDetection",
             "NSemanticSegmentation",
             "ConditionalFlow","LoopFlow","Delayer","ElapsedTimer",
@@ -3132,8 +2338,8 @@ private slots:
         QTRY_VERIFY_WITH_TIMEOUT(!forkFlow->isRunning(),5000);
         QCOMPARE(forkFlow->getXvFuncRunStatus(),EXvFlowRunStatus::Ok);
         QStringList branchOrder;
-        if(left->funcId()<right->funcId()) branchOrder={"left","right"};
-        else branchOrder={"right","left"};
+        if(left->funcId()<right->funcId()) branchOrder=QStringList{"left","right"};
+        else branchOrder=QStringList{"right","left"};
         QCOMPARE(order,QStringList({"root",branchOrder.at(0),
                                     branchOrder.at(1),"join"}));
         QCOMPARE(root->getXvFuncRunInfo().runIdx,1U);
@@ -3758,8 +2964,11 @@ private slots:
         expectLoadRejected(invalidPath,installedLegacy);
     }
 
-    void cameraAcquisitionFeedsTemplateMatchProject()
+    void cameraAcquisitionFeedsOpenCvTemplateMatchProject()
     {
+#if !defined(XVISION_ENABLE_OPENCV)
+        QSKIP("OpenCV backend is disabled");
+#else
         QTemporaryDir directory;
         QVERIFY(directory.isValid());
         const QImage trainingImage=makeIntegrationImage();
@@ -3784,8 +2993,8 @@ private slots:
 
         auto acquisition=qobject_cast<ImageAcquisition*>(
                     captureFlow->createXvFunc("ImageAcquisition"));
-        auto matcher=qobject_cast<HModelMatch*>(
-                    captureFlow->createXvFunc("HModelMatch"));
+        auto matcher=qobject_cast<OTemplateMatch*>(
+                    captureFlow->createXvFunc("OTemplateMatch"));
         auto writer=qobject_cast<BaseDataWriter*>(
                     afterFlow->createXvFunc("BaseDataWriter"));
         QVERIFY(acquisition && matcher && writer);
@@ -3795,17 +3004,17 @@ private slots:
 
         auto matcherInput=dynamic_cast<XImage*>(
                     matcher->getParamsByName("inputImage"));
-        auto matcherMode=dynamic_cast<XInt*>(matcher->getParamsByName("mode"));
+        auto matcherMode=dynamic_cast<XInt*>(matcher->getParamsByName("operation"));
         auto matcherCount=dynamic_cast<XInt*>(
                     matcher->getResultsByName("matchCount"));
         QVERIFY(matcherInput && matcherMode && matcherCount);
         matcherInput->setValue(trainingImage);
-        matcherMode->setValue(HModelMatch::CreateTemplate);
+        matcherMode->setValue(OTemplateMatch::CreateTemplate);
         QVERIFY2(matcher->runXvFunc()==EXvFuncRunStatus::Ok,
                  qPrintable(matcher->getXvFuncRunMsg()));
-        QVERIFY(matcher->hasTemplateModel());
-        const QByteArray modelAsset=matcher->templateModelAsset();
-        matcherMode->setValue(HModelMatch::FindTemplate);
+        QVERIFY(matcher->hasTemplate());
+        const QByteArray modelAsset=matcher->templateAsset();
+        matcherMode->setValue(OTemplateMatch::FindTemplate);
         QVERIFY(acquisition->addSonFunc(matcher));
         QVERIFY(matcher->paramSubscribe("inputImage",acquisition,
                                         "outputImage"));
@@ -3833,7 +3042,7 @@ private slots:
         QVERIFY(manager->saveXvProject(projectPath));
         const QByteArray savedXml=readFile(projectPath);
         QVERIFY(savedXml.contains("cameraDeviceId"));
-        QVERIFY(savedXml.contains("halcon-shape-model"));
+        QVERIFY(savedXml.contains("OTemplateMatch"));
         QVERIFY(manager->loadXvProject(projectPath));
         XvProject *restored=manager->getXvProject();
         QVERIFY(restored);
@@ -3841,12 +3050,12 @@ private slots:
         QVERIFY(restoredCapture);
         auto restoredAcquisition=qobject_cast<ImageAcquisition*>(
                     findFunctionByRole(restoredCapture,"ImageAcquisition"));
-        auto restoredMatcher=qobject_cast<HModelMatch*>(
-                    findFunctionByRole(restoredCapture,"HModelMatch"));
+        auto restoredMatcher=qobject_cast<OTemplateMatch*>(
+                    findFunctionByRole(restoredCapture,"OTemplateMatch"));
         QVERIFY(restoredAcquisition && restoredMatcher);
         QCOMPARE(restoredAcquisition->cameraDeviceId(),deviceId);
         QCOMPARE(restoredAcquisition->cameraTimeoutMs(),100);
-        QCOMPARE(restoredMatcher->templateModelAsset(),modelAsset);
+        QCOMPARE(restoredMatcher->templateAsset(),modelAsset);
         XvFunc::SubscribeInfo subscription;
         QVERIFY(restoredMatcher->getParamSubscribe("inputImage",subscription));
         QCOMPARE(subscription.first->funcRole(),QString("ImageAcquisition"));
@@ -3933,6 +3142,7 @@ private slots:
         QCOMPARE(failureInfo.runStatus,EXvProjectRunStatus::Error);
         QCOMPARE(failureInfo.runCode,Ret_Xv_ProjectFlowFailed);
         QCOMPARE(failureInfo.failedFlowIds,QStringList({failureFlow->flowId()}));
+#endif
     }
 
     void projectConfigLifecycleAndAtomicUpdate()

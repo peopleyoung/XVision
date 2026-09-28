@@ -19,8 +19,6 @@ def case(name,config='Release',skip=False,skip_build=True,fault=''):
         suffix='d' if config=='Debug' else ''
         put(bins/'XVision.exe'); put(bins/'XvFuncCollection/XvFuncSystem.dll')
         for x in ['XvCamera','XvCore','XvData','XvDisplay','XvTokenMsg','XvUtils','XWidget','XLog','XLanguage','AdsDocking','XFlowGraphics','XConcurrent','halcon','halconcpp','onnxruntime','opencv_world4100']: put(bins/(x+'.dll'))
-        for f in ['halcon.dll','halcon.lib','halconcpp.dll','halconcpp.lib']: put(src/'3rdparty/halcon/lib'/f)
-        put(src/'3rdparty/halcon/include/HVersNum.h','#define HLIB_MAJOR_NUM 19\n#define HLIB_MINOR_NUM 11\n')
         sdk=r/'SDK with spaces'; put(sdk/'opencv_world4100.dll'); put(sdk/'onnxruntime.dll')
         flags=['BUILD_TESTING','XVISION_BUILD_COMMON_USING','XVISION_BUILD_SYSTEM_PLUGIN','XVISION_ENABLE_BREAKPAD','XVISION_ENABLE_OPENCV','XVISION_ENABLE_ONNXRUNTIME']
         cache=[f'{f}:BOOL=ON' for f in flags]+[f'XVISION_OPENCV_RUNTIME_DLL:FILEPATH={sdk}/opencv_world4100.dll',f'XVISION_ONNXRUNTIME_RUNTIME_DLL:FILEPATH={sdk}/onnxruntime.dll']
@@ -102,6 +100,7 @@ sys.exit(9 if os.environ['FAULT']=='verify_fail' else 0)
             if skip and not skip_build: assert (r/'called.configure').exists()
             with zipfile.ZipFile(archive) as z:
                 names=z.namelist(); assert 'XVision.exe' in names
+                assert not any(pathlib.PurePosixPath(n).name.lower().startswith('halcon') for n in names)
                 assert 'licenses/qt-translations/qtbase_zh_CN.ts' in names
                 assert 'licenses/qt-translations/GPL-3.0-only.txt' in names
                 assert 'XvFuncCollection/XvFuncSystem.dll' in names

@@ -1,3 +1,4 @@
+#include <QVariant>
 #include "DetectRecordRepository.h"
 
 #include <QCoreApplication>

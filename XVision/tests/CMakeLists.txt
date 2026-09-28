@@ -451,8 +451,6 @@ target_include_directories(XvCorePersistenceTests PRIVATE
     ../XvFuncCollection/XvFuncSystem/Communication
     ../CommonUsing/Project/XLanguage/include
     ../CommonUsing/Project/XLog/include
-    ../3rdparty/halcon/include
-    ../3rdparty/halcon/include/halconcpp
 )
 
 target_link_libraries(XvCorePersistenceTests PRIVATE
@@ -466,12 +464,12 @@ target_link_libraries(XvCorePersistenceTests PRIVATE
     Qt${QT_VERSION_MAJOR}::Test
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::Xml
-    ${HALCON_LIB}
 )
 
-target_link_directories(XvCorePersistenceTests PRIVATE
-    ../${HALCON_LINK_DIR}
-)
+
+if(XVISION_ENABLE_OPENCV)
+    target_compile_definitions(XvCorePersistenceTests PRIVATE XVISION_ENABLE_OPENCV=1)
+endif()
 
 if(XVISION_ENABLE_ONNXRUNTIME)
     target_compile_definitions(XvCorePersistenceTests PRIVATE
@@ -595,3 +593,51 @@ if(WIN32)
     set_tests_properties(ui_appearance PROPERTIES ENVIRONMENT
         "QT_PLUGIN_PATH=$ENV{QTDIR}/plugins;QT_LOGGING_TO_CONSOLE=1")
 endif()
+
+# Real application widgets are compiled into the UI regression executable.
+add_executable(XvUiResponsivenessTests
+    tst_uiresponsiveness.cpp
+    ../XVision/Res/AppRes.qrc
+    ../XVision/Model/BaseWidget.cpp
+    ../XVision/UIOutput/FrmLogShow.cpp
+    ../XVision/UIOutput/FrmLogShow.ui
+    ../XvFuncCollection/XvFuncSystem/Model/BaseSystemFuncWdg.cpp
+)
+set_target_properties(XvUiResponsivenessTests PROPERTIES
+    CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON AUTOMOC ON AUTOUIC ON AUTORCC ON)
+get_target_property(XVISION_UI_TEST_INCLUDES XVision INCLUDE_DIRECTORIES)
+target_include_directories(XvUiResponsivenessTests PRIVATE
+    ${XVISION_UI_TEST_INCLUDES}
+    ../XvFuncCollection/XvFuncSystem/Model
+    ../XvFuncCollection/XvFuncSystem/include
+    ../XvFuncCollection/XvFuncSystem/Other)
+target_link_libraries(XvUiResponsivenessTests PRIVATE
+    XvFuncSystem XvCore XvData XvDisplay XWidget XLog XLanguage
+    Qt${QT_VERSION_MAJOR}::Test Qt${QT_VERSION_MAJOR}::Widgets)
+
+add_executable(XvOnnxCpuBenchmark bench_onnxcpu.cpp)
+set_target_properties(XvOnnxCpuBenchmark PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON)
+target_include_directories(XvOnnxCpuBenchmark PRIVATE
+    ../XvFuncCollection/XvFuncSystem/Onnx
+    ../XvFuncCollection/XvFuncSystem/Interop
+    ../XvFuncCollection/XvFuncSystem/include)
+target_link_libraries(XvOnnxCpuBenchmark PRIVATE XvFuncSystem XvCore XvData XLanguage
+    Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Widgets)
+
+find_package(Threads REQUIRED)
+target_link_libraries(XvSourceNotificationTests PRIVATE Threads::Threads)
+target_link_libraries(XvUiResponsivenessTests PRIVATE Threads::Threads)
+
+target_compile_definitions(XvOnnxOperatorTests PRIVATE
+    XVISION_ONNX_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/cpu-identity.onnx")
+add_test(NAME ui_responsiveness
+    COMMAND ${CMAKE_COMMAND} -E env "QT_QPA_PLATFORM=offscreen"
+        "PATH=$<TARGET_FILE_DIR:XVision>$<SEMICOLON>$<TARGET_FILE_DIR:XvFuncSystem>$<SEMICOLON>$ENV{QTDIR}/bin$<SEMICOLON>$ENV{PATH}"
+        $<TARGET_FILE:XvUiResponsivenessTests>
+        -o "${XVISION_QT_TEST_LOG_DIR}/ui_responsiveness.txt,txt" -o "-,txt")
+if(WIN32)
+    set_tests_properties(ui_responsiveness PROPERTIES ENVIRONMENT
+        "QT_PLUGIN_PATH=$ENV{QTDIR}/plugins;QT_LOGGING_TO_CONSOLE=1")
+endif()
+
+target_link_libraries(XvCommunicationOperatorTests PRIVATE Threads::Threads)

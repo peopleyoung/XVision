@@ -226,7 +226,7 @@ ORectification::ORectification(QObject *parent)
 {
     _funcRole="ORectification";
     _funcName=getLang("XvFuncSystem_ORectification_Name","OpenCV图像矫正");
-    _funcType=EXvFuncType::ImageProcessing;
+    _funcType=EXvFuncType::Calibration;
     QString error;
     OpenCvTemplateRectificationUtils::setTransformTensor(
                 IdentityTransform,m_candidateTransform,error);

@@ -14,7 +14,7 @@ NObjectDetection::NObjectDetection(QObject *parent)
 {
     _funcRole="NObjectDetection";
     _funcName=getLang("XvFuncSystem_NObjectDetection_Name","ONNX目标检测");
-    _funcType=EXvFuncType::Other;
+    _funcType=EXvFuncType::MachineLearning;
 }
 
 NObjectDetection::~NObjectDetection()

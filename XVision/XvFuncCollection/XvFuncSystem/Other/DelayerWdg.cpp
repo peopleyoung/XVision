@@ -25,7 +25,7 @@ void DelayerWdg::initFrm()
 
 
 
-    connect(ui->cmbDelay,&QComboBox::currentIndexChanged,this,[=]()
+    connect(ui->cmbDelay,qOverload<int>(&QComboBox::currentIndexChanged),this,[=]()
     {
         setCmbWithLetEnable(ui->cmbDelay,ui->letDelay,ms->objectName());
     });

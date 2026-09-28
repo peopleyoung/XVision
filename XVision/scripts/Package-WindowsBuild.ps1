@@ -79,22 +79,6 @@ if ($LASTEXITCODE -ne 0 -or $QtVersion -notmatch "^6\.4\.") {
 }
 $env:PATH = (Join-Path $env:QTDIR "bin") + ";" + $env:PATH
 
-$RequiredHalconFiles = @(
-    "3rdparty/halcon/lib/halcon.dll",
-    "3rdparty/halcon/lib/halcon.lib",
-    "3rdparty/halcon/lib/halconcpp.dll",
-    "3rdparty/halcon/lib/halconcpp.lib"
-)
-foreach ($RelativePath in $RequiredHalconFiles) {
-    Assert-File (Join-Path $SourceDir $RelativePath) "Halcon dependency $RelativePath"
-}
-$HalconVersionHeader = Join-Path $SourceDir "3rdparty/halcon/include/HVersNum.h"
-Assert-File $HalconVersionHeader "Halcon version header"
-$HalconVersionText = Get-Content -Raw $HalconVersionHeader
-if ($HalconVersionText -notmatch "(?m)^\s*#\s*define\s+HLIB_MAJOR_NUM\s+19\s*$" -or
-    $HalconVersionText -notmatch "(?m)^\s*#\s*define\s+HLIB_MINOR_NUM\s+11\s*$") {
-    throw "The bundled Halcon headers are not version 19.11."
-}
 
 if (-not $SkipBuild) {
     $FullFeatureArguments = @(Get-XVisionFullFeatureArguments $OpenCvRoot $OnnxRuntimeRoot)
@@ -142,8 +126,6 @@ foreach ($RuntimeName in $SdkRuntimeNames) {
 Assert-File (Join-Path $BinDir "XVision.exe") "XVision executable"
 Assert-File (Join-Path $BinDir "XvCamera.dll") "XvCamera runtime"
 Assert-File (Join-Path $BinDir "XvFuncCollection/XvFuncSystem.dll") "system operator plugin"
-Assert-File (Join-Path $BinDir "halcon.dll") "Halcon runtime"
-Assert-File (Join-Path $BinDir "halconcpp.dll") "Halcon C++ runtime"
 
 $RequiredCommonDlls = @(
     "XWidget.dll",
@@ -168,6 +150,7 @@ New-Item -ItemType Directory -Path $PackageDirectory -Force | Out-Null
 # Keep every application DLL in the root and preserve the plugin directory.
 # OpenCV and ONNX Runtime are required by this full-feature package entry.
 Get-ChildItem -LiteralPath $BinDir -File -Filter "*.dll" |
+    Where-Object { $_.Name -notmatch '^halcon.*\.dll$' } |
     Copy-Item -Destination $PackageDirectory -Force
 $PluginSource = Join-Path $BinDir "XvFuncCollection"
 $PluginDestination = Join-Path $PackageDirectory "XvFuncCollection"
@@ -199,7 +182,7 @@ $PackageReadmePath = Join-Path $PackageDirectory "PACKAGE-README.txt"
     "",
     "Start the application with XVision.exe.",
     "Keep XvFuncCollection beside XVision.exe; it contains the operator plugin.",
-    "This package requires a valid Halcon 19.11 runtime license on the target machine.",
+    "This build contains no HALCON operators or HALCON runtime dependency.",
     "Camera drivers and real serial/Modbus devices are deployment-machine dependencies."
 ) | Set-Content -LiteralPath $PackageReadmePath -Encoding UTF8
 
@@ -213,12 +196,14 @@ $RequiredPackageFiles = @(
     "XvTokenMsg.dll",
     "XvUtils.dll",
     "XvCamera.dll",
-    "XvFuncCollection/XvFuncSystem.dll",
-    "halcon.dll",
-    "halconcpp.dll"
+    "XvFuncCollection/XvFuncSystem.dll"
 ) + $RequiredCommonDlls + $SdkRuntimeNames + @(Get-XVisionQtRuntimeFiles $Configuration) + @($MsvcRuntimeFiles | ForEach-Object { $_.Name })
 foreach ($RelativePath in $RequiredPackageFiles) {
     Assert-File (Join-Path $PackageDirectory $RelativePath) "packaged runtime file $RelativePath"
+}
+
+if (Get-ChildItem -LiteralPath $PackageDirectory -Recurse -File -Filter "halcon*.dll") {
+    throw "HALCON runtime must not be included in the license-free package."
 }
 
 if (-not $SkipTests) {
@@ -244,7 +229,7 @@ if (-not $SkipTests) {
         try {
             $MatrixPath = Join-Path (Split-Path -Parent $SourceDir) 'doc/开发工作/VisionMaster算子兼容矩阵.csv'
             Invoke-Checked $PluginTest @((Join-Path $PluginDestination 'XvFuncSystem.dll'), $MatrixPath) `
-                "Packaged plugin failed to load or validate its 42 roles / 126 presets."
+                "Packaged plugin failed to load or validate its 39 roles / 126 presets."
         } finally {
             Pop-Location
         }
@@ -286,11 +271,11 @@ $ManifestLines = @(
     "MSVC runtime: app-local x64 CRT DLLs",
     "Qt: $QtVersion",
     "CMake: $CMakeVersion",
-    "Halcon headers: 19.11",
+    "HALCON dependency: none",
     "OpenCV: enabled ($($SdkRuntimeNames[0]))",
     "ONNX Runtime: enabled ($($SdkRuntimeNames[1]))",
     "First-party tests: $(if ($SkipTests) { 'SKIPPED - package not runtime-verified' } else { 'passed' })",
-    "Packaged plugin test: $(if ($SkipTests) { 'SKIPPED' } else { 'passed (42 roles / 126 presets)' })",
+    "Packaged plugin test: $(if ($SkipTests) { 'SKIPPED' } else { 'passed (39 roles / 126 presets)' })",
     "Git commit: $GitCommit",
     "",
     "Files and SHA256:"
@@ -308,7 +293,7 @@ Compress-Archive -Path (Join-Path $PackageDirectory "*") -DestinationPath $Archi
 Write-Host "Windows package created: $ArchivePath"
 Write-Host "Staged directory: $PackageDirectory"
 Write-Host "Qt: $QtVersion; CMake: $CMakeVersion; Git: $GitCommit"
-Write-Host "A valid Halcon 19.11 runtime license is required on the target machine."
+Write-Host "No HALCON runtime license is required by this build."
 
 if (-not $KeepStaging) {
     Remove-Item -LiteralPath $PackageDirectory -Recurse -Force

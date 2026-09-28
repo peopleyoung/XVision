@@ -36,7 +36,7 @@ TcpText::TcpText(QObject *parent)
 {
     _funcRole="TcpText";
     _funcName=getLang("XvFuncSystem_TcpText_Name","TCP文本");
-    _funcType=EXvFuncType::DataProcessing;
+    _funcType=EXvFuncType::Communication;
 }
 
 TcpText::~TcpText()

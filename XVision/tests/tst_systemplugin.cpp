@@ -46,9 +46,6 @@ private slots:
             "ElapsedTimer",
             "GeometryCreate",
             "GeometryMeasure",
-            "HModelMatch",
-            "HObjectDetection",
-            "HSemanticSegmentation",
             "HttpJson",
             "ImageAcquisition",
             "LogOutput",
@@ -81,7 +78,24 @@ private slots:
         const QList<QMetaObject> metaObjects=plugin->getPlgXvFunc();
         QCOMPARE(metaObjects.count(),expectedRoles.count());
 
+        const QMap<QString,EXvFuncType> expectedCategories={
+            {"HttpJson",EXvFuncType::Communication},
+            {"TcpText",EXvFuncType::Communication},
+            {"UdpText",EXvFuncType::Communication},
+            {"SerialData",EXvFuncType::Communication},
+            {"ModbusRegister",EXvFuncType::Communication},
+            {"NInference",EXvFuncType::MachineLearning},
+            {"NClassification",EXvFuncType::MachineLearning},
+            {"NObjectDetection",EXvFuncType::MachineLearning},
+            {"NSemanticSegmentation",EXvFuncType::MachineLearning},
+            {"OCodeDetector",EXvFuncType::Recognition},
+            {"OCascadeDetector",EXvFuncType::DefectDetection},
+            {"ORegionDetector",EXvFuncType::DefectDetection},
+            {"OPointFeature",EXvFuncType::Location},
+            {"ORectification",EXvFuncType::Calibration}
+        };
         QSet<QString> roles;
+        QStringList missingIcons;
         for(const QMetaObject &metaObject:metaObjects)
         {
             QVERIFY2(metaObject.inherits(&XvFunc::staticMetaObject),
@@ -96,11 +110,18 @@ private slots:
             QVERIFY2(!roles.contains(function->funcRole()),
                      qPrintable(function->funcRole()));
             roles.insert(function->funcRole());
+            if(function->funcIcon().isNull()) missingIcons.append(function->funcRole());
+            if(expectedCategories.contains(function->funcRole()))
+                QCOMPARE(function->funcType(),expectedCategories.value(function->funcRole()));
         }
 
+        QVERIFY2(missingIcons.isEmpty(),qPrintable(missingIcons.join(", ")));
         QStringList actualRoles=roles.values();
         actualRoles.sort();
         QCOMPARE(actualRoles,expectedRoles);
+        for(const QString &removedRole:QStringList({"HModelMatch","HObjectDetection",
+                                                    "HSemanticSegmentation"}))
+            QVERIFY2(!roles.contains(removedRole),qPrintable(removedRole));
 
         const QList<XvFuncPreset> presets=plugin->getPlgXvFuncPresets();
         QCOMPARE(presets.count(),126);

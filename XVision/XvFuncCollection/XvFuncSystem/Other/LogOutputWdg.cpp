@@ -34,12 +34,12 @@ void LogOutputWdg::initFrm()
     ui->lbLogType->setText(type->dispalyName()+":");
     ui->lbMsg->setText(msg->dispalyName()+":");
     
-    connect(ui->cmbLogTypeBind,&QComboBox::currentIndexChanged,this,[=]()
+    connect(ui->cmbLogTypeBind,qOverload<int>(&QComboBox::currentIndexChanged),this,[=]()
     {
         setCmbWithCmbEnable(ui->cmbLogTypeBind,ui->cmbLogTypeVal,type->objectName());
     });
 
-    connect(ui->cmbLogTypeVal,&QComboBox::currentIndexChanged,this,[=]()
+    connect(ui->cmbLogTypeVal,qOverload<int>(&QComboBox::currentIndexChanged),this,[=]()
     {
         auto idx=ui->cmbLogTypeBind->currentIndex();
         if(idx==0)
@@ -49,7 +49,7 @@ void LogOutputWdg::initFrm()
         }
     });
 
-    connect(ui->cmbMsg,&QComboBox::currentIndexChanged,this,[=]()
+    connect(ui->cmbMsg,qOverload<int>(&QComboBox::currentIndexChanged),this,[=]()
     {
         setCmbWithPetEnable(ui->cmbMsg,ui->ptxMsg,msg->objectName());
     });
