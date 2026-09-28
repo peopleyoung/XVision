@@ -590,3 +590,8 @@ add_test(NAME ui_appearance
         "PATH=$<TARGET_FILE_DIR:XVision>$<SEMICOLON>$ENV{QTDIR}/bin$<SEMICOLON>$ENV{PATH}"
         $<TARGET_FILE:XvUiAppearanceTests>
         -o "${XVISION_QT_TEST_LOG_DIR}/ui_appearance.txt,txt" -o "-,txt")
+
+if(WIN32)
+    set_tests_properties(ui_appearance PROPERTIES ENVIRONMENT
+        "QT_PLUGIN_PATH=$ENV{QTDIR}/plugins;QT_LOGGING_TO_CONSOLE=1")
+endif()
