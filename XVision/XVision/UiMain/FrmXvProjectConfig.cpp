@@ -1,4 +1,4 @@
-#include "FrmXvProjectConfig.h"
+﻿#include "FrmXvProjectConfig.h"
 #include "ui_FrmXvProjectConfig.h"
 
 #include <QHeaderView>
@@ -127,7 +127,7 @@ void FrmXvProjectConfig::moveCurrentFlow(int offset)
     const int row=ui->tbFlows->currentRow();
     const int target=row+offset;
     if(row<0 || target<0 || target>=m_config.mainFlows.count()) return;
-    m_config.mainFlows.swap(row,target);
+    qSwap(m_config.mainFlows[row],m_config.mainFlows[target]);
     refreshFlowTable(target);
 }
 
