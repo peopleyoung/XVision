@@ -2690,10 +2690,21 @@ private slots:
         QVERIFY(manager->exportXvFlow(flowId,flowPath));
         XvFlow *imported=manager->importXvFlow(flowPath);
         QVERIFY(imported);
-        auto importedMatcher=qobject_cast<OTemplateMatch*>(
-                    findFunctionByRole(imported,"OTemplateMatch"));
+        OTemplateMatch *importedMatcher=nullptr;
+        int importedBase64Matchers=0;
+        for(XvFunc *function:imported->getXvFuncs())
+        {
+            auto candidate=qobject_cast<OTemplateMatch*>(function);
+            if(candidate && candidate->mode()==OTemplateMatch::Base64)
+            {
+                importedMatcher=candidate;
+                ++importedBase64Matchers;
+            }
+        }
+        QCOMPARE(importedBase64Matchers,1);
         QVERIFY(importedMatcher);
         QCOMPARE(importedMatcher->templateAsset(),asset);
+        QCOMPARE(importedMatcher->templateSize(),templateImage.size());
 
         const auto rejectMutation=[&](const std::function<void(QDomDocument&)> &mutate)
         {
