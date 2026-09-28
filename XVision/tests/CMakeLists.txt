@@ -114,11 +114,21 @@ if(WIN32)
         endif()
     endforeach()
 endif()
+# CTest's explicit environment overrides process environment. Resolve blank
+# optional cache values to the checked-in CPU identity fixture at configure time.
+set(_XVISION_ONNX_TEST_MODEL "${XVISION_ONNX_TEST_MODEL}")
+set(_XVISION_ONNX_EXECUTION_TEST_MODEL "${XVISION_ONNX_EXECUTION_TEST_MODEL}")
+if(NOT _XVISION_ONNX_TEST_MODEL)
+    set(_XVISION_ONNX_TEST_MODEL "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/cpu-identity.onnx")
+endif()
+if(NOT _XVISION_ONNX_EXECUTION_TEST_MODEL)
+    set(_XVISION_ONNX_EXECUTION_TEST_MODEL "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/cpu-identity.onnx")
+endif()
 add_test(NAME visionmaster_backend_boundary
     COMMAND ${CMAKE_COMMAND} -E env
         "QT_QPA_PLATFORM=offscreen"
-        "XVISION_ONNX_TEST_MODEL=${XVISION_ONNX_TEST_MODEL}"
-        "XVISION_ONNX_EXECUTION_TEST_MODEL=${XVISION_ONNX_EXECUTION_TEST_MODEL}"
+        "XVISION_ONNX_TEST_MODEL=${_XVISION_ONNX_TEST_MODEL}"
+        "XVISION_ONNX_EXECUTION_TEST_MODEL=${_XVISION_ONNX_EXECUTION_TEST_MODEL}"
         "PATH=$<TARGET_FILE_DIR:XvVisionBackendBoundaryTests>$<SEMICOLON>$ENV{QTDIR}/bin$<SEMICOLON>$ENV{PATH}"
         $<TARGET_FILE:XvVisionBackendBoundaryTests>
         -o "${XVISION_QT_TEST_LOG_DIR}/visionmaster_backend_boundary.txt,txt"
