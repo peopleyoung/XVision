@@ -61,9 +61,14 @@ function Get-XVisionQtDeploymentArguments {
         "--$($Configuration.ToLowerInvariant())",
         '--no-translations', '--compiler-runtime', '--sql',
         '--dir', $PackageDirectory,
-        (Join-Path $PackageDirectory 'XVision.exe'),
-        (Join-Path $PackageDirectory 'XvFuncCollection/XvFuncSystem.dll')
+        (Join-Path $PackageDirectory 'XVision.exe')
     )
+    foreach ($RelativePath in @(Get-XVisionQtRuntimeFiles $Configuration)) {
+        if ([System.IO.Path]::GetFileName($RelativePath) -eq $RelativePath) {
+            Join-Path $PackageDirectory $RelativePath
+        }
+    }
+    Join-Path $PackageDirectory 'XvFuncCollection/XvFuncSystem.dll'
 }
 
 function Get-XVisionQtRuntimeFiles {

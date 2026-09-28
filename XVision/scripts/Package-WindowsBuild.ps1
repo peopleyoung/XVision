@@ -176,6 +176,15 @@ Get-ChildItem -LiteralPath $PluginSource -File -Filter "*.dll" |
     Copy-Item -Destination $PluginDestination -Force
 Copy-Item -LiteralPath (Join-Path $BinDir "XVision.exe") -Destination $PackageDirectory -Force
 
+# Release linking can remove references to declared Qt modules. Stage every
+# required module and scan it so the package contract does not depend on that.
+foreach ($RelativePath in @(Get-XVisionQtRuntimeFiles $Configuration)) {
+    if ([System.IO.Path]::GetFileName($RelativePath) -ne $RelativePath) { continue }
+    $QtRuntimeSource = Join-Path $env:QTDIR ("bin/" + $RelativePath)
+    Assert-File $QtRuntimeSource "declared Qt runtime $RelativePath"
+    Copy-Item -LiteralPath $QtRuntimeSource -Destination $PackageDirectory -Force
+}
+
 $WindeployqtArguments = @(Get-XVisionQtDeploymentArguments $Configuration $PackageDirectory)
 Invoke-Checked $Windeployqt $WindeployqtArguments "Qt runtime deployment failed."
 

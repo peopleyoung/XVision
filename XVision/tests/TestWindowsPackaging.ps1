@@ -77,6 +77,10 @@ try {
     foreach ($Configuration in @('Debug', 'Release')) {
         $DeploymentArguments = @(Get-XVisionQtDeploymentArguments $Configuration $TemporaryDirectory)
         Assert-True ($DeploymentArguments -contains '--sql') 'Qt SQL module must be deployed.'
+        $Suffix = if ($Configuration -eq 'Debug') { 'd' } else { '' }
+        foreach ($Module in @('Concurrent', 'StateMachine')) {
+            Assert-True ($DeploymentArguments -contains (Join-Path $TemporaryDirectory "Qt6${Module}${Suffix}.dll")) "Declared Qt $Module module must be scanned."
+        }
         Assert-True ($DeploymentArguments -notcontains 'sqlite') 'sqlite is not a positional executable for windeployqt.'
         Assert-True ($DeploymentArguments -contains (Join-Path $TemporaryDirectory 'XVision.exe')) 'Application must be scanned.'
         Assert-True ($DeploymentArguments -contains (Join-Path $TemporaryDirectory 'XvFuncCollection/XvFuncSystem.dll')) 'Dynamically loaded plugin must be scanned.'
