@@ -53,7 +53,7 @@ public:
 class XVFUNCSYSTEM_EXPORT OImageModel:public OpenCvImageOperatorBase
 {
     Q_OBJECT
-    Q_PROPERTY(OImageModel::Mode mode READ mode WRITE setMode)
+    Q_PROPERTY(Mode mode READ mode WRITE setMode)
 public:
     enum Mode { SuperResolution=0,BackgroundSubtraction=1,Svm=2 };
     Q_ENUM(Mode)

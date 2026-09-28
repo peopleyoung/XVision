@@ -46,7 +46,7 @@ public:
 class XVFUNCSYSTEM_EXPORT LoopFlow:public XvFunc
 {
     Q_OBJECT
-    Q_PROPERTY(LoopFlow::Mode mode READ mode WRITE setMode)
+    Q_PROPERTY(Mode mode READ mode WRITE setMode)
     friend class ::LoopFlowWdg;
 public:
     enum Mode { For,ForeachImages };

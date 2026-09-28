@@ -42,7 +42,7 @@ public:
 class XVFUNCSYSTEM_EXPORT HttpJson:public CommunicationOperatorBase
 {
     Q_OBJECT
-    Q_PROPERTY(HttpJson::Mode mode READ mode WRITE setMode)
+    Q_PROPERTY(Mode mode READ mode WRITE setMode)
 public:
     enum Mode { Read=0,Write=1 };
     Q_ENUM(Mode)

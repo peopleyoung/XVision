@@ -43,7 +43,7 @@ public:
 class XVFUNCSYSTEM_EXPORT NotificationOutput:public XvFunc
 {
     Q_OBJECT
-    Q_PROPERTY(NotificationOutput::Mode mode READ mode WRITE setMode)
+    Q_PROPERTY(Mode mode READ mode WRITE setMode)
     friend class ::NotificationOutputWdg;
 public:
     enum Mode

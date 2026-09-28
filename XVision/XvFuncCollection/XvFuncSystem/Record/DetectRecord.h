@@ -44,7 +44,7 @@ public:
 class XVFUNCSYSTEM_EXPORT DetectRecord:public XvFunc
 {
     Q_OBJECT
-    Q_PROPERTY(DetectRecord::Mode mode READ mode WRITE setMode)
+    Q_PROPERTY(Mode mode READ mode WRITE setMode)
 public:
     enum Mode { Record=0,ClassRecord=1,ObjectRecord=2,HasRecord=3 };
     Q_ENUM(Mode)

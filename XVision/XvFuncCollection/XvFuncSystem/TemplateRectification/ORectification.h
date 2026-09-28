@@ -41,7 +41,7 @@ public:
 class XVFUNCSYSTEM_EXPORT ORectification:public OpenCvImageOperatorBase
 {
     Q_OBJECT
-    Q_PROPERTY(ORectification::Mode mode READ mode WRITE setMode)
+    Q_PROPERTY(Mode mode READ mode WRITE setMode)
 public:
     enum Mode { ForegroundRotatedRect=0,ForegroundExtract=1,RotatedRect=2 };
     Q_ENUM(Mode)

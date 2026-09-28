@@ -43,7 +43,7 @@ public:
 class XVFUNCSYSTEM_EXPORT UdpText:public CommunicationOperatorBase
 {
     Q_OBJECT
-    Q_PROPERTY(UdpText::Mode mode READ mode WRITE setMode)
+    Q_PROPERTY(Mode mode READ mode WRITE setMode)
 public:
     enum Mode { Read=0,Write=1 };
     Q_ENUM(Mode)

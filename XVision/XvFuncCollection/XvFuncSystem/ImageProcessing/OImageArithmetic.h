@@ -22,7 +22,7 @@ public:
 class XVFUNCSYSTEM_EXPORT OImageArithmetic:public OpenCvImageOperatorBase
 {
     Q_OBJECT
-    Q_PROPERTY(OImageArithmetic::Mode mode READ mode WRITE setMode)
+    Q_PROPERTY(Mode mode READ mode WRITE setMode)
 public:
     enum Mode { AddSubtract=0,BitwiseNot=1,MultiplyDivide=2,Pow=3 };
     Q_ENUM(Mode)

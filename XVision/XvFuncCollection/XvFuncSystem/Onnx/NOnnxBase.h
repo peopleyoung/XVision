@@ -13,11 +13,11 @@ class XVFUNCSYSTEM_EXPORT NOnnxBase:public XvFunc
 {
     Q_OBJECT
     Q_PROPERTY(QString modelPath READ modelPath WRITE setModelPath)
-    Q_PROPERTY(NOnnxBase::InputLayout inputLayout READ inputLayout WRITE setInputLayout)
+    Q_PROPERTY(InputLayout inputLayout READ inputLayout WRITE setInputLayout)
     Q_PROPERTY(int inputWidth READ inputWidth WRITE setInputWidth)
     Q_PROPERTY(int inputHeight READ inputHeight WRITE setInputHeight)
-    Q_PROPERTY(NOnnxBase::ImageChannelOrder channelOrder READ channelOrder WRITE setChannelOrder)
-    Q_PROPERTY(NOnnxBase::ImageResizeMode resizeMode READ resizeMode WRITE setResizeMode)
+    Q_PROPERTY(ImageChannelOrder channelOrder READ channelOrder WRITE setChannelOrder)
+    Q_PROPERTY(ImageResizeMode resizeMode READ resizeMode WRITE setResizeMode)
     Q_PROPERTY(int paddingValue READ paddingValue WRITE setPaddingValue)
     Q_PROPERTY(double pixelScale READ pixelScale WRITE setPixelScale)
     Q_PROPERTY(QString meanValues READ meanValues WRITE setMeanValues)

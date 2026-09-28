@@ -40,7 +40,7 @@ public:
 class XVFUNCSYSTEM_EXPORT ModbusRegister:public CommunicationOperatorBase
 {
     Q_OBJECT
-    Q_PROPERTY(ModbusRegister::Mode mode READ mode WRITE setMode)
+    Q_PROPERTY(Mode mode READ mode WRITE setMode)
 public:
     enum Mode { ReadInt32=0,WriteInt16=1 };
     Q_ENUM(Mode)

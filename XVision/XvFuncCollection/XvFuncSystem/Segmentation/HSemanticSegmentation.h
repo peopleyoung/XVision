@@ -62,7 +62,7 @@ class XVFUNCSYSTEM_EXPORT HSemanticSegmentation : public XvFunc
     Q_OBJECT
     Q_PROPERTY(QString modelPath READ modelPath WRITE setModelPath)
     Q_PROPERTY(QString preprocessPath READ preprocessPath WRITE setPreprocessPath)
-    Q_PROPERTY(HSemanticSegmentation::Runtime runtime READ runtime WRITE setRuntime)
+    Q_PROPERTY(Runtime runtime READ runtime WRITE setRuntime)
     Q_PROPERTY(double overlayOpacity READ overlayOpacity WRITE setOverlayOpacity)
     friend class ::HSemanticSegmentationWdg;
 

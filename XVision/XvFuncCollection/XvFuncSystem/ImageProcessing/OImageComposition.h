@@ -35,7 +35,7 @@ public:
 class XVFUNCSYSTEM_EXPORT OImageComposition:public OpenCvImageOperatorBase
 {
     Q_OBJECT
-    Q_PROPERTY(OImageComposition::Mode mode READ mode WRITE setMode)
+    Q_PROPERTY(Mode mode READ mode WRITE setMode)
 public:
     enum Mode { Background=0,SeamlessClone=1,Stitching=2 };
     Q_ENUM(Mode)

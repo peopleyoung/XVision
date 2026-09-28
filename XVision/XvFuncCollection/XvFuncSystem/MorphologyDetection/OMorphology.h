@@ -43,7 +43,7 @@ class OMorphologyResult:public OpenCvImageResultBase
 class XVFUNCSYSTEM_EXPORT OMorphology:public OpenCvImageOperatorBase
 {
     Q_OBJECT
-    Q_PROPERTY(OMorphology::Mode mode READ mode WRITE setMode)
+    Q_PROPERTY(Mode mode READ mode WRITE setMode)
 public:
     enum Mode { BlackHat=0,Close=1,Dilate=2,Erode=3,Gradient=4,Open=5,TopHat=6 };
     Q_ENUM(Mode)

@@ -51,7 +51,7 @@ public:
 class XVFUNCSYSTEM_EXPORT OCascadeDetector:public OpenCvImageOperatorBase
 {
     Q_OBJECT
-    Q_PROPERTY(OCascadeDetector::Mode mode READ mode WRITE setMode)
+    Q_PROPERTY(Mode mode READ mode WRITE setMode)
 public:
     enum Mode { Haar=0,Lbp=1 };
     Q_ENUM(Mode)

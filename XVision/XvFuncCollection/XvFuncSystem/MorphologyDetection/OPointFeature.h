@@ -83,7 +83,7 @@ public:
 class XVFUNCSYSTEM_EXPORT OPointFeature:public OpenCvImageOperatorBase
 {
     Q_OBJECT
-    Q_PROPERTY(OPointFeature::Mode mode READ mode WRITE setMode)
+    Q_PROPERTY(Mode mode READ mode WRITE setMode)
 public:
     enum Mode { Harris=0,Subpixel=1,Akaze=2,Brisk=3,Fast=4,Freak=5,Kaze=6,Mser=7,Star=8 };
     Q_ENUM(Mode)

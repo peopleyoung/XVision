@@ -48,7 +48,7 @@ public:
 class XVFUNCSYSTEM_EXPORT SerialData:public CommunicationOperatorBase
 {
     Q_OBJECT
-    Q_PROPERTY(SerialData::Mode mode READ mode WRITE setMode)
+    Q_PROPERTY(Mode mode READ mode WRITE setMode)
 public:
     enum Mode { ReadBytes=0,ReadText=1,WriteBytes=2,WriteText=3 };
     Q_ENUM(Mode)

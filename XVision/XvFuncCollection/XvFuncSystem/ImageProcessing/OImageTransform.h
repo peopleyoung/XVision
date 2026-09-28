@@ -32,7 +32,7 @@ public:
 class XVFUNCSYSTEM_EXPORT OImageTransform:public OpenCvImageOperatorBase
 {
     Q_OBJECT
-    Q_PROPERTY(OImageTransform::Mode mode READ mode WRITE setMode)
+    Q_PROPERTY(Mode mode READ mode WRITE setMode)
 public:
     enum Mode
     {

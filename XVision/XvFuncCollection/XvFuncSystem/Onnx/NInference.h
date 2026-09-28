@@ -40,7 +40,7 @@ public:
 class XVFUNCSYSTEM_EXPORT NInference:public NOnnxBase
 {
     Q_OBJECT
-    Q_PROPERTY(NInference::Mode mode READ mode WRITE setMode)
+    Q_PROPERTY(Mode mode READ mode WRITE setMode)
     friend class ::NOnnxOperatorWdg;
 public:
     enum Mode

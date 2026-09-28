@@ -48,7 +48,7 @@ public:
 class XVFUNCSYSTEM_EXPORT OTemplateMatch:public OpenCvImageOperatorBase
 {
     Q_OBJECT
-    Q_PROPERTY(OTemplateMatch::Mode mode READ mode WRITE setMode)
+    Q_PROPERTY(Mode mode READ mode WRITE setMode)
 public:
     enum Mode { Base64=0,Feature=1,Shape=2,Hsv=3 };
     Q_ENUM(Mode)

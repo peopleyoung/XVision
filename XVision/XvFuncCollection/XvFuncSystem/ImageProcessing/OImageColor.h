@@ -40,7 +40,7 @@ public:
 class XVFUNCSYSTEM_EXPORT OImageColor:public OpenCvImageOperatorBase
 {
     Q_OBJECT
-    Q_PROPERTY(OImageColor::Mode mode READ mode WRITE setMode)
+    Q_PROPERTY(Mode mode READ mode WRITE setMode)
 public:
     enum Mode { Convert=0,HsvInRange=1,Normalize=2,SplitBgr=3 };
     Q_ENUM(Mode)

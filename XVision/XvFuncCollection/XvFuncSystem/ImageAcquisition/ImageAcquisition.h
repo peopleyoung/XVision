@@ -81,7 +81,7 @@ struct SVideoCapture;
 class XVFUNCSYSTEM_EXPORT ImageAcquisition:public XvFunc
 {
     Q_OBJECT
-    Q_PROPERTY(ImageAcquisition::AcqType acqType READ acqType WRITE setAcqType)
+    Q_PROPERTY(AcqType acqType READ acqType WRITE setAcqType)
     Q_PROPERTY(QString localFile READ localFile WRITE setLocalFile)
     Q_PROPERTY(QString localDir READ localDir WRITE setLocalDir)
     Q_PROPERTY(QString cameraDeviceId READ cameraDeviceId WRITE setCameraDeviceId)
@@ -99,7 +99,7 @@ public:
         Camera=2,
         Video=3,
     };
-    Q_ENUMS(AcqType);
+    Q_ENUM(AcqType);
     AcqType acqType() const {return m_AcqType;}
     void setAcqType(AcqType type)
     {

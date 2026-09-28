@@ -47,7 +47,7 @@ public:
 class XVFUNCSYSTEM_EXPORT GeometryMeasure:public GeometryOperatorBase
 {
     Q_OBJECT
-    Q_PROPERTY(GeometryMeasure::Mode mode READ mode WRITE setMode)
+    Q_PROPERTY(Mode mode READ mode WRITE setMode)
 public:
     enum Mode {
         CircleCircle=0,

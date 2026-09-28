@@ -39,7 +39,7 @@ public:
 class XVFUNCSYSTEM_EXPORT BaseDataIntCalc:public XvFunc
 {
     Q_OBJECT
-    Q_PROPERTY(BaseDataIntCalc::EIntCalaType intCalaType WRITE setIntCalaType READ intCalaType)
+    Q_PROPERTY(EIntCalaType intCalaType WRITE setIntCalaType READ intCalaType)
     friend class ::BaseDataIntCalcWdg;
 public:
     Q_INVOKABLE explicit BaseDataIntCalc(QObject *parent = nullptr);
@@ -54,7 +54,7 @@ public:
         SelfAdd=4,//++
         SelfSub=5,//--
     };
-    Q_ENUMS(EIntCalaType);
+    Q_ENUM(EIntCalaType);
     EIntCalaType intCalaType() const {return m_intCalaType;}
     void setIntCalaType(EIntCalaType type){ m_intCalaType=type;}
     QStringList persistentPropertyNames() const override

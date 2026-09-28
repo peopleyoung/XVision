@@ -48,7 +48,7 @@ public:
 class XVFUNCSYSTEM_EXPORT NObjectDetection:public NOnnxBase
 {
     Q_OBJECT
-    Q_PROPERTY(NObjectDetection::Mode mode READ mode WRITE setMode)
+    Q_PROPERTY(Mode mode READ mode WRITE setMode)
     Q_PROPERTY(bool normalizedCoordinates READ normalizedCoordinates WRITE setNormalizedCoordinates)
     Q_PROPERTY(QString classNames READ classNames WRITE setClassNames)
     friend class ::NOnnxOperatorWdg;

@@ -45,7 +45,7 @@ public:
 class XVFUNCSYSTEM_EXPORT GeometryCreate:public GeometryOperatorBase
 {
     Q_OBJECT
-    Q_PROPERTY(GeometryCreate::ShapeType shapeType READ shapeType WRITE setShapeType)
+    Q_PROPERTY(ShapeType shapeType READ shapeType WRITE setShapeType)
 public:
     enum ShapeType { Point=0,Line=1,Circle=2,Rectangle=3 };
     Q_ENUM(ShapeType)

@@ -81,7 +81,7 @@ public:
 class XVFUNCSYSTEM_EXPORT ORegionDetector:public OpenCvImageOperatorBase
 {
     Q_OBJECT
-    Q_PROPERTY(ORegionDetector::Mode mode READ mode WRITE setMode)
+    Q_PROPERTY(Mode mode READ mode WRITE setMode)
 public:
     enum Mode { Blob=0,Contours=1,HoughCircles=2,RenderBlobs=3,HoughLines=4,HoughLinesP=5 };
     Q_ENUM(Mode)

@@ -41,8 +41,8 @@ public:
 class XVFUNCSYSTEM_EXPORT NSemanticSegmentation:public NOnnxBase
 {
     Q_OBJECT
-    Q_PROPERTY(NSemanticSegmentation::Mode mode READ mode WRITE setMode)
-    Q_PROPERTY(NOnnxBase::InputLayout outputLayout READ outputLayout WRITE setOutputLayout)
+    Q_PROPERTY(Mode mode READ mode WRITE setMode)
+    Q_PROPERTY(XvCore::NOnnxBase::InputLayout outputLayout READ outputLayout WRITE setOutputLayout)
     Q_PROPERTY(QString classNames READ classNames WRITE setClassNames)
     friend class ::NOnnxOperatorWdg;
 public:

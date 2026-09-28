@@ -54,7 +54,7 @@ public:
 class XVFUNCSYSTEM_EXPORT OImageAnalysis:public OpenCvImageOperatorBase
 {
     Q_OBJECT
-    Q_PROPERTY(OImageAnalysis::Mode mode READ mode WRITE setMode)
+    Q_PROPERTY(Mode mode READ mode WRITE setMode)
 public:
     enum Mode { Canny=0,Histogram=1,Hog=2,Subdiv2d=3 };
     Q_ENUM(Mode)

@@ -28,7 +28,7 @@ public:
 class XVFUNCSYSTEM_EXPORT OCodeDetector:public OpenCvImageOperatorBase
 {
     Q_OBJECT
-    Q_PROPERTY(OCodeDetector::Mode mode READ mode WRITE setMode)
+    Q_PROPERTY(Mode mode READ mode WRITE setMode)
 public:
     enum Mode { QrCode=0 };
     Q_ENUM(Mode)

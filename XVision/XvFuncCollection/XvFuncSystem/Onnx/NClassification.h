@@ -41,7 +41,7 @@ public:
 class XVFUNCSYSTEM_EXPORT NClassification:public NOnnxBase
 {
     Q_OBJECT
-    Q_PROPERTY(NClassification::Mode mode READ mode WRITE setMode)
+    Q_PROPERTY(Mode mode READ mode WRITE setMode)
     Q_PROPERTY(bool applySoftmax READ applySoftmax WRITE setApplySoftmax)
     Q_PROPERTY(QString classNames READ classNames WRITE setClassNames)
     friend class ::NOnnxOperatorWdg;

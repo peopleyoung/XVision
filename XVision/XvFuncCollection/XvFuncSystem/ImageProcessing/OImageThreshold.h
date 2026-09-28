@@ -26,7 +26,7 @@ public:
 class XVFUNCSYSTEM_EXPORT OImageThreshold:public OpenCvImageOperatorBase
 {
     Q_OBJECT
-    Q_PROPERTY(OImageThreshold::Mode mode READ mode WRITE setMode)
+    Q_PROPERTY(Mode mode READ mode WRITE setMode)
 public:
     enum Mode { Threshold=0,PixelCondition=1 };
     Q_ENUM(Mode)
