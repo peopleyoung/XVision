@@ -12,6 +12,8 @@ jobs:
   windows-exe:
     runs-on: windows-2022
     timeout-minutes: 180
+    env:
+      CMAKE_BUILD_PARALLEL_LEVEL: 4
     defaults:
       run:
         shell: pwsh

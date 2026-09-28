@@ -85,7 +85,7 @@ if (-not (Test-Path -LiteralPath (Join-Path $OpenCvRoot 'bin/opencv_world4100.dl
     Invoke-BuildTool 'cmake' @(
         '-S', $OpenCvSource, '-B', $OpenCvBuild, '-G', 'Visual Studio 16 2019', '-A', 'x64',
         "-DCMAKE_INSTALL_PREFIX=$OpenCvInstall", "-DOPENCV_EXTRA_MODULES_PATH=$ContribModules",
-        '-DBUILD_LIST=core,imgproc,imgcodecs,features2d,xfeatures2d,calib3d,photo,objdetect,stitching,ml,dnn,dnn_superres,video,videoio,world',
+        '-DBUILD_LIST=core,imgproc,imgcodecs,features2d,xfeatures2d,calib3d,photo,objdetect,stitching,ml,dnn,dnn_superres,video,videoio,highgui,world',
         '-DBUILD_opencv_world=ON', '-DBUILD_TESTS=OFF', '-DBUILD_PERF_TESTS=OFF',
         '-DBUILD_EXAMPLES=OFF', '-DBUILD_DOCS=OFF', '-DBUILD_opencv_apps=OFF',
         '-DBUILD_opencv_python2=OFF', '-DBUILD_opencv_python3=OFF', '-DBUILD_JAVA=OFF',
