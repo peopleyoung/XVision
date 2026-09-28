@@ -3435,7 +3435,7 @@ private slots:
 
     void roundTripCurrentOperators()
     {
-        DefaultLocaleGuard localeGuard(QLocale(QLocale::German));
+        DefaultLocaleGuard localeGuard{QLocale(QLocale::German)};
         Q_UNUSED(localeGuard);
         QTemporaryDir directory;
         QVERIFY(directory.isValid());
