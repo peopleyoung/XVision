@@ -1,4 +1,4 @@
-#include "NOnnxOperatorWdg.h"
+﻿#include "NOnnxOperatorWdg.h"
 
 #include "NClassification.h"
 #include "NInference.h"
@@ -142,16 +142,16 @@ void NOnnxOperatorWdg::initFrm()
     auto function=getFunc<NOnnxBase>();
     if(!function) return;
 
-    m_inputLayout->addItem("Auto",NOnnxBase::Auto);
+    m_inputLayout->addItem(getUiText("Auto"),NOnnxBase::Auto);
     m_inputLayout->addItem("NCHW",NOnnxBase::Nchw);
     m_inputLayout->addItem("NHWC",NOnnxBase::Nhwc);
-    m_outputLayout->addItem("Auto",NOnnxBase::Auto);
+    m_outputLayout->addItem(getUiText("Auto"),NOnnxBase::Auto);
     m_outputLayout->addItem("NCHW",NOnnxBase::Nchw);
     m_outputLayout->addItem("NHWC",NOnnxBase::Nhwc);
     m_channelOrder->addItem("RGB",NOnnxBase::Rgb);
     m_channelOrder->addItem("BGR",NOnnxBase::Bgr);
     m_resizeMode->addItem(getLang("XvFuncSystem_NOnnx_Stretch","拉伸"),NOnnxBase::Stretch);
-    m_resizeMode->addItem("Letterbox",NOnnxBase::Letterbox);
+    m_resizeMode->addItem(getUiText("Letterbox"),NOnnxBase::Letterbox);
     m_inputWidth->setRange(0,32768);
     m_inputHeight->setRange(0,32768);
     m_paddingValue->setRange(0,255);
@@ -175,7 +175,7 @@ void NOnnxOperatorWdg::initFrm()
         m_mode->addItem(getLang("XvFuncSystem_NOnnx_Generic","通用"),NObjectDetection::Generic);
         m_mode->addItem("YOLOv3",NObjectDetection::Yolov3);
         m_mode->addItem("YOLOv5",NObjectDetection::Yolov5);
-        m_mode->addItem("YOLOv5 Face",NObjectDetection::Yolov5Face);
+        m_mode->addItem(getUiText("YOLOv5 Face"),NObjectDetection::Yolov5Face);
     }
     else if(qobject_cast<NSemanticSegmentation*>(function))
     {

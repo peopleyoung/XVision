@@ -16,13 +16,13 @@ public:
     {
         rectRounded=5;
 
-        itemRectPen.setColor(QColor(25, 150, 255));
-        itemRectPen.setWidth(3);
-        itemRectBrush=QBrush(QColor(Qt::white));
+        itemRectPen.setColor(QColor("#408FCC"));
+        itemRectPen.setWidth(2);
+        itemRectBrush=QBrush(QColor("#152E49"));
 
-        selectRectPen.setColor(QColor(255, 150, 50));
-        selectRectPen.setWidth(5);
-        selectRectBrush=QBrush(QColor(Qt::white));
+        selectRectPen.setColor(QColor("#69C9FF"));
+        selectRectPen.setWidth(3);
+        selectRectBrush=QBrush(QColor("#152E49"));
 
         selectBoundingRectPen.setColor(Qt::white);
         selectBoundingRectPen.setWidth(1);

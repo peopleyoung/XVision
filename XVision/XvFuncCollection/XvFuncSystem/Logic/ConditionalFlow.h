@@ -1,4 +1,4 @@
-#ifndef CONDITIONALFLOW_H
+﻿#ifndef CONDITIONALFLOW_H
 #define CONDITIONALFLOW_H
 
 #include "XVFuncSystemGlobal.h"
@@ -14,7 +14,7 @@ class ConditionalFlowParam:public XvBaseParam
 public:
     ConditionalFlowParam()
     {
-        condition=new XBool("condition",false,this,"Condition");
+        condition=new XBool("condition",false,this,"条件");
     }
 
     XBool *condition=nullptr;

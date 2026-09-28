@@ -48,6 +48,28 @@ try {
     Start-Sleep -Seconds 3
     $Process.Refresh()
     if ($Process.HasExited) { throw "Packaged XVision exited after opening its window: $($Process.ExitCode)." }
+    Add-Type -AssemblyName System.Drawing
+    Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+public static class XVisionWindowCapture {
+    [StructLayout(LayoutKind.Sequential)]
+    public struct Rect { public int Left, Top, Right, Bottom; }
+    [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr window, out Rect rect);
+    [DllImport("user32.dll")] public static extern bool PrintWindow(IntPtr window, IntPtr dc, uint flags);
+}
+'@
+    $Bounds = New-Object XVisionWindowCapture+Rect
+    if ([XVisionWindowCapture]::GetWindowRect($Process.MainWindowHandle, [ref]$Bounds)) {
+        $Bitmap = New-Object System.Drawing.Bitmap ($Bounds.Right - $Bounds.Left), ($Bounds.Bottom - $Bounds.Top)
+        $Graphics = [System.Drawing.Graphics]::FromImage($Bitmap)
+        $Device = $Graphics.GetHdc()
+        try { $Captured = [XVisionWindowCapture]::PrintWindow($Process.MainWindowHandle, $Device, 2) }
+        finally { $Graphics.ReleaseHdc($Device) }
+        try {
+            if ($Captured) { $Bitmap.Save((Join-Path $LogDirectory 'technology-blue-main-window.png')) }
+        } finally { $Graphics.Dispose(); $Bitmap.Dispose() }
+    }
     'Packaged XVision main window opened successfully with only packaged files and Windows system directories on PATH.' |
         Set-Content -LiteralPath (Join-Path $LogDirectory 'result.txt') -Encoding UTF8
     Write-Host 'Packaged XVision main window opened successfully.'

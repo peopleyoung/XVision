@@ -1,3 +1,4 @@
+﻿#include "XLanguage.h"
 #include "LoopFlow.h"
 #include "LoopFlowWdg.h"
 
@@ -9,7 +10,7 @@ LoopFlow::LoopFlow(QObject *parent)
     :XvFunc(parent),m_param(new LoopFlowParam()),m_result(new LoopFlowResult())
 {
     _funcRole="LoopFlow";
-    _funcName="Loop Flow";
+    _funcName=getUiText("Loop Flow");
     _funcType=EXvFuncType::Logic;
 }
 

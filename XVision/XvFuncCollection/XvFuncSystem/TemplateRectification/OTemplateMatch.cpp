@@ -1,4 +1,4 @@
-#include "OTemplateMatch.h"
+﻿#include "OTemplateMatch.h"
 
 #include "OpenCvImageUtils.h"
 #include "OpenCvTemplateRectificationUtils.h"
@@ -375,8 +375,8 @@ OTemplateMatchParam::OTemplateMatchParam()
                           getLang("XvFuncSystem_OTemplateMatch_AngleExtent","角度范围"));
     angleStep=new XReal("angleStep",0.05,this,
                         getLang("XvFuncSystem_OTemplateMatch_AngleStep","角度步长"));
-    cannyLower=new XInt("cannyLower",50,this,"Canny lower");
-    cannyUpper=new XInt("cannyUpper",150,this,"Canny upper");
+    cannyLower=new XInt("cannyLower",50,this,"边缘检测下限");
+    cannyUpper=new XInt("cannyUpper",150,this,"边缘检测上限");
     maxFeatures=new XInt("maxFeatures",1500,this,
                          getLang("XvFuncSystem_OTemplateMatch_MaxFeatures","最大特征数"));
     featureRatio=new XReal("featureRatio",0.75,this,
@@ -386,7 +386,7 @@ OTemplateMatchParam::OTemplateMatchParam()
     minimumInliers=new XInt("minimumInliers",6,this,
                             getLang("XvFuncSystem_OTemplateMatch_MinInliers","最少内点"));
     ransacReprojectionThreshold=new XReal("ransacReprojectionThreshold",3.0,this,
-                                          "RANSAC reprojection threshold");
+                                          "RANSAC 重投影阈值");
 }
 
 OTemplateMatchResult::OTemplateMatchResult()

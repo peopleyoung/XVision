@@ -1,4 +1,4 @@
-#ifndef OPENCVIMAGEOPERATORBASE_H
+﻿#ifndef OPENCVIMAGEOPERATORBASE_H
 #define OPENCVIMAGEOPERATORBASE_H
 
 #include "XVFuncSystemGlobal.h"
@@ -14,7 +14,7 @@ class OpenCvImageParamBase:public XvBaseParam
 public:
     OpenCvImageParamBase()
     {
-        inputImage=new XImage("inputImage",QImage(),this,"Input image");
+        inputImage=new XImage("inputImage",QImage(),this,"输入图像");
     }
 
     XImage *inputImage=nullptr;
@@ -25,7 +25,7 @@ class OpenCvImageResultBase:public XvBaseResult
 public:
     OpenCvImageResultBase()
     {
-        outputImage=new XImage("outputImage",QImage(),this,"Output image");
+        outputImage=new XImage("outputImage",QImage(),this,"输出图像");
     }
 
     XImage *outputImage=nullptr;

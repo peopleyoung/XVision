@@ -117,7 +117,8 @@ try {
         "detect_record",
         "communication_operators",
         "source_notification",
-        "onnx_operators"
+        "onnx_operators",
+        "ui_appearance"
     )) {
         if ($DiscoveredTests -notcontains $ExpectedTest) {
             throw "Expected CTest entry is missing: $ExpectedTest"

@@ -1,4 +1,4 @@
-#include "DetectRecordWdg.h"
+﻿#include "DetectRecordWdg.h"
 
 #include "DetectRecord.h"
 #include "XVisionRuntimeData.h"
@@ -32,7 +32,7 @@ DetectRecordWdg::DetectRecordWdg(DetectRecord *func,QWidget *parent)
     {
         const QMetaEnum values=func->metaObject()->property(propertyIndex).enumerator();
         for(int index=0;index<values.keyCount();++index)
-            m_mode->addItem(QString::fromLatin1(values.key(index)),values.value(index));
+            m_mode->addItem(getUiText(QString::fromLatin1(values.key(index))),values.value(index));
     }
     connect(m_mode,qOverload<int>(&QComboBox::currentIndexChanged),this,
             [this,func](int index)
@@ -69,7 +69,7 @@ void DetectRecordWdg::rebuildParameters()
         if(!object) continue;
         QWidget *editor=createParameterEditor(object);
         if(editor)
-            m_form->addRow(object->dispalyName().isEmpty()?name:object->dispalyName(),editor);
+            m_form->addRow(getUiText(object->dispalyName().isEmpty()?name:object->dispalyName()),editor);
     }
     adjustSize();
     resize(qMax(width(),520),qMax(height(),320));

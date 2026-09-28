@@ -1,4 +1,4 @@
-#include "ConditionalFlowWdg.h"
+﻿#include "ConditionalFlowWdg.h"
 
 #include <QComboBox>
 #include <QFormLayout>
@@ -16,8 +16,8 @@ ConditionalFlowWdg::ConditionalFlowWdg(ConditionalFlow *func,QWidget *parent)
     m_source=new QComboBox(centralWidget());
     m_value=new QComboBox(centralWidget());
     initCmbByBool(m_value);
-    layout->addRow(new QLabel("Condition source",centralWidget()),m_source);
-    layout->addRow(new QLabel("Condition",centralWidget()),m_value);
+    layout->addRow(new QLabel(getUiText("Condition source"),centralWidget()),m_source);
+    layout->addRow(new QLabel(getUiText("Condition"),centralWidget()),m_value);
     setFixedSize(420,180);
 
     connect(m_source,qOverload<int>(&QComboBox::currentIndexChanged),this,

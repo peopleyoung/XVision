@@ -1,3 +1,4 @@
+﻿#include "XLanguage.h"
 #include "OImageArithmetic.h"
 
 #include "OpenCvImageUtils.h"
@@ -13,7 +14,7 @@ OImageArithmetic::OImageArithmetic(QObject *parent)
       m_result(new OpenCvImageResultBase())
 {
     _funcRole="OImageArithmetic";
-    _funcName="OpenCV Image Arithmetic";
+    _funcName=getUiText("OpenCV Image Arithmetic");
 }
 
 OImageArithmetic::~OImageArithmetic()

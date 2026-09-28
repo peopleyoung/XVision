@@ -1,4 +1,4 @@
-#include "GeometryOperatorWdg.h"
+﻿#include "GeometryOperatorWdg.h"
 
 #include "GeometryOperatorBase.h"
 #include "XPoint2D.h"
@@ -46,7 +46,7 @@ GeometryOperatorWdg::GeometryOperatorWdg(GeometryOperatorBase *func,QWidget *par
         const QMetaProperty property=func->metaObject()->property(propertyIndex);
         const QMetaEnum values=property.enumerator();
         for(int index=0;index<values.keyCount();++index)
-            m_selector->addItem(QString::fromLatin1(values.key(index)),values.value(index));
+            m_selector->addItem(getUiText(QString::fromLatin1(values.key(index))),values.value(index));
     }
     connect(m_selector,qOverload<int>(&QComboBox::currentIndexChanged),this,
             [this,func,propertyName](int index)
@@ -84,7 +84,7 @@ void GeometryOperatorWdg::rebuildParameters()
         if(!object) continue;
         QWidget *editor=createParameterEditor(object);
         if(editor)
-            m_form->addRow(object->dispalyName().isEmpty()?name:object->dispalyName(),editor);
+            m_form->addRow(getUiText(object->dispalyName().isEmpty()?name:object->dispalyName()),editor);
     }
     adjustSize();
     resize(qMax(width(),480),qMax(height(),280));

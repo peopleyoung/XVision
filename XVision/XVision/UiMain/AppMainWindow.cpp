@@ -519,13 +519,14 @@ void AppMainWindow::init()
         {
             QString runTime= QString("%1:%2").arg(getLang(App_AppMainWindow_StatusBarAppRunTime,"软件运行时间")).arg(funcMsToHMS(getApp()->getAppRunTime()));
             HardWareInfo info;
-            double rCpuUsage;
-            double rMemTotal;
-            double rMemUsed;
-            info.getCpuUsage(rCpuUsage);
+            double rCpuUsage=0.0;
+            double rMemTotal=0.0;
+            double rMemUsed=0.0;
+            const bool cpuAvailable=info.getCpuUsage(rCpuUsage) && qIsFinite(rCpuUsage);
             info.getMemUsage(rMemTotal,rMemUsed);
             QString hardWare= QString("%1:%2% %3:%4MB/%5MB")
-                    .arg(getLang(App_AppMainWindow_StatusBarCpuUsage,"CPU占用率")).arg(rCpuUsage)
+                    .arg(getLang(App_AppMainWindow_StatusBarCpuUsage,"CPU占用率"))
+                    .arg(cpuAvailable?QString::number(rCpuUsage,'f',1):QStringLiteral("--"))
                     .arg(getLang(App_AppMainWindow_StatusBarMemUsage,"内存占用")).arg(rMemUsed).arg(rMemTotal);
             emit this->sgStatusBarInfoUpdate(runTime,hardWare);
             QThread::msleep(500);

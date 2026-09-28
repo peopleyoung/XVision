@@ -1,4 +1,4 @@
-#ifndef OIMAGEARITHMETIC_H
+﻿#ifndef OIMAGEARITHMETIC_H
 #define OIMAGEARITHMETIC_H
 
 #include "OpenCvImageOperatorBase.h"
@@ -11,8 +11,8 @@ class OImageArithmeticParam:public OpenCvImageParamBase
 public:
     OImageArithmeticParam()
     {
-        value=new XReal("value",1.0,this,"Value");
-        useAbsolute=new XBool("useAbsolute",false,this,"Use absolute difference");
+        value=new XReal("value",1.0,this,"数值");
+        useAbsolute=new XBool("useAbsolute",false,this,"使用绝对差值");
     }
 
     XReal *value=nullptr;

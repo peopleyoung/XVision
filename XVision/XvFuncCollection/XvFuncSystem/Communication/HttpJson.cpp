@@ -1,4 +1,4 @@
-#include "HttpJson.h"
+﻿#include "HttpJson.h"
 
 #include "CommunicationOperatorWdg.h"
 #include "XLanguage.h"
@@ -11,7 +11,7 @@ using namespace XvCore;
 HttpJsonParam::HttpJsonParam()
 {
     url=new XString("url","http://127.0.0.1:8080/",this,
-                    getLang("XvFuncSystem_HttpJson_Url","URL"));
+                    getUiText(getLang("XvFuncSystem_HttpJson_Url","请求地址")));
     timeoutMs=new XInt("timeoutMs",5000,this,
                        getLang("XvFuncSystem_Communication_Timeout","超时(ms)"));
     maxResponseBytes=new XInt("maxResponseBytes",1024*1024,this,
@@ -44,7 +44,7 @@ HttpJson::HttpJson(QObject *parent)
     :CommunicationOperatorBase(parent),m_param(new HttpJsonParam()),m_result(new HttpJsonResult())
 {
     _funcRole="HttpJson";
-    _funcName=getLang("XvFuncSystem_HttpJson_Name","HTTP JSON");
+    _funcName=getUiText(getLang("XvFuncSystem_HttpJson_Name","HTTP 数据通信"));
     _funcType=EXvFuncType::DataProcessing;
 }
 

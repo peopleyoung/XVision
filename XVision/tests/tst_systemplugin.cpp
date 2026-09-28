@@ -1,10 +1,11 @@
-#include <QtTest>
+﻿#include <QtTest>
 
 #include <QGuiApplication>
 #include <QFile>
 #include <QMap>
 #include <QPluginLoader>
 #include <QSet>
+#include <QRegularExpression>
 
 #include <memory>
 
@@ -103,6 +104,13 @@ private slots:
 
         const QList<XvFuncPreset> presets=plugin->getPlgXvFuncPresets();
         QCOMPARE(presets.count(),126);
+        const QRegularExpression chinese(QStringLiteral("[\\x{4e00}-\\x{9fff}]"));
+        for(const XvFuncPreset &preset:presets)
+        {
+            QVERIFY2(chinese.match(preset.displayName).hasMatch(),qPrintable(preset.alias));
+            QVERIFY(!preset.alias.contains(chinese));
+        }
+
         const QMap<QString,QString> expectedRolePresets={
             {"CreateShapeNodeData","GeometryCreate"},
             {"OpenCVConditionNodeData","ConditionalFlow"},

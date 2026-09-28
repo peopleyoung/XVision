@@ -1,6 +1,9 @@
 <RCC>
     <qresource prefix="/">
         <file>style/Light_Default.css</file>
+        <file>style/TechBlue.css</file>
+        <file>translations/qtbase_zh_CN.qm</file>
+        <file>translations/xvision_zh_CN.qm</file>
         <file>images/LightStyle/Close.svg</file>
         <file>images/LightStyle/CloseInverse.svg</file>
         <file>images/LightStyle/Maximize.svg</file>

@@ -14,6 +14,7 @@ def case(name,config='Release',skip=False,skip_build=True,fault=''):
         r=pathlib.Path(tmp); src=r/'XVision'; scripts=src/'scripts'; scripts.mkdir(parents=True)
         for f in ['Package-WindowsBuild.ps1','Verify-WindowsBuild.ps1','WindowsBuild.Common.ps1']:
             shutil.copy2(ROOT/'XVision/scripts'/f,scripts/f)
+        shutil.copytree(ROOT/'XVision/XVision/Res/translations',src/'XVision/Res/translations')
         build=src/'build'/('windows-msvc2019-'+config.lower()); bins=build/('BinD' if config=='Debug' else 'Bin')
         suffix='d' if config=='Debug' else ''
         put(bins/'XVision.exe'); put(bins/'XvFuncCollection/XvFuncSystem.dll')
@@ -101,6 +102,8 @@ sys.exit(9 if os.environ['FAULT']=='verify_fail' else 0)
             if skip and not skip_build: assert (r/'called.configure').exists()
             with zipfile.ZipFile(archive) as z:
                 names=z.namelist(); assert 'XVision.exe' in names
+                assert 'licenses/qt-translations/qtbase_zh_CN.ts' in names
+                assert 'licenses/qt-translations/GPL-3.0-only.txt' in names
                 assert 'XvFuncCollection/XvFuncSystem.dll' in names
                 assert all(filename in names for filename in crt_names)
                 assert all(f'Qt6{module}{suffix}.dll' in names for module in qt_modules)

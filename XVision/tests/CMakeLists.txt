@@ -1,4 +1,4 @@
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Gui Network SerialBus SerialPort Sql Test Widgets Xml)
+﻿find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Gui Network SerialBus SerialPort Sql Test Widgets Xml)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Gui Network SerialBus SerialPort Sql Test Widgets Xml)
 include(../3rdparty/Common3rdparty.cmake)
 
@@ -570,3 +570,23 @@ if(WIN32)
             "QT_PLUGIN_PATH=$ENV{QTDIR}/plugins;QT_LOGGING_TO_CONSOLE=1"
     )
 endif()
+
+# Presentation resources and localization must also work in the deployed Qt runtime.
+add_executable(XvUiAppearanceTests
+    tst_uiappearance.cpp
+    ../XVision/Utils/UiAppearance.cpp
+    ../XVision/Res/AppRes.qrc
+)
+set_target_properties(XvUiAppearanceTests PROPERTIES
+    CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON AUTORCC ON)
+target_include_directories(XvUiAppearanceTests PRIVATE
+    ../XVision/Utils ../CommonUsing/Project/XLanguage/include ../XvCore/include
+    ../XvData/include)
+target_link_libraries(XvUiAppearanceTests PRIVATE
+    XvCore XLanguage Qt${QT_VERSION_MAJOR}::Test Qt${QT_VERSION_MAJOR}::Widgets)
+add_test(NAME ui_appearance
+    COMMAND ${CMAKE_COMMAND} -E env
+        "QT_QPA_PLATFORM=offscreen"
+        "PATH=$<TARGET_FILE_DIR:XVision>$<SEMICOLON>$ENV{QTDIR}/bin$<SEMICOLON>$ENV{PATH}"
+        $<TARGET_FILE:XvUiAppearanceTests>
+        -o "${XVISION_QT_TEST_LOG_DIR}/ui_appearance.txt,txt" -o "-,txt")

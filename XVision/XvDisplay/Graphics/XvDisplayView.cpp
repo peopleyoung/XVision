@@ -19,8 +19,8 @@ public:
     XvDisplayViewPrivate(XvDisplayView *q):q_ptr(q)
     {
         backgroundPixmapSize=Background_Pix_Size;
-        backgroundFillColor=QColor(255,255,255);
-        backgroundGridColor=QColor(100,100,100,100);
+        backgroundFillColor=QColor("#0B1728");
+        backgroundGridColor=QColor("#11233A");
         resizeToFif=true;
         doubleClickToFit=true;
 

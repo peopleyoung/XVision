@@ -1,4 +1,4 @@
-#ifndef OIMAGETHRESHOLD_H
+﻿#ifndef OIMAGETHRESHOLD_H
 #define OIMAGETHRESHOLD_H
 
 #include "OpenCvImageOperatorBase.h"
@@ -11,10 +11,10 @@ class OImageThresholdParam:public OpenCvImageParamBase
 public:
     OImageThresholdParam()
     {
-        threshold=new XReal("threshold",127.0,this,"Threshold");
-        maxValue=new XReal("maxValue",255.0,this,"Maximum value");
-        thresholdType=new XInt("thresholdType",0,this,"Threshold type");
-        comparison=new XInt("comparison",0,this,"Comparison");
+        threshold=new XReal("threshold",127.0,this,"阈值处理");
+        maxValue=new XReal("maxValue",255.0,this,"最大值");
+        thresholdType=new XInt("thresholdType",0,this,"阈值类型");
+        comparison=new XInt("comparison",0,this,"比较方式");
     }
 
     XReal *threshold=nullptr;

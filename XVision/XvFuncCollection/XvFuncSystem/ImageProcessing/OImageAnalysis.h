@@ -1,4 +1,4 @@
-#ifndef OIMAGEANALYSIS_H
+﻿#ifndef OIMAGEANALYSIS_H
 #define OIMAGEANALYSIS_H
 
 #include "OpenCvImageOperatorBase.h"
@@ -14,16 +14,16 @@ class OImageAnalysisParam:public OpenCvImageParamBase
 public:
     OImageAnalysisParam()
     {
-        threshold1=new XReal("threshold1",50.0,this,"Threshold 1");
-        threshold2=new XReal("threshold2",150.0,this,"Threshold 2");
-        apertureSize=new XInt("apertureSize",3,this,"Aperture size");
-        l2Gradient=new XBool("l2Gradient",false,this,"L2 gradient");
-        histogramBins=new XInt("histogramBins",256,this,"Histogram bins");
-        hogWidth=new XInt("hogWidth",64,this,"HOG width");
-        hogHeight=new XInt("hogHeight",128,this,"HOG height");
-        hogBins=new XInt("hogBins",9,this,"HOG bins");
-        subdivisionSpacing=new XInt("subdivisionSpacing",32,this,"Subdivision spacing");
-        subdivisionOutput=new XInt("subdivisionOutput",0,this,"Subdivision output");
+        threshold1=new XReal("threshold1",50.0,this,"第一阈值");
+        threshold2=new XReal("threshold2",150.0,this,"第二阈值");
+        apertureSize=new XInt("apertureSize",3,this,"算子孔径");
+        l2Gradient=new XBool("l2Gradient",false,this,"L2 梯度");
+        histogramBins=new XInt("histogramBins",256,this,"直方图分箱数");
+        hogWidth=new XInt("hogWidth",64,this,"HOG 窗口宽度");
+        hogHeight=new XInt("hogHeight",128,this,"HOG 窗口高度");
+        hogBins=new XInt("hogBins",9,this,"HOG 分箱数");
+        subdivisionSpacing=new XInt("subdivisionSpacing",32,this,"细分间距");
+        subdivisionOutput=new XInt("subdivisionOutput",0,this,"细分输出");
     }
 
     XReal *threshold1=nullptr;
@@ -43,8 +43,8 @@ class OImageAnalysisResult:public OpenCvImageResultBase
 public:
     OImageAnalysisResult()
     {
-        descriptor=new XTensor("descriptor","float32",{1},QByteArray(4,0),this,"Descriptor");
-        featureCount=new XInt("featureCount",0,this,"Feature count");
+        descriptor=new XTensor("descriptor","float32",{1},QByteArray(4,0),this,"描述子");
+        featureCount=new XInt("featureCount",0,this,"特征数量");
     }
 
     XTensor *descriptor=nullptr;

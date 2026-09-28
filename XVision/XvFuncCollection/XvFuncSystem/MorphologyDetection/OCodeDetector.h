@@ -1,4 +1,4 @@
-#ifndef OCODEDETECTOR_H
+﻿#ifndef OCODEDETECTOR_H
 #define OCODEDETECTOR_H
 
 #include "OpenCvImageOperatorBase.h"
@@ -17,8 +17,8 @@ class OCodeDetectorResult:public OpenCvImageResultBase
 public:
     OCodeDetectorResult()
     {
-        text=new XString("text",QString(),this,"Decoded text");
-        corners=new XObjectList("corners",XPoint2D::type(),this,"Code corners");
+        text=new XString("text",QString(),this,"解码文本");
+        corners=new XObjectList("corners",XPoint2D::type(),this,"二维码角点");
     }
 
     XString *text=nullptr;

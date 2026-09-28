@@ -1,3 +1,4 @@
+﻿#include "XLanguage.h"
 #include "OImageFilter.h"
 
 #include "OpenCvImageUtils.h"
@@ -15,7 +16,7 @@ OImageFilter::OImageFilter(QObject *parent)
       m_result(new OpenCvImageResultBase())
 {
     _funcRole="OImageFilter";
-    _funcName="OpenCV Image Filter";
+    _funcName=getUiText("OpenCV Image Filter");
 }
 
 OImageFilter::~OImageFilter()

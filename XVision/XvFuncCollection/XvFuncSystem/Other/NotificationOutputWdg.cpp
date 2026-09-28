@@ -1,4 +1,4 @@
-#include "NotificationOutputWdg.h"
+﻿#include "NotificationOutputWdg.h"
 
 #include <QComboBox>
 #include <QFormLayout>
@@ -19,10 +19,10 @@ NotificationOutputWdg::NotificationOutputWdg(NotificationOutput *function,
     m_messageBinding=new QComboBox(centralWidget());
     m_message=new QPlainTextEdit(centralWidget());
     m_message->setMaximumHeight(80);
-    form->addRow("Mode",m_mode);
-    form->addRow("Input image",m_imageBinding);
-    form->addRow("Message source",m_messageBinding);
-    form->addRow("Message",m_message);
+    form->addRow(getUiText("Mode"),m_mode);
+    form->addRow(getUiText("Input image"),m_imageBinding);
+    form->addRow(getUiText("Message source"),m_messageBinding);
+    form->addRow(getUiText("Message"),m_message);
     layout->addLayout(form);
     initFrm();
 }
@@ -35,7 +35,7 @@ void NotificationOutputWdg::initFrm()
 
     const QStringList modes={"OK","NG","Info","Success","Warning",
                              "Error","Fatal","Dialog"};
-    for(int index=0;index<modes.size();++index) m_mode->addItem(modes.at(index),index);
+    for(int index=0;index<modes.size();++index) m_mode->addItem(getUiText(modes.at(index)),index);
 
     connect(m_mode,qOverload<int>(&QComboBox::currentIndexChanged),this,[=](int index)
     {

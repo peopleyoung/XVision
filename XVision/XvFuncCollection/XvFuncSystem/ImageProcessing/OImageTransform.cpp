@@ -1,3 +1,4 @@
+﻿#include "XLanguage.h"
 #include "OImageTransform.h"
 
 #include "OpenCvImageUtils.h"
@@ -14,16 +15,16 @@ using namespace XvCore;
 
 OImageTransformParam::OImageTransformParam()
 {
-    flipCode=new XInt("flipCode",1,this,"Flip code");
-    repeatX=new XInt("repeatX",1,this,"Horizontal repeats");
-    repeatY=new XInt("repeatY",1,this,"Vertical repeats");
-    outputWidth=new XInt("outputWidth",0,this,"Output width");
-    outputHeight=new XInt("outputHeight",0,this,"Output height");
-    scaleX=new XReal("scaleX",1.0,this,"Scale X");
-    scaleY=new XReal("scaleY",1.0,this,"Scale Y");
-    interpolation=new XInt("interpolation",1,this,"Interpolation");
-    rotateCode=new XInt("rotateCode",0,this,"Rotate code");
-    normalizedPoints=new XBool("normalizedPoints",true,this,"Normalized points");
+    flipCode=new XInt("flipCode",1,this,"翻转方向");
+    repeatX=new XInt("repeatX",1,this,"水平重复次数");
+    repeatY=new XInt("repeatY",1,this,"垂直重复次数");
+    outputWidth=new XInt("outputWidth",0,this,"输出宽度");
+    outputHeight=new XInt("outputHeight",0,this,"输出高度");
+    scaleX=new XReal("scaleX",1.0,this,"水平缩放比例");
+    scaleY=new XReal("scaleY",1.0,this,"垂直缩放比例");
+    interpolation=new XInt("interpolation",1,this,"插值方式");
+    rotateCode=new XInt("rotateCode",0,this,"旋转方向");
+    normalizedPoints=new XBool("normalizedPoints",true,this,"归一化特征点");
     const double xDefaults[]={0.0,1.0,1.0,0.0};
     const double yDefaults[]={0.0,0.0,1.0,1.0};
     for(int index=0;index<4;++index)
@@ -44,7 +45,7 @@ OImageTransform::OImageTransform(QObject *parent)
       m_result(new OpenCvImageResultBase())
 {
     _funcRole="OImageTransform";
-    _funcName="OpenCV Image Transform";
+    _funcName=getUiText("OpenCV Image Transform");
 }
 
 OImageTransform::~OImageTransform()

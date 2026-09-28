@@ -23,7 +23,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>参数设置</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="spacing">

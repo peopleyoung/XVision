@@ -60,7 +60,7 @@ XvFuncPreset acquisitionPreset(const QString &alias,ImageAcquisition::AcqType ty
 {
     XvFuncPreset preset;
     preset.alias=alias;
-    preset.displayName=alias;
+    preset.displayName=getUiText(alias);
     preset.canonicalRole="ImageAcquisition";
     preset.properties.insert("acqType",static_cast<int>(type));
     return preset;
@@ -70,7 +70,7 @@ XvFuncPreset modePreset(const QString &alias,const QString &canonicalRole,int mo
 {
     XvFuncPreset preset;
     preset.alias=alias;
-    preset.displayName=alias;
+    preset.displayName=getUiText(alias);
     preset.canonicalRole=canonicalRole;
     preset.properties.insert("mode",mode);
     return preset;
@@ -80,7 +80,7 @@ XvFuncPreset rolePreset(const QString &alias,const QString &canonicalRole)
 {
     XvFuncPreset preset;
     preset.alias=alias;
-    preset.displayName=alias;
+    preset.displayName=getUiText(alias);
     preset.canonicalRole=canonicalRole;
     return preset;
 }

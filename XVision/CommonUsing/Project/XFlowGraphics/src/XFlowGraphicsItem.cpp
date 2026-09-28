@@ -19,14 +19,14 @@ public:
         connectAreaBrush=QBrush(QColor(100,130,250));
 
         textPen = QPen();
-        textPen.setColor(QColor(75, 75, 75));
+        textPen.setColor(QColor("#E3EDF9"));
         textPen.setWidth(1);
-        textFont = QFont("YouYuan", 12, 2);
+        textFont = QFont("Microsoft YaHei UI", 10, QFont::Normal);
         textFont.setBold(true);
 
-        highLightPen.setColor(QColor(255,242,0));
+        highLightPen.setColor(QColor("#69C9FF"));
         highLightPen.setWidth(5);
-        highLightBrush=QBrush(QColor(Qt::white));
+        highLightBrush=QBrush(QColor("#1B4166"));
 
     };
     virtual ~XFlowGraphicsItemPrivate(){};

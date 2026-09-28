@@ -140,7 +140,7 @@ void FrmXvFuncResult::onUpdateXvFuncResult()
     }
     tb->setRowCount(fixedTopRowCount+nRetCount);
 
-    funcSetItemText(tb,0,getLang(App_Ui_FrmXvFuncResultFuncName,"算子名称") ,func->funcName());
+    funcSetItemText(tb,0,getLang(App_Ui_FrmXvFuncResultFuncName,"算子名称") ,getUiText(func->funcName()));
     funcSetItemText(tb,1,getLang(App_Ui_FrmXvFuncResultFuncStatus,"算子状态") ,map[func->getXvFuncRunStatus()]);
     funcSetItemText(tb,2,getLang(App_Ui_FrmXvFuncResultFuncRunMsg,"算子运行消息") ,func->getXvFuncRunMsg());
     funcSetItemText(tb,3,getLang(App_Ui_FrmXvFuncResultFuncRunElapsed,"算子运行耗时") ,QString("%1ms").arg(func->getXvFuncRunElapsed()));
@@ -150,7 +150,7 @@ void FrmXvFuncResult::onUpdateXvFuncResult()
         for (int i = 0; i < results->childObjects().count(); ++i)
         {
             auto ret=results->childObjects()[i];
-            funcSetItemText(tb,i+fixedTopRowCount,ret->dispalyName(),ret->toString());
+            funcSetItemText(tb,i+fixedTopRowCount,getUiText(ret->dispalyName()),ret->toString());
         }
 
     }

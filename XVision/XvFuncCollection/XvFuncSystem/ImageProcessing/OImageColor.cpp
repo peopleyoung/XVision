@@ -1,3 +1,4 @@
+﻿#include "XLanguage.h"
 #include "OImageColor.h"
 
 #include "OpenCvImageUtils.h"
@@ -16,7 +17,7 @@ OImageColor::OImageColor(QObject *parent)
       m_result(new OpenCvImageResultBase())
 {
     _funcRole="OImageColor";
-    _funcName="OpenCV Image Color";
+    _funcName=getUiText("OpenCV Image Color");
 }
 
 OImageColor::~OImageColor()

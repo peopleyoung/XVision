@@ -1,6 +1,7 @@
 ﻿#include "XvSingleApplication.h"
 
 #include <QElapsedTimer>
+#include "UiAppearance.h"
 
 #include "LangDef.h"
 #include "AppMainWindow.h"
@@ -84,7 +85,7 @@ void XvSingleApplication::init()
     Log_Event(getLang(App_Common_RunStart,"软件开始运行"));
 
     //设置界面风格
-    this->setStyleSheet(XvUtils::getStyleByPath(":/style/Light_Default.css"));
+    applyUiAppearance(*this);
 
     //初始化工作管理器
     XvWorkMgr->init();

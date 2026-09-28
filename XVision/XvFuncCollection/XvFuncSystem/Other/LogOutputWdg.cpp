@@ -26,7 +26,7 @@ void LogOutputWdg::initFrm()
     cmbLogTypeVal->clear();
     for (int i = XLOG_LEVEL_TRACE; i <= XLOG_LEVEL_CRITICAL; ++i)
     {
-        cmbLogTypeVal->addItem(meta.valueToKey(i),XLogger::ELogType(i));
+        cmbLogTypeVal->addItem(getUiText(QString::fromLatin1(meta.valueToKey(i))),XLogger::ELogType(i));
     }
     
     auto type=func->param->outputType;

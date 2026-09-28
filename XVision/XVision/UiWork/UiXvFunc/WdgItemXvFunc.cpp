@@ -23,10 +23,12 @@ WdgItemXvFunc::~WdgItemXvFunc()
 void WdgItemXvFunc::initFrm()
 {
     auto btn=ui->btnXvFunc;
-    U_initSetButton(btn,m_xvFuncInfo.name,m_xvFuncInfo.name,m_xvFuncInfo.icon,WdgItemXvFunc_XvFunc_IconSize);
+    U_initSetButton(btn,getUiText(m_xvFuncInfo.name),getUiText(m_xvFuncInfo.name),m_xvFuncInfo.icon,WdgItemXvFunc_XvFunc_IconSize);
     btn->setProperty(Item_Btn_Property,m_xvFuncInfo.role);
     auto lb=ui->lbXvFunc;
-    lb->setText(m_xvFuncInfo.name);
+    lb->setText(getUiText(m_xvFuncInfo.name));
+    lb->setWordWrap(true);
+    lb->setToolTip(lb->text());
     lb->setAlignment(Qt::AlignCenter);
     connect(btn,&QToolButton::released,this,&WdgItemXvFunc::onXvFunc);
 }

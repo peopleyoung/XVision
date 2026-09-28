@@ -1,3 +1,4 @@
+﻿#include "XLanguage.h"
 #include "OCodeDetector.h"
 
 #include "OpenCvImageUtils.h"
@@ -15,7 +16,7 @@ OCodeDetector::OCodeDetector(QObject *parent)
       m_result(new OCodeDetectorResult())
 {
     _funcRole="OCodeDetector";
-    _funcName="OpenCV Code Detector";
+    _funcName=getUiText("OpenCV Code Detector");
 }
 
 OCodeDetector::~OCodeDetector()

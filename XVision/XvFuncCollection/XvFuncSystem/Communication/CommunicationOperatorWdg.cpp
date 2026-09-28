@@ -1,4 +1,4 @@
-#include "CommunicationOperatorWdg.h"
+﻿#include "CommunicationOperatorWdg.h"
 
 #include "CommunicationOperatorBase.h"
 #include "XVisionRuntimeData.h"
@@ -21,30 +21,30 @@ namespace
 QList<QPair<QString,int>> enumItems(const QString &name)
 {
     if(name=="encoding")
-        return {{getLang("XvFuncSystem_Communication_Utf8","UTF-8"),0},
-                {getLang("XvFuncSystem_Communication_Latin1","Latin-1"),1}};
+        return {{getUiText(getLang("XvFuncSystem_Communication_Utf8","UTF-8")),0},
+                {getUiText(getLang("XvFuncSystem_Communication_Latin1","Latin-1")),1}};
     if(name=="frameMode")
-        return {{getLang("XvFuncSystem_Communication_DelimiterFrame","Delimiter"),0},
-                {getLang("XvFuncSystem_Communication_FixedFrame","Fixed length"),1},
-                {getLang("XvFuncSystem_Communication_CloseQuietFrame","Close / quiet"),2}};
+        return {{getUiText(getLang("XvFuncSystem_Communication_DelimiterFrame","Delimiter")),0},
+                {getUiText(getLang("XvFuncSystem_Communication_FixedFrame","Fixed length")),1},
+                {getUiText(getLang("XvFuncSystem_Communication_CloseQuietFrame","Close / quiet")),2}};
     if(name=="dataBits") return {{"5",5},{"6",6},{"7",7},{"8",8}};
     if(name=="parity")
-        return {{getLang("XvFuncSystem_Communication_None","None"),0},
-                {getLang("XvFuncSystem_Serial_EvenParity","Even"),2},
-                {getLang("XvFuncSystem_Serial_OddParity","Odd"),3},
-                {getLang("XvFuncSystem_Serial_SpaceParity","Space"),4},
-                {getLang("XvFuncSystem_Serial_MarkParity","Mark"),5}};
+        return {{getUiText(getLang("XvFuncSystem_Communication_None","None")),0},
+                {getUiText(getLang("XvFuncSystem_Serial_EvenParity","Even")),2},
+                {getUiText(getLang("XvFuncSystem_Serial_OddParity","Odd")),3},
+                {getUiText(getLang("XvFuncSystem_Serial_SpaceParity","Space")),4},
+                {getUiText(getLang("XvFuncSystem_Serial_MarkParity","Mark")),5}};
     if(name=="stopBits") return {{"1",1},{"2",2},{"1.5",3}};
     if(name=="flowControl")
-        return {{getLang("XvFuncSystem_Communication_None","None"),0},
-                {getLang("XvFuncSystem_Serial_HardwareFlow","Hardware"),1},
-                {getLang("XvFuncSystem_Serial_SoftwareFlow","Software"),2}};
+        return {{getUiText(getLang("XvFuncSystem_Communication_None","None")),0},
+                {getUiText(getLang("XvFuncSystem_Serial_HardwareFlow","Hardware")),1},
+                {getUiText(getLang("XvFuncSystem_Serial_SoftwareFlow","Software")),2}};
     if(name=="byteOrder")
-        return {{getLang("XvFuncSystem_Modbus_BigEndian","Big endian"),0},
-                {getLang("XvFuncSystem_Modbus_LittleEndian","Little endian"),1}};
+        return {{getUiText(getLang("XvFuncSystem_Modbus_BigEndian","Big endian")),0},
+                {getUiText(getLang("XvFuncSystem_Modbus_LittleEndian","Little endian")),1}};
     if(name=="wordOrder")
-        return {{getLang("XvFuncSystem_Modbus_HighWordFirst","High word first"),0},
-                {getLang("XvFuncSystem_Modbus_LowWordFirst","Low word first"),1}};
+        return {{getUiText(getLang("XvFuncSystem_Modbus_HighWordFirst","High word first")),0},
+                {getUiText(getLang("XvFuncSystem_Modbus_LowWordFirst","Low word first")),1}};
     return {};
 }
 
@@ -68,7 +68,7 @@ CommunicationOperatorWdg::CommunicationOperatorWdg(CommunicationOperatorBase *fu
     m_mode=new QComboBox(centralWidget());
     m_form->addRow(getLang("XvFuncSystem_Communication_Mode","模式"),m_mode);
     const QStringList modeNames=func?func->communicationModeNames():QStringList();
-    for(int index=0;index<modeNames.size();++index) m_mode->addItem(modeNames.at(index),index);
+    for(int index=0;index<modeNames.size();++index) m_mode->addItem(getUiText(modeNames.at(index)),index);
     connect(m_mode,qOverload<int>(&QComboBox::currentIndexChanged),this,
             [this,func](int index)
     {
@@ -107,7 +107,7 @@ void CommunicationOperatorWdg::rebuildParameters()
     {
         XObject *object=func->getParamsByName(name);
         QWidget *editor=createParameterEditor(object);
-        if(editor) m_form->addRow(object->dispalyName().isEmpty()?name:object->dispalyName(),editor);
+        if(editor) m_form->addRow(getUiText(object->dispalyName().isEmpty()?name:object->dispalyName()),editor);
     }
     adjustSize();
     resize(qMax(width(),560),qMax(height(),360));

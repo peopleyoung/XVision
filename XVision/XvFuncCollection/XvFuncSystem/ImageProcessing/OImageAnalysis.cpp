@@ -1,3 +1,4 @@
+﻿#include "XLanguage.h"
 #include "OImageAnalysis.h"
 
 #include "OpenCvImageUtils.h"
@@ -17,7 +18,7 @@ OImageAnalysis::OImageAnalysis(QObject *parent)
       m_result(new OImageAnalysisResult())
 {
     _funcRole="OImageAnalysis";
-    _funcName="OpenCV Image Analysis";
+    _funcName=getUiText("OpenCV Image Analysis");
 }
 
 OImageAnalysis::~OImageAnalysis()

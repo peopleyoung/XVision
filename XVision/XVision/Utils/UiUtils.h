@@ -88,10 +88,10 @@ inline static QMap<XMessageBox::StandardButton,QString> U_getXMessageBoxButtonTe
             map[XMessageBox::StandardButton::Close]=getLang(App_UiCommon_Close,"关闭");
             break;
         case XMessageBox::StandardButton::Cancel:
-            map[XMessageBox::StandardButton::Ok]=getLang(App_UiCommon_Cancel,"取消");
+            map[XMessageBox::StandardButton::Cancel]=getLang(App_UiCommon_Cancel,"取消");
             break;
         case XMessageBox::StandardButton::Discard:
-            map[XMessageBox::StandardButton::Ok]=getLang(App_UiCommon_Discard,"废弃");
+            map[XMessageBox::StandardButton::Discard]=getLang(App_UiCommon_Discard,"废弃");
             break;
         case XMessageBox::StandardButton::Help:
             map[XMessageBox::StandardButton::Help]=getLang(App_UiCommon_Help,"帮助");

@@ -1,3 +1,4 @@
+﻿#include "XLanguage.h"
 #include "OImageModel.h"
 
 #include "OpenCvImageUtils.h"
@@ -53,7 +54,7 @@ OImageModel::OImageModel(QObject *parent)
       m_param(new OImageModelParam()),m_result(new OImageModelResult())
 {
     _funcRole="OImageModel";
-    _funcName="OpenCV Image Model";
+    _funcName=getUiText("OpenCV Image Model");
 }
 
 OImageModel::~OImageModel()

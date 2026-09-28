@@ -1,4 +1,4 @@
-#ifndef NOTIFICATIONOUTPUT_H
+﻿#ifndef NOTIFICATIONOUTPUT_H
 #define NOTIFICATIONOUTPUT_H
 
 #include "XVFuncSystemGlobal.h"
@@ -13,8 +13,8 @@ class NotificationOutputParam:public XvBaseParam
 public:
     NotificationOutputParam()
     {
-        inputImage=new XImage("inputImage",QImage(),this,"Input image");
-        message=new XString("message","",this,"Message");
+        inputImage=new XImage("inputImage",QImage(),this,"输入图像");
+        message=new XString("message","",this,"消息内容");
     }
 
     XImage *inputImage=nullptr;
@@ -26,11 +26,11 @@ class NotificationOutputResult:public XvBaseResult
 public:
     NotificationOutputResult()
     {
-        outputImage=new XImage("outputImage",QImage(),this,"Output image");
-        published=new XBool("published",false,this,"Published");
-        accepted=new XBool("accepted",false,this,"Accepted");
-        notificationKind=new XInt("notificationKind",0,this,"Notification kind");
-        publishedMessage=new XString("publishedMessage","",this,"Published message");
+        outputImage=new XImage("outputImage",QImage(),this,"输出图像");
+        published=new XBool("published",false,this,"已发布");
+        accepted=new XBool("accepted",false,this,"已接收");
+        notificationKind=new XInt("notificationKind",0,this,"通知类型");
+        publishedMessage=new XString("publishedMessage","",this,"已发布消息");
     }
 
     XImage *outputImage=nullptr;

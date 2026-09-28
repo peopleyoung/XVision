@@ -1,3 +1,4 @@
+﻿#include "XLanguage.h"
 #include "OImageThreshold.h"
 
 #include "OpenCvImageUtils.h"
@@ -14,7 +15,7 @@ OImageThreshold::OImageThreshold(QObject *parent)
       m_result(new OpenCvImageResultBase())
 {
     _funcRole="OImageThreshold";
-    _funcName="OpenCV Image Threshold";
+    _funcName=getUiText("OpenCV Image Threshold");
 }
 
 OImageThreshold::~OImageThreshold()

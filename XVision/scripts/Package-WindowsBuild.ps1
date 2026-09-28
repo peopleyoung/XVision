@@ -260,6 +260,17 @@ if (-not $SkipTests) {
     }
 }
 
+# Retain the exact source and license notices for the embedded Qt translations.
+$TranslationSources = Join-Path $SourceDir 'XVision/Res/translations'
+$TranslationNotices = Join-Path $PackageDirectory 'licenses/qt-translations'
+New-Item -ItemType Directory -Path $TranslationNotices -Force | Out-Null
+foreach ($Name in @('NOTICE.md', 'GPL-3.0-only.txt', 'Qt-GPL-exception-1.0.txt',
+                    'qtbase_zh_CN.ts', 'xvision_zh_CN.ts')) {
+    $Source = Join-Path $TranslationSources $Name
+    Assert-File $Source "Chinese translation source or notice $Name"
+    Copy-Item -LiteralPath $Source -Destination $TranslationNotices
+}
+
 $GitCommit = "unknown"
 if (Get-Command git -ErrorAction SilentlyContinue) {
     $GitCommit = (& git -C $SourceDir rev-parse HEAD 2>$null).Trim()

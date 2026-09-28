@@ -1,4 +1,4 @@
-#include "OpenCvImageOperatorWdg.h"
+﻿#include "OpenCvImageOperatorWdg.h"
 
 #include <QCheckBox>
 #include <QComboBox>
@@ -74,7 +74,7 @@ OpenCvImageOperatorWdg::OpenCvImageOperatorWdg(OpenCvImageOperatorBase *func,QWi
 {
     m_form=new QFormLayout(centralWidget());
     m_mode=new QComboBox(centralWidget());
-    m_form->addRow("Mode",m_mode);
+    m_form->addRow(getUiText("Mode"),m_mode);
 
     const int propertyIndex=func->metaObject()->indexOfProperty("mode");
     if(propertyIndex>=0)
@@ -82,7 +82,7 @@ OpenCvImageOperatorWdg::OpenCvImageOperatorWdg(OpenCvImageOperatorBase *func,QWi
         const QMetaProperty property=func->metaObject()->property(propertyIndex);
         const QMetaEnum values=property.enumerator();
         for(int index=0;index<values.keyCount();++index)
-            m_mode->addItem(QString::fromLatin1(values.key(index)),values.value(index));
+            m_mode->addItem(getUiText(QString::fromLatin1(values.key(index))),values.value(index));
     }
     connect(m_mode,qOverload<int>(&QComboBox::currentIndexChanged),this,[this,func](int index)
     {
@@ -117,7 +117,7 @@ void OpenCvImageOperatorWdg::rebuildParameters()
         XObject *object=func->getParamsByName(name);
         if(!object) continue;
         QWidget *editor=createParameterEditor(object);
-        if(editor) m_form->addRow(object->dispalyName().isEmpty()?name:object->dispalyName(),editor);
+        if(editor) m_form->addRow(getUiText(object->dispalyName().isEmpty()?name:object->dispalyName()),editor);
     }
     adjustSize();
     resize(qMax(width(),460),qMax(height(),260));
@@ -134,7 +134,7 @@ QWidget *OpenCvImageOperatorWdg::createParameterEditor(XObject *object)
         if(!choices.isEmpty())
         {
             auto editor=new QComboBox(centralWidget());
-            for(const auto &choice:choices) editor->addItem(choice.first,choice.second);
+            for(const auto &choice:choices) editor->addItem(getUiText(choice.first),choice.second);
             editor->setCurrentIndex(editor->findData(value->value()));
             connect(editor,qOverload<int>(&QComboBox::currentIndexChanged),this,
                     [value,editor](int index)
@@ -195,12 +195,12 @@ QWidget *OpenCvImageOperatorWdg::createParameterEditor(XObject *object)
             layout->setContentsMargins(0,0,0,0);
             auto browse=new QToolButton(container);
             browse->setIcon(style()->standardIcon(QStyle::SP_DialogOpenButton));
-            browse->setToolTip("Select file");
+            browse->setToolTip(getUiText("Select file"));
             layout->addWidget(editor,1);
             layout->addWidget(browse);
             connect(browse,&QToolButton::clicked,this,[value,editor,this]()
             {
-                const QString path=QFileDialog::getOpenFileName(this,"Select file",editor->text());
+                const QString path=QFileDialog::getOpenFileName(this,getUiText("Select file"),editor->text());
                 if(path.isEmpty()) return;
                 editor->setText(path);
                 value->setValue(path);

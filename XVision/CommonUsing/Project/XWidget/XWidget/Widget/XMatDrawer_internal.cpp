@@ -227,7 +227,7 @@ void XMatDrawerWidget::paintEvent(QPaintEvent *event)
 
     QBrush brush;
     brush.setStyle(Qt::SolidPattern);
-    brush.setColor(Qt::white);
+    brush.setColor(QColor("#101F33"));
     painter.setBrush(brush);
     painter.setPen(Qt::NoPen);
 

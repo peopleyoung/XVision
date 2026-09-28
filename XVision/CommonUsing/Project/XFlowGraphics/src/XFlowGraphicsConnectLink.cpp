@@ -28,7 +28,7 @@ public:
         linkedPen.setWidth(3);
         linkedPen.setStyle(Qt::SolidLine);
 
-        linkSelectedPen=QColor(255, 150, 50);
+        linkSelectedPen=QColor("#69C9FF");
         linkSelectedPen.setWidth(5);
         linkSelectedPen.setStyle(Qt::SolidLine);
 
@@ -39,7 +39,7 @@ public:
 
         arrowSize=15;
 
-        highLightPen.setColor(QColor(255,242,0));
+        highLightPen.setColor(QColor("#69C9FF"));
         highLightPen.setWidth(3);
         highLightPen.setStyle(Qt::SolidLine);
 

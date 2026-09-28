@@ -1,4 +1,4 @@
-#ifndef NOBJECTDETECTION_H
+﻿#ifndef NOBJECTDETECTION_H
 #define NOBJECTDETECTION_H
 
 #include "NOnnxBase.h"
@@ -14,14 +14,14 @@ class NObjectDetectionParam:public XvBaseParam
 public:
     NObjectDetectionParam()
     {
-        inputImage=new XImage("inputImage",QImage(),this,"Input image");
+        inputImage=new XImage("inputImage",QImage(),this,"输入图像");
         confidenceThreshold=new XReal("confidenceThreshold",0.25,this,
-                                      "Confidence threshold");
-        iouThreshold=new XReal("iouThreshold",0.45,this,"IoU threshold");
+                                      "置信度阈值");
+        iouThreshold=new XReal("iouThreshold",0.45,this,"交并比阈值");
         classAgnosticNms=new XBool("classAgnosticNms",false,this,
-                                   "Class agnostic NMS");
+                                   "跨类别非极大值抑制");
         maximumDetections=new XInt("maximumDetections",300,this,
-                                   "Maximum detections");
+                                   "最大检测数量");
     }
     XImage *inputImage=nullptr;
     XReal *confidenceThreshold=nullptr;
@@ -35,10 +35,10 @@ class NObjectDetectionResult:public XvBaseResult
 public:
     NObjectDetectionResult()
     {
-        outputImage=new XImage("outputImage",QImage(),this,"Output image");
-        detectionCount=new XInt("detectionCount",0,this,"Detection count");
+        outputImage=new XImage("outputImage",QImage(),this,"输出图像");
+        detectionCount=new XInt("detectionCount",0,this,"检测数量");
         detections=new XObjectList("detections",XDetectionResult::type(),
-                                   this,"Detections");
+                                   this,"检测结果");
     }
     XImage *outputImage=nullptr;
     XInt *detectionCount=nullptr;

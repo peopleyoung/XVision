@@ -1,3 +1,4 @@
+﻿#include "XLanguage.h"
 #include "OMorphology.h"
 
 #include "OpenCvImageUtils.h"
@@ -16,7 +17,7 @@ OMorphology::OMorphology(QObject *parent)
       m_result(new OMorphologyResult())
 {
     _funcRole="OMorphology";
-    _funcName="OpenCV Morphology";
+    _funcName=getUiText("OpenCV Morphology");
 }
 
 OMorphology::~OMorphology()

@@ -63,32 +63,32 @@ void FrmLogShow::initFrm()
 void FrmLogShow::onSignalLog(const QString &log, const XLogger::ELogType &logType)
 {
     QTextCharFormat fmt;
-    QColor color=QColor(0,0,0);
+    QColor color=QColor("#C0D5EC");
     //字体大小
     fmt.setFontWeight(QFont::Normal);
     auto *ptxt=ui->ptxtLog;
     switch (logType)
     {
     case XLogger::Trace:
-        color=QColor(0,255,255,200);
+        color=QColor("#93ABC7");
         break;
     case XLogger::Debug:
-        color=QColor(255,0,255,200);
+        color=QColor("#A7AEFF");
         break;
     case XLogger::Info:
-        color=QColor(0,255,0,230);
+        color=QColor("#B6D4EC");
         break;
     case XLogger::Event:
-        color=QColor(0,128,255,230);
+        color=QColor("#65BBFF");
         break;
     case XLogger::Warn:
-        color=QColor(255,128,0,230);
+        color=QColor("#F5BF69");
         break;
     case XLogger::Error:
-        color=QColor(255,30,0,230);
+        color=QColor("#FF7C8D");
         break;
     case XLogger::Critical:
-        color=QColor(128,0,0,230);
+        color=QColor("#FF9CA8");
         break;
     }
     //字体色

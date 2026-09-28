@@ -98,7 +98,7 @@ void FrmThreadMonitor::onThreadCreate(XThread* thread)
 {
     if(thread)
     {
-        QString str=QString("Create Thread:Group<%1> Name<%2>").arg(thread->group()).arg(thread->name());
+        QString str=QString("创建线程：分组<%1> 名称<%2>").arg(thread->group()).arg(thread->name());
         Log_Trace(str);
     }
 }
@@ -107,7 +107,7 @@ void FrmThreadMonitor::onThreadRemove(XThread* thread)
 {
     if(thread)
     {
-        QString str=QString("Remove Thread:Group<%1> Name<%2>").arg(thread->group()).arg(thread->name());
+        QString str=QString("移除线程：分组<%1> 名称<%2>").arg(thread->group()).arg(thread->name());
         Log_Trace(str);
     }
 }

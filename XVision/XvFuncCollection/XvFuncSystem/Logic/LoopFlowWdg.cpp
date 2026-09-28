@@ -1,4 +1,4 @@
-#include "LoopFlowWdg.h"
+﻿#include "LoopFlowWdg.h"
 
 #include <QComboBox>
 #include <QFormLayout>
@@ -16,19 +16,19 @@ LoopFlowWdg::LoopFlowWdg(LoopFlow *func,QWidget *parent)
 {
     auto layout=new QFormLayout(centralWidget());
     m_mode=new QComboBox(centralWidget());
-    m_mode->addItem("For",LoopFlow::For);
-    m_mode->addItem("Foreach images",LoopFlow::ForeachImages);
+    m_mode->addItem(getUiText("For"),LoopFlow::For);
+    m_mode->addItem(getUiText("Foreach images"),LoopFlow::ForeachImages);
     m_start=new QSpinBox(centralWidget());
     m_end=new QSpinBox(centralWidget());
     m_step=new QSpinBox(centralWidget());
     for(QSpinBox *spin:{m_start,m_end,m_step})
         spin->setRange(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
     m_images=new QComboBox(centralWidget());
-    layout->addRow("Mode",m_mode);
-    layout->addRow("Start",m_start);
-    layout->addRow("End",m_end);
-    layout->addRow("Step",m_step);
-    layout->addRow("Images",m_images);
+    layout->addRow(getUiText("Mode"),m_mode);
+    layout->addRow(getUiText("Start"),m_start);
+    layout->addRow(getUiText("End"),m_end);
+    layout->addRow(getUiText("Step"),m_step);
+    layout->addRow(getUiText("Images"),m_images);
     setFixedSize(420,260);
 
     connect(m_mode,qOverload<int>(&QComboBox::currentIndexChanged),this,

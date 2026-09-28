@@ -1,4 +1,4 @@
-#ifndef NSEMANTICSEGMENTATION_H
+﻿#ifndef NSEMANTICSEGMENTATION_H
 #define NSEMANTICSEGMENTATION_H
 
 #include "NOnnxBase.h"
@@ -13,9 +13,9 @@ class NSemanticSegmentationParam:public XvBaseParam
 public:
     NSemanticSegmentationParam()
     {
-        inputImage=new XImage("inputImage",QImage(),this,"Input image");
-        binaryThreshold=new XReal("binaryThreshold",0.5,this,"Binary threshold");
-        overlayOpacity=new XReal("overlayOpacity",0.5,this,"Overlay opacity");
+        inputImage=new XImage("inputImage",QImage(),this,"输入图像");
+        binaryThreshold=new XReal("binaryThreshold",0.5,this,"二值化阈值");
+        overlayOpacity=new XReal("overlayOpacity",0.5,this,"叠加不透明度");
     }
     XImage *inputImage=nullptr;
     XReal *binaryThreshold=nullptr;
@@ -27,10 +27,10 @@ class NSemanticSegmentationResult:public XvBaseResult
 public:
     NSemanticSegmentationResult()
     {
-        segmentation=new XSegmentationResult("segmentation",this,"Segmentation");
-        colorMask=new XImage("colorMask",QImage(),this,"Color mask");
-        overlayImage=new XImage("overlayImage",QImage(),this,"Overlay image");
-        confidenceImage=new XImage("confidenceImage",QImage(),this,"Confidence image");
+        segmentation=new XSegmentationResult("segmentation",this,"分割结果");
+        colorMask=new XImage("colorMask",QImage(),this,"颜色掩膜");
+        overlayImage=new XImage("overlayImage",QImage(),this,"叠加图像");
+        confidenceImage=new XImage("confidenceImage",QImage(),this,"置信度图像");
     }
     XSegmentationResult *segmentation=nullptr;
     XImage *colorMask=nullptr;

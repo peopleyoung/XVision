@@ -1,4 +1,4 @@
-#ifndef OCASCADEDETECTOR_H
+﻿#ifndef OCASCADEDETECTOR_H
 #define OCASCADEDETECTOR_H
 
 #include "OpenCvImageOperatorBase.h"
@@ -15,14 +15,14 @@ class OCascadeDetectorParam:public OpenCvImageParamBase
 public:
     OCascadeDetectorParam()
     {
-        cascadePath=new XString("cascadePath",QString(),this,"Cascade path");
-        scaleFactor=new XReal("scaleFactor",1.1,this,"Scale factor");
-        minNeighbors=new XInt("minNeighbors",3,this,"Minimum neighbors");
-        flags=new XInt("flags",0,this,"Detection flags");
-        minWidth=new XInt("minWidth",0,this,"Minimum width");
-        minHeight=new XInt("minHeight",0,this,"Minimum height");
-        maxWidth=new XInt("maxWidth",0,this,"Maximum width");
-        maxHeight=new XInt("maxHeight",0,this,"Maximum height");
+        cascadePath=new XString("cascadePath",QString(),this,"级联模型路径");
+        scaleFactor=new XReal("scaleFactor",1.1,this,"缩放系数");
+        minNeighbors=new XInt("minNeighbors",3,this,"最小邻居数");
+        flags=new XInt("flags",0,this,"检测标志");
+        minWidth=new XInt("minWidth",0,this,"最小宽度");
+        minHeight=new XInt("minHeight",0,this,"最小高度");
+        maxWidth=new XInt("maxWidth",0,this,"最大宽度");
+        maxHeight=new XInt("maxHeight",0,this,"最大高度");
     }
 
     XString *cascadePath=nullptr;
@@ -40,8 +40,8 @@ class OCascadeDetectorResult:public OpenCvImageResultBase
 public:
     OCascadeDetectorResult()
     {
-        rectangles=new XObjectList("rectangles",XRect2D::type(),this,"Rectangles");
-        count=new XInt("count",0,this,"Detection count");
+        rectangles=new XObjectList("rectangles",XRect2D::type(),this,"矩形集合");
+        count=new XInt("count",0,this,"检测数量");
     }
 
     XObjectList *rectangles=nullptr;

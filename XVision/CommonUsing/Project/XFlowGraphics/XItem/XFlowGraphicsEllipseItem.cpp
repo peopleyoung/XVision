@@ -16,13 +16,13 @@ class XFlowGraphicsEllipseItemPrivate
 public:
     XFlowGraphicsEllipseItemPrivate(XFlowGraphicsEllipseItem *q):q_ptr(q)
     {
-        itemEllipsePen.setColor(QColor(25, 150, 255));
-        itemEllipsePen.setWidth(3);
-        itemEllipseBrush=QBrush(QColor(Qt::white));
+        itemEllipsePen.setColor(QColor("#408FCC"));
+        itemEllipsePen.setWidth(2);
+        itemEllipseBrush=QBrush(QColor("#152E49"));
 
-        selectEllipsePen.setColor(QColor(255, 150, 50));
-        selectEllipsePen.setWidth(5);
-        selectEllipseBrush=QBrush(QColor(Qt::white));
+        selectEllipsePen.setColor(QColor("#69C9FF"));
+        selectEllipsePen.setWidth(3);
+        selectEllipseBrush=QBrush(QColor("#152E49"));
 
         selectBoundingEllipsePen.setColor(Qt::white);
         selectBoundingEllipsePen.setWidth(1);

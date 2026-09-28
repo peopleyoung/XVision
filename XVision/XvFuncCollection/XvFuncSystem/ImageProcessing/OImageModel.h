@@ -1,4 +1,4 @@
-#ifndef OIMAGEMODEL_H
+﻿#ifndef OIMAGEMODEL_H
 #define OIMAGEMODEL_H
 
 #include "OpenCvImageOperatorBase.h"
@@ -13,17 +13,17 @@ class OImageModelParam:public OpenCvImageParamBase
 public:
     OImageModelParam()
     {
-        modelPath=new XString("modelPath",QString(),this,"Model path");
-        algorithm=new XString("algorithm","edsr",this,"Algorithm");
-        scale=new XInt("scale",2,this,"Scale");
-        history=new XInt("history",500,this,"History");
-        mixtures=new XInt("mixtures",5,this,"Mixtures");
-        backgroundRatio=new XReal("backgroundRatio",0.7,this,"Background ratio");
-        varianceThreshold=new XReal("varianceThreshold",16.0,this,"Variance threshold");
-        learningRate=new XReal("learningRate",-1.0,this,"Learning rate");
-        outputBackground=new XBool("outputBackground",false,this,"Output background");
-        svmWidth=new XInt("svmWidth",0,this,"SVM input width");
-        svmHeight=new XInt("svmHeight",0,this,"SVM input height");
+        modelPath=new XString("modelPath",QString(),this,"模型路径");
+        algorithm=new XString("algorithm","edsr",this,"算法");
+        scale=new XInt("scale",2,this,"缩放比例");
+        history=new XInt("history",500,this,"历史帧数");
+        mixtures=new XInt("mixtures",5,this,"混合模型数量");
+        backgroundRatio=new XReal("backgroundRatio",0.7,this,"背景比例");
+        varianceThreshold=new XReal("varianceThreshold",16.0,this,"方差阈值");
+        learningRate=new XReal("learningRate",-1.0,this,"学习率");
+        outputBackground=new XBool("outputBackground",false,this,"输出背景");
+        svmWidth=new XInt("svmWidth",0,this,"SVM 输入宽度");
+        svmHeight=new XInt("svmHeight",0,this,"SVM 输入高度");
     }
 
     XString *modelPath=nullptr;
@@ -44,7 +44,7 @@ class OImageModelResult:public OpenCvImageResultBase
 public:
     OImageModelResult()
     {
-        classId=new XInt("classId",0,this,"Class ID");
+        classId=new XInt("classId",0,this,"类别编号");
     }
 
     XInt *classId=nullptr;

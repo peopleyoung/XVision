@@ -12,8 +12,8 @@
 
 #define XvFuncType_Btn_Property "Type"///算子类型按钮属性
 
-const static int FrmXvFuncAsm_Width=40; ///窗口固定尺寸
-const static int CS_XvFuncType_Btn_Size=38;///算子类型按钮尺寸
+const static int FrmXvFuncAsm_Width=56; ///窗口固定尺寸
+const static int CS_XvFuncType_Btn_Size=44;///算子类型按钮尺寸
 
 FrmXvFuncAsm::FrmXvFuncAsm(QWidget *parent) :
     BaseWidget(parent),
@@ -117,8 +117,9 @@ void FrmXvFuncAsm::initFrm()
     {
         auto fmH=CS_XvFuncType_Btn_Size;
         XMatToolButton* btn = new XMatToolButton(parent);
-        U_initSetButton(btn,text,tip,icon,fmH-8,QSize(fmH,fmH),QSize(fmH,fmH));
+        U_initSetButton(btn,text,tip,icon,24,QSize(fmH,fmH),QSize(fmH,fmH));
         btn->setToolButtonStyle(Qt::ToolButtonIconOnly);
+        btn->setAccessibleName(text);
         btn->setProperty(XvFuncType_Btn_Property,QVariant::fromValue(type));
         btn->installEventFilter(this);
         layout->addWidget(btn);
@@ -140,7 +141,7 @@ void FrmXvFuncAsm::initFrm()
 
 
 
-    this->setWindowTitle("FrmXvFuncAsm");
+    this->setWindowTitle(QStringLiteral("算子工具箱"));
     this->setMinimumWidth(FrmXvFuncAsm_Width);
     this->setMaximumWidth(FrmXvFuncAsm_Width);
     this->setAttribute(Qt::WA_Hover);
@@ -163,8 +164,8 @@ void FrmXvFuncAsm::initFrm()
     ///添加算子分类按钮及算子单独类型窗口
     QVBoxLayout *vLayout = new QVBoxLayout(scAreaWcXvFuncAsm);
     vLayout->setObjectName("verticalLayout");
-    vLayout->setContentsMargins(0, 5, 0, 5);
-    vLayout->setSpacing(5);
+    vLayout->setContentsMargins(6, 8, 6, 8);
+    vLayout->setSpacing(6);
     scAreaWcXvFuncAsm->setLayout(vLayout);
 
 

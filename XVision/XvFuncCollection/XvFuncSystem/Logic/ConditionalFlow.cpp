@@ -1,3 +1,4 @@
+﻿#include "XLanguage.h"
 #include "ConditionalFlow.h"
 #include "ConditionalFlowWdg.h"
 
@@ -7,7 +8,7 @@ ConditionalFlow::ConditionalFlow(QObject *parent)
     :XvFunc(parent),m_param(new ConditionalFlowParam())
 {
     _funcRole="ConditionalFlow";
-    _funcName="Conditional Flow";
+    _funcName=getUiText("Conditional Flow");
     _funcType=EXvFuncType::Logic;
 }
 

@@ -6,24 +6,24 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>75</width>
-    <height>80</height>
+    <width>100</width>
+    <height>90</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>75</width>
-    <height>80</height>
+    <width>100</width>
+    <height>90</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>75</width>
-    <height>80</height>
+    <width>100</width>
+    <height>90</height>
    </size>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>参数设置</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="spacing">
@@ -72,7 +72,7 @@
      <property name="maximumSize">
       <size>
        <width>16777215</width>
-       <height>30</height>
+       <height>34</height>
       </size>
      </property>
      <property name="text">

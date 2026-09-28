@@ -1,4 +1,4 @@
-#ifndef OIMAGECOMPOSITION_H
+﻿#ifndef OIMAGECOMPOSITION_H
 #define OIMAGECOMPOSITION_H
 
 #include "OpenCvImageOperatorBase.h"
@@ -12,14 +12,14 @@ class OImageCompositionParam:public OpenCvImageParamBase
 public:
     OImageCompositionParam()
     {
-        backgroundImage=new XImage("backgroundImage",QImage(),this,"Background image");
-        maskImage=new XImage("maskImage",QImage(),this,"Mask image");
-        images=new XObjectList("images",XImage::type(),this,"Additional images");
-        backgroundPath=new XString("backgroundPath",QString(),this,"Background path");
-        centerX=new XInt("centerX",-1,this,"Center X");
-        centerY=new XInt("centerY",-1,this,"Center Y");
-        blurBackground=new XBool("blurBackground",false,this,"Blur background");
-        stitchMode=new XInt("stitchMode",0,this,"Stitch mode");
+        backgroundImage=new XImage("backgroundImage",QImage(),this,"背景图像");
+        maskImage=new XImage("maskImage",QImage(),this,"掩膜图像");
+        images=new XObjectList("images",XImage::type(),this,"附加图像");
+        backgroundPath=new XString("backgroundPath",QString(),this,"背景图像路径");
+        centerX=new XInt("centerX",-1,this,"中心 X");
+        centerY=new XInt("centerY",-1,this,"中心 Y");
+        blurBackground=new XBool("blurBackground",false,this,"模糊背景");
+        stitchMode=new XInt("stitchMode",0,this,"拼接模式");
     }
 
     XImage *backgroundImage=nullptr;

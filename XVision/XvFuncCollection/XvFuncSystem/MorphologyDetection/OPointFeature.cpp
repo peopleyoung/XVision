@@ -1,3 +1,4 @@
+﻿#include "XLanguage.h"
 #include "OPointFeature.h"
 
 #include "OpenCvImageUtils.h"
@@ -16,61 +17,61 @@ using namespace XvCore;
 
 OPointFeatureParam::OPointFeatureParam()
 {
-    maxFeatures=new XInt("maxFeatures",500,this,"Maximum features");
-    qualityLevel=new XReal("qualityLevel",0.01,this,"Quality level");
-    minDistance=new XReal("minDistance",5.0,this,"Minimum distance");
-    blockSize=new XInt("blockSize",3,this,"Block size");
-    harrisK=new XReal("harrisK",0.04,this,"Harris K");
-    subpixelWindow=new XInt("subpixelWindow",5,this,"Subpixel window");
-    subpixelMaxIterations=new XInt("subpixelMaxIterations",40,this,"Subpixel iterations");
-    subpixelEpsilon=new XReal("subpixelEpsilon",0.001,this,"Subpixel epsilon");
+    maxFeatures=new XInt("maxFeatures",500,this,"最大特征数量");
+    qualityLevel=new XReal("qualityLevel",0.01,this,"质量等级");
+    minDistance=new XReal("minDistance",5.0,this,"最小距离");
+    blockSize=new XInt("blockSize",3,this,"邻域大小");
+    harrisK=new XReal("harrisK",0.04,this,"Harris 响应系数");
+    subpixelWindow=new XInt("subpixelWindow",5,this,"亚像素窗口");
+    subpixelMaxIterations=new XInt("subpixelMaxIterations",40,this,"亚像素迭代次数");
+    subpixelEpsilon=new XReal("subpixelEpsilon",0.001,this,"亚像素精度");
 
-    akazeDescriptorType=new XInt("akazeDescriptorType",2,this,"AKAZE descriptor type");
-    descriptorSize=new XInt("descriptorSize",0,this,"Descriptor size");
-    descriptorChannels=new XInt("descriptorChannels",3,this,"Descriptor channels");
-    featureThreshold=new XReal("featureThreshold",0.001,this,"Feature threshold");
-    octaves=new XInt("octaves",4,this,"Octaves");
-    octaveLayers=new XInt("octaveLayers",4,this,"Octave layers");
-    diffusivity=new XInt("diffusivity",1,this,"Diffusivity");
-    extended=new XBool("extended",false,this,"Extended descriptor");
-    upright=new XBool("upright",false,this,"Upright descriptor");
+    akazeDescriptorType=new XInt("akazeDescriptorType",2,this,"AKAZE 描述子类型");
+    descriptorSize=new XInt("descriptorSize",0,this,"描述子大小");
+    descriptorChannels=new XInt("descriptorChannels",3,this,"描述子通道数");
+    featureThreshold=new XReal("featureThreshold",0.001,this,"特征阈值");
+    octaves=new XInt("octaves",4,this,"金字塔组数");
+    octaveLayers=new XInt("octaveLayers",4,this,"组内层数");
+    diffusivity=new XInt("diffusivity",1,this,"扩散函数");
+    extended=new XBool("extended",false,this,"扩展描述子");
+    upright=new XBool("upright",false,this,"直立描述子");
 
-    briskThreshold=new XInt("briskThreshold",30,this,"BRISK threshold");
-    briskOctaves=new XInt("briskOctaves",3,this,"BRISK octaves");
-    briskPatternScale=new XReal("briskPatternScale",1.0,this,"BRISK pattern scale");
-    fastThreshold=new XInt("fastThreshold",20,this,"FAST threshold");
-    nonmaxSuppression=new XBool("nonmaxSuppression",true,this,"Non-maximum suppression");
+    briskThreshold=new XInt("briskThreshold",30,this,"BRISK 阈值");
+    briskOctaves=new XInt("briskOctaves",3,this,"BRISK 组数");
+    briskPatternScale=new XReal("briskPatternScale",1.0,this,"BRISK 模式缩放");
+    fastThreshold=new XInt("fastThreshold",20,this,"FAST 阈值");
+    nonmaxSuppression=new XBool("nonmaxSuppression",true,this,"非极大值抑制");
 
-    orbScaleFactor=new XReal("orbScaleFactor",1.2,this,"ORB scale factor");
-    orbLevels=new XInt("orbLevels",8,this,"ORB levels");
-    orbEdgeThreshold=new XInt("orbEdgeThreshold",31,this,"ORB edge threshold");
-    orbFirstLevel=new XInt("orbFirstLevel",0,this,"ORB first level");
-    orbWtaK=new XInt("orbWtaK",2,this,"ORB WTA K");
-    orbScoreType=new XInt("orbScoreType",0,this,"ORB score type");
-    orbPatchSize=new XInt("orbPatchSize",31,this,"ORB patch size");
-    orientationNormalized=new XBool("orientationNormalized",true,this,"Normalize orientation");
-    scaleNormalized=new XBool("scaleNormalized",true,this,"Normalize scale");
-    freakPatternScale=new XReal("freakPatternScale",22.0,this,"FREAK pattern scale");
-    freakOctaves=new XInt("freakOctaves",4,this,"FREAK octaves");
+    orbScaleFactor=new XReal("orbScaleFactor",1.2,this,"ORB 缩放系数");
+    orbLevels=new XInt("orbLevels",8,this,"ORB 金字塔层数");
+    orbEdgeThreshold=new XInt("orbEdgeThreshold",31,this,"ORB 边缘阈值");
+    orbFirstLevel=new XInt("orbFirstLevel",0,this,"ORB 起始层");
+    orbWtaK=new XInt("orbWtaK",2,this,"ORB 采样点数");
+    orbScoreType=new XInt("orbScoreType",0,this,"ORB 评分方式");
+    orbPatchSize=new XInt("orbPatchSize",31,this,"ORB 邻域尺寸");
+    orientationNormalized=new XBool("orientationNormalized",true,this,"方向归一化");
+    scaleNormalized=new XBool("scaleNormalized",true,this,"尺度归一化");
+    freakPatternScale=new XReal("freakPatternScale",22.0,this,"FREAK 模式缩放");
+    freakOctaves=new XInt("freakOctaves",4,this,"FREAK 组数");
 
-    mserDelta=new XInt("mserDelta",5,this,"MSER delta");
-    mserMinArea=new XInt("mserMinArea",60,this,"MSER minimum area");
-    mserMaxArea=new XInt("mserMaxArea",14400,this,"MSER maximum area");
-    mserMaxVariation=new XReal("mserMaxVariation",0.25,this,"MSER maximum variation");
-    mserMinDiversity=new XReal("mserMinDiversity",0.2,this,"MSER minimum diversity");
-    mserMaxEvolution=new XInt("mserMaxEvolution",200,this,"MSER maximum evolution");
-    mserAreaThreshold=new XReal("mserAreaThreshold",1.01,this,"MSER area threshold");
-    mserMinMargin=new XReal("mserMinMargin",0.003,this,"MSER minimum margin");
-    mserEdgeBlurSize=new XInt("mserEdgeBlurSize",5,this,"MSER edge blur size");
+    mserDelta=new XInt("mserDelta",5,this,"MSER 灰度步长");
+    mserMinArea=new XInt("mserMinArea",60,this,"MSER 最小面积");
+    mserMaxArea=new XInt("mserMaxArea",14400,this,"MSER 最大面积");
+    mserMaxVariation=new XReal("mserMaxVariation",0.25,this,"MSER 最大变化率");
+    mserMinDiversity=new XReal("mserMinDiversity",0.2,this,"MSER 最小差异度");
+    mserMaxEvolution=new XInt("mserMaxEvolution",200,this,"MSER 最大演化次数");
+    mserAreaThreshold=new XReal("mserAreaThreshold",1.01,this,"MSER 面积阈值");
+    mserMinMargin=new XReal("mserMinMargin",0.003,this,"MSER 最小边距");
+    mserEdgeBlurSize=new XInt("mserEdgeBlurSize",5,this,"MSER 边缘模糊尺寸");
 
-    starMaxSize=new XInt("starMaxSize",45,this,"STAR maximum size");
-    starResponseThreshold=new XInt("starResponseThreshold",30,this,"STAR response threshold");
+    starMaxSize=new XInt("starMaxSize",45,this,"STAR 最大尺寸");
+    starResponseThreshold=new XInt("starResponseThreshold",30,this,"STAR 响应阈值");
     starLineThresholdProjected=new XInt("starLineThresholdProjected",10,this,
-                                        "STAR projected line threshold");
+                                        "STAR 投影线阈值");
     starLineThresholdBinarized=new XInt("starLineThresholdBinarized",8,this,
-                                        "STAR binarized line threshold");
+                                        "STAR 二值线阈值");
     starSuppressNonmaxSize=new XInt("starSuppressNonmaxSize",5,this,
-                                    "STAR suppression size");
+                                    "STAR 抑制邻域");
 }
 
 OPointFeature::OPointFeature(QObject *parent)
@@ -78,7 +79,7 @@ OPointFeature::OPointFeature(QObject *parent)
       m_result(new OPointFeatureResult())
 {
     _funcRole="OPointFeature";
-    _funcName="OpenCV Point Feature";
+    _funcName=getUiText("OpenCV Point Feature");
 }
 
 OPointFeature::~OPointFeature()

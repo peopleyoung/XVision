@@ -1,3 +1,4 @@
+﻿#include "XLanguage.h"
 #include "NotificationOutput.h"
 #include "NotificationOutputWdg.h"
 
@@ -11,7 +12,7 @@ NotificationOutput::NotificationOutput(QObject *parent)
       m_result(new NotificationOutputResult())
 {
     _funcRole="NotificationOutput";
-    _funcName="Notification Output";
+    _funcName=getUiText("Notification Output");
     _funcType=EXvFuncType::Other;
 }
 

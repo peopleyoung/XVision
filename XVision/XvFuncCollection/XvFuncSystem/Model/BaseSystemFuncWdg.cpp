@@ -45,7 +45,7 @@ void BaseSystemFuncWdg::initCmbBindResultTag(XvFunc *func,QComboBox *cmb,const Q
             {
                 SBindResultTag tag(func,ret->objectName());
                 QVariant var=QVariant::fromValue(tag);
-                QString itemStr=QString("%1.%2").arg(func->funcName()).arg(ret->dispalyName());
+                QString itemStr=QString("%1.%2").arg(func->funcName()).arg(getUiText(ret->dispalyName()));
                 cmb->addItem(itemStr,var);
             }
         }
@@ -98,15 +98,15 @@ void BaseSystemFuncWdg::updateLbTextWithXObject(QLabel* lb,XObject *obj,const QS
 {
     if(lb&&obj)
     {
-        lb->setText(obj->dispalyName()+suffix);
+        lb->setText(getUiText(obj->dispalyName())+suffix);
     }
 }
 
 void BaseSystemFuncWdg::initCmbByBool(QComboBox *cmb)
 {
     cmb->clear();
-    cmb->addItem("False");
-    cmb->addItem("True");
+    cmb->addItem(getUiText("False"));
+    cmb->addItem(getUiText("True"));
 }
 
 void BaseSystemFuncWdg::setCmbBind(XObject *param, QComboBox *cmb)
@@ -250,11 +250,11 @@ void BaseSystemFuncWdg::showEvent(QShowEvent *event)
         if(m_func->parFlow())
         {
             QString flowName=m_func->parFlow()->flowName();
-            this->setWindowTitle(flowName+"."+m_func->funcName());
+            this->setWindowTitle(flowName+"."+getUiText(m_func->funcName()));
         }
         else
         {
-            this->setWindowTitle(m_func->funcName());
+            this->setWindowTitle(getUiText(m_func->funcName()));
         }
 
         this->setWindowIcon(m_func->funcIcon());

@@ -1,3 +1,4 @@
+﻿#include "XLanguage.h"
 #include "OImageComposition.h"
 
 #include "OpenCvImageUtils.h"
@@ -20,7 +21,7 @@ OImageComposition::OImageComposition(QObject *parent)
       m_result(new OpenCvImageResultBase())
 {
     _funcRole="OImageComposition";
-    _funcName="OpenCV Image Composition";
+    _funcName=getUiText("OpenCV Image Composition");
 }
 
 OImageComposition::~OImageComposition()

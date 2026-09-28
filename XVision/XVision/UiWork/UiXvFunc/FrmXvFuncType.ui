@@ -6,24 +6,24 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>250</width>
-    <height>300</height>
+    <width>340</width>
+    <height>410</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>250</width>
-    <height>300</height>
+    <width>340</width>
+    <height>410</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>250</width>
-    <height>300</height>
+    <width>340</width>
+    <height>410</height>
    </size>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>参数设置</string>
   </property>
   <property name="styleSheet">
    <string notr="true"/>

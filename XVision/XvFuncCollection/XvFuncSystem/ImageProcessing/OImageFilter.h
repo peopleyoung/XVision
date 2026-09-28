@@ -1,4 +1,4 @@
-#ifndef OIMAGEFILTER_H
+﻿#ifndef OIMAGEFILTER_H
 #define OIMAGEFILTER_H
 
 #include "OpenCvImageOperatorBase.h"
@@ -11,15 +11,15 @@ class OImageFilterParam:public OpenCvImageParamBase
 public:
     OImageFilterParam()
     {
-        kernelWidth=new XInt("kernelWidth",3,this,"Kernel width");
-        kernelHeight=new XInt("kernelHeight",3,this,"Kernel height");
-        sigmaX=new XReal("sigmaX",0.0,this,"Sigma X");
-        sigmaY=new XReal("sigmaY",0.0,this,"Sigma Y");
-        sigmaS=new XReal("sigmaS",60.0,this,"Sigma spatial");
-        sigmaR=new XReal("sigmaR",0.4,this,"Sigma range");
-        shadeFactor=new XReal("shadeFactor",0.02,this,"Shade factor");
-        method=new XInt("method",0,this,"Method");
-        outputVariant=new XInt("outputVariant",0,this,"Output variant");
+        kernelWidth=new XInt("kernelWidth",3,this,"卷积核宽度");
+        kernelHeight=new XInt("kernelHeight",3,this,"卷积核高度");
+        sigmaX=new XReal("sigmaX",0.0,this,"水平标准差");
+        sigmaY=new XReal("sigmaY",0.0,this,"垂直标准差");
+        sigmaS=new XReal("sigmaS",60.0,this,"空间标准差");
+        sigmaR=new XReal("sigmaR",0.4,this,"值域标准差");
+        shadeFactor=new XReal("shadeFactor",0.02,this,"阴影系数");
+        method=new XInt("method",0,this,"方法");
+        outputVariant=new XInt("outputVariant",0,this,"输出类型");
     }
 
     XInt *kernelWidth=nullptr;

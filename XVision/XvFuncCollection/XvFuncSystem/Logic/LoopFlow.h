@@ -1,4 +1,4 @@
-#ifndef LOOPFLOW_H
+﻿#ifndef LOOPFLOW_H
 #define LOOPFLOW_H
 
 #include "XVFuncSystemGlobal.h"
@@ -16,10 +16,10 @@ class LoopFlowParam:public XvBaseParam
 public:
     LoopFlowParam()
     {
-        start=new XInt("start",0,this,"Start");
-        end=new XInt("end",1,this,"End");
-        step=new XInt("step",1,this,"Step");
-        images=new XObjectList("images",XImage::type(),this,"Images");
+        start=new XInt("start",0,this,"起始值");
+        end=new XInt("end",1,this,"结束值");
+        step=new XInt("step",1,this,"步长");
+        images=new XObjectList("images",XImage::type(),this,"图像集合");
     }
 
     XInt *start=nullptr;
@@ -33,9 +33,9 @@ class LoopFlowResult:public XvBaseResult
 public:
     LoopFlowResult()
     {
-        iterationIndex=new XInt("iterationIndex",-1,this,"Iteration index");
-        currentValue=new XInt("currentValue",0,this,"Current value");
-        currentImage=new XImage("currentImage",QImage(),this,"Current image");
+        iterationIndex=new XInt("iterationIndex",-1,this,"迭代序号");
+        currentValue=new XInt("currentValue",0,this,"当前值");
+        currentImage=new XImage("currentImage",QImage(),this,"当前图像");
     }
 
     XInt *iterationIndex=nullptr;

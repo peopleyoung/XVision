@@ -1,4 +1,4 @@
-#ifndef NCLASSIFICATION_H
+﻿#ifndef NCLASSIFICATION_H
 #define NCLASSIFICATION_H
 
 #include "NOnnxBase.h"
@@ -14,9 +14,9 @@ class NClassificationParam:public XvBaseParam
 public:
     NClassificationParam()
     {
-        inputImage=new XImage("inputImage",QImage(),this,"Input image");
-        topK=new XInt("topK",5,this,"Top K");
-        minScore=new XReal("minScore",0.0,this,"Minimum score");
+        inputImage=new XImage("inputImage",QImage(),this,"输入图像");
+        topK=new XInt("topK",5,this,"前 K 个结果");
+        minScore=new XReal("minScore",0.0,this,"最低匹配分数");
     }
     XImage *inputImage=nullptr;
     XInt *topK=nullptr;
@@ -28,10 +28,10 @@ class NClassificationResult:public XvBaseResult
 public:
     NClassificationResult()
     {
-        outputImage=new XImage("outputImage",QImage(),this,"Output image");
-        classificationCount=new XInt("classificationCount",0,this,"Classification count");
+        outputImage=new XImage("outputImage",QImage(),this,"输出图像");
+        classificationCount=new XInt("classificationCount",0,this,"分类数量");
         classifications=new XObjectList("classifications",XClassificationResult::type(),
-                                        this,"Classifications");
+                                        this,"分类结果");
     }
     XImage *outputImage=nullptr;
     XInt *classificationCount=nullptr;

@@ -53,4 +53,7 @@ static QString setLang(const QString &key,QString lang)
     return XLang->setLang(key,lang);
 }
 
+/// Translate built-in display labels without changing identifiers or persisted data.
+XLANGUAGE_EXPORT QString getUiText(const QString &text);
+
 #endif // XLANGUAGE_H

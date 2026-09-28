@@ -1,3 +1,4 @@
+﻿#include "XLanguage.h"
 #include "ORegionDetector.h"
 
 #include "OpenCvImageUtils.h"
@@ -40,67 +41,67 @@ double lineAngleDistance(double left,double right)
 
 ORegionDetectorParam::ORegionDetectorParam()
 {
-    thresholdStep=new XReal("thresholdStep",10.0,this,"Threshold step");
-    minThreshold=new XReal("minThreshold",10.0,this,"Minimum threshold");
-    maxThreshold=new XReal("maxThreshold",220.0,this,"Maximum threshold");
-    minRepeatability=new XInt("minRepeatability",2,this,"Minimum repeatability");
-    minDistBetweenBlobs=new XReal("minDistBetweenBlobs",10.0,this,"Minimum blob distance");
-    filterByColor=new XBool("filterByColor",false,this,"Filter by color");
-    blobColor=new XInt("blobColor",0,this,"Blob color");
-    filterByArea=new XBool("filterByArea",true,this,"Filter by area");
-    minArea=new XReal("minArea",25.0,this,"Minimum area");
-    maxArea=new XReal("maxArea",5000.0,this,"Maximum area");
-    filterByCircularity=new XBool("filterByCircularity",false,this,"Filter by circularity");
-    minCircularity=new XReal("minCircularity",0.1,this,"Minimum circularity");
-    maxCircularity=new XReal("maxCircularity",1.0,this,"Maximum circularity");
-    filterByInertia=new XBool("filterByInertia",false,this,"Filter by inertia");
-    minInertiaRatio=new XReal("minInertiaRatio",0.1,this,"Minimum inertia ratio");
-    maxInertiaRatio=new XReal("maxInertiaRatio",1.0,this,"Maximum inertia ratio");
-    filterByConvexity=new XBool("filterByConvexity",false,this,"Filter by convexity");
-    minConvexity=new XReal("minConvexity",0.5,this,"Minimum convexity");
-    maxConvexity=new XReal("maxConvexity",1.0,this,"Maximum convexity");
+    thresholdStep=new XReal("thresholdStep",10.0,this,"阈值步长");
+    minThreshold=new XReal("minThreshold",10.0,this,"阈值下限");
+    maxThreshold=new XReal("maxThreshold",220.0,this,"阈值上限");
+    minRepeatability=new XInt("minRepeatability",2,this,"最小重复次数");
+    minDistBetweenBlobs=new XReal("minDistBetweenBlobs",10.0,this,"最小斑点间距");
+    filterByColor=new XBool("filterByColor",false,this,"按颜色筛选");
+    blobColor=new XInt("blobColor",0,this,"斑点颜色");
+    filterByArea=new XBool("filterByArea",true,this,"按面积筛选");
+    minArea=new XReal("minArea",25.0,this,"最小面积");
+    maxArea=new XReal("maxArea",5000.0,this,"最大面积");
+    filterByCircularity=new XBool("filterByCircularity",false,this,"按圆度筛选");
+    minCircularity=new XReal("minCircularity",0.1,this,"最小圆度");
+    maxCircularity=new XReal("maxCircularity",1.0,this,"最大圆度");
+    filterByInertia=new XBool("filterByInertia",false,this,"按惯性筛选");
+    minInertiaRatio=new XReal("minInertiaRatio",0.1,this,"最小惯性比");
+    maxInertiaRatio=new XReal("maxInertiaRatio",1.0,this,"最大惯性比");
+    filterByConvexity=new XBool("filterByConvexity",false,this,"按凸度筛选");
+    minConvexity=new XReal("minConvexity",0.5,this,"最小凸度");
+    maxConvexity=new XReal("maxConvexity",1.0,this,"最大凸度");
 
-    binaryThreshold=new XReal("binaryThreshold",127.0,this,"Binary threshold");
-    retrievalMode=new XInt("retrievalMode",0,this,"Retrieval mode");
-    approximationMode=new XInt("approximationMode",1,this,"Approximation mode");
-    offsetX=new XInt("offsetX",0,this,"Offset X");
-    offsetY=new XInt("offsetY",0,this,"Offset Y");
-    minContourArea=new XReal("minContourArea",0.0,this,"Minimum contour area");
+    binaryThreshold=new XReal("binaryThreshold",127.0,this,"二值化阈值");
+    retrievalMode=new XInt("retrievalMode",0,this,"轮廓检索模式");
+    approximationMode=new XInt("approximationMode",1,this,"轮廓近似模式");
+    offsetX=new XInt("offsetX",0,this,"偏移 X");
+    offsetY=new XInt("offsetY",0,this,"偏移 Y");
+    minContourArea=new XReal("minContourArea",0.0,this,"最小轮廓面积");
 
-    circleDp=new XReal("circleDp",1.0,this,"Accumulator ratio");
-    circleMinDistance=new XReal("circleMinDistance",20.0,this,"Minimum circle distance");
-    circleEdgeThreshold=new XReal("circleEdgeThreshold",100.0,this,"Circle edge threshold");
-    circleCenterThreshold=new XReal("circleCenterThreshold",30.0,this,"Circle center threshold");
-    minRadius=new XInt("minRadius",0,this,"Minimum radius");
-    maxRadius=new XInt("maxRadius",0,this,"Maximum radius");
+    circleDp=new XReal("circleDp",1.0,this,"累加器分辨率比");
+    circleMinDistance=new XReal("circleMinDistance",20.0,this,"最小圆心距");
+    circleEdgeThreshold=new XReal("circleEdgeThreshold",100.0,this,"圆边缘阈值");
+    circleCenterThreshold=new XReal("circleCenterThreshold",30.0,this,"圆心检测阈值");
+    minRadius=new XInt("minRadius",0,this,"最小半径");
+    maxRadius=new XInt("maxRadius",0,this,"最大半径");
 
-    connectivity=new XInt("connectivity",8,this,"Pixel connectivity");
+    connectivity=new XInt("connectivity",8,this,"像素连通性");
     connectedComponentsAlgorithm=new XInt("connectedComponentsAlgorithm",-1,this,
-                                          "Component algorithm");
-    componentMinArea=new XReal("componentMinArea",1.0,this,"Minimum component area");
-    componentMaxArea=new XReal("componentMaxArea",10000000.0,this,"Maximum component area");
-    useRenderBlobs=new XBool("useRenderBlobs",true,this,"Render blobs");
+                                          "连通域算法");
+    componentMinArea=new XReal("componentMinArea",1.0,this,"最小连通域面积");
+    componentMaxArea=new XReal("componentMaxArea",10000000.0,this,"最大连通域面积");
+    useRenderBlobs=new XBool("useRenderBlobs",true,this,"绘制斑点");
 
-    rho=new XReal("rho",1.0,this,"Rho resolution");
-    theta=new XReal("theta",1.0,this,"Theta resolution (degrees)");
-    houghThreshold=new XInt("houghThreshold",80,this,"Hough threshold");
-    srn=new XReal("srn",0.0,this,"Multi-scale rho divisor");
-    stn=new XReal("stn",0.0,this,"Multi-scale theta divisor");
-    minLineLength=new XReal("minLineLength",30.0,this,"Minimum line length");
-    maxLineGap=new XReal("maxLineGap",10.0,this,"Maximum line gap");
-    targetAngle=new XReal("targetAngle",-1.0,this,"Target angle");
-    angleTolerance=new XReal("angleTolerance",10.0,this,"Angle tolerance");
+    rho=new XReal("rho",1.0,this,"距离分辨率");
+    theta=new XReal("theta",1.0,this,"角度分辨率（度）");
+    houghThreshold=new XInt("houghThreshold",80,this,"霍夫变换阈值");
+    srn=new XReal("srn",0.0,this,"多尺度距离分辨率系数");
+    stn=new XReal("stn",0.0,this,"多尺度角度分辨率系数");
+    minLineLength=new XReal("minLineLength",30.0,this,"最小线段长度");
+    maxLineGap=new XReal("maxLineGap",10.0,this,"最大线段间距");
+    targetAngle=new XReal("targetAngle",-1.0,this,"目标角度");
+    angleTolerance=new XReal("angleTolerance",10.0,this,"角度容差");
 }
 
 ORegionDetectorResult::ORegionDetectorResult()
 {
-    keyPoints=new XObjectList("keyPoints",XKeyPoint::type(),this,"Key points");
-    contours=new XObjectList("contours",XContour::type(),this,"Contours");
-    circles=new XObjectList("circles",XCircle2D::type(),this,"Circles");
-    regions=new XObjectList("regions",XRegion::type(),this,"Regions");
-    rectangles=new XObjectList("rectangles",XRect2D::type(),this,"Rectangles");
-    lines=new XObjectList("lines",XLine2D::type(),this,"Lines");
-    count=new XInt("count",0,this,"Detection count");
+    keyPoints=new XObjectList("keyPoints",XKeyPoint::type(),this,"关键点");
+    contours=new XObjectList("contours",XContour::type(),this,"轮廓集合");
+    circles=new XObjectList("circles",XCircle2D::type(),this,"圆集合");
+    regions=new XObjectList("regions",XRegion::type(),this,"区域集合");
+    rectangles=new XObjectList("rectangles",XRect2D::type(),this,"矩形集合");
+    lines=new XObjectList("lines",XLine2D::type(),this,"直线集合");
+    count=new XInt("count",0,this,"检测数量");
 }
 
 ORegionDetector::ORegionDetector(QObject *parent)
@@ -108,7 +109,7 @@ ORegionDetector::ORegionDetector(QObject *parent)
       m_result(new ORegionDetectorResult())
 {
     _funcRole="ORegionDetector";
-    _funcName="OpenCV Region Detector";
+    _funcName=getUiText("OpenCV Region Detector");
 }
 
 ORegionDetector::~ORegionDetector()

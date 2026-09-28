@@ -88,7 +88,7 @@ inline static void updateFuncToolTip(XFlowGraphicsItem* xItem, XvFunc* func)
 
     auto runInfo=func->getXvFuncRunInfo();
     QString tip;
-    tip=QString("Item-Id:%1\r\n"+
+    tip=QString("图元编号:%1\r\n"+
                 strFuncId+":%2\r\n"+
                 strRole+":%3\r\n"+
                 strRunStatus+":%4\r\n"+
@@ -506,7 +506,7 @@ bool UiXvWorkManager::restoreFlowScene(XvFlow *flow)
             removeFlowScene(flow);
             return false;
         }
-        item->setText(function->funcName());
+        item->setText(getUiText(function->funcName()));
         item->setItemTag(function->funcId());
         item->setItemQPtrTag(function);
         item->item()->setPos(function->canvasPosition());
@@ -1137,7 +1137,7 @@ void UiXvWorkManager::onFlowSceneMenuRequested(const QPoint &pos)
            auto menu= addMenu->addMenu(tInfo.icon,tInfo.name);
            foreach (auto fInfo, lstFInfo)
            {
-               menu->addAction(fInfo.icon,fInfo.name,this,[=]()
+               menu->addAction(fInfo.icon,getUiText(fInfo.name),this,[=]()
                {
                    auto role= fInfo.role;
                    auto factory= scene->xItemDelegateFactory();

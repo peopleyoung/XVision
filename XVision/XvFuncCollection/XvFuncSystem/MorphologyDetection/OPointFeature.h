@@ -1,4 +1,4 @@
-#ifndef OPOINTFEATURE_H
+﻿#ifndef OPOINTFEATURE_H
 #define OPOINTFEATURE_H
 
 #include "OpenCvImageOperatorBase.h"
@@ -72,8 +72,8 @@ class OPointFeatureResult:public OpenCvImageResultBase
 public:
     OPointFeatureResult()
     {
-        keyPoints=new XObjectList("keyPoints",XKeyPoint::type(),this,"Key points");
-        count=new XInt("count",0,this,"Feature count");
+        keyPoints=new XObjectList("keyPoints",XKeyPoint::type(),this,"关键点");
+        count=new XInt("count",0,this,"特征数量");
     }
 
     XObjectList *keyPoints=nullptr;

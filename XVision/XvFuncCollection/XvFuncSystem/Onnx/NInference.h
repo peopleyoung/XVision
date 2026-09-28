@@ -1,4 +1,4 @@
-#ifndef NINFERENCE_H
+﻿#ifndef NINFERENCE_H
 #define NINFERENCE_H
 
 #include "NOnnxBase.h"
@@ -14,8 +14,8 @@ class NInferenceParam:public XvBaseParam
 public:
     NInferenceParam()
     {
-        inputs=new XObjectList("inputs",XTensor::type(),this,"Input tensors");
-        inputImage=new XImage("inputImage",QImage(),this,"Input image");
+        inputs=new XObjectList("inputs",XTensor::type(),this,"输入张量");
+        inputImage=new XImage("inputImage",QImage(),this,"输入图像");
     }
     XObjectList *inputs=nullptr;
     XImage *inputImage=nullptr;
@@ -26,10 +26,10 @@ class NInferenceResult:public XvBaseResult
 public:
     NInferenceResult()
     {
-        outputs=new XObjectList("outputs",XTensor::type(),this,"Output tensors");
-        outputCount=new XInt("outputCount",0,this,"Output count");
-        age=new XReal("age",0.0,this,"Age");
-        ageValid=new XBool("ageValid",false,this,"Age valid");
+        outputs=new XObjectList("outputs",XTensor::type(),this,"输出张量");
+        outputCount=new XInt("outputCount",0,this,"输出数量");
+        age=new XReal("age",0.0,this,"年龄估计");
+        ageValid=new XBool("ageValid",false,this,"年龄有效");
     }
     XObjectList *outputs=nullptr;
     XInt *outputCount=nullptr;
