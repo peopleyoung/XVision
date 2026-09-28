@@ -70,7 +70,7 @@ function Get-XVisionQtRuntimeFiles {
     param([ValidateSet('Debug', 'Release')][string]$Configuration)
     $Suffix = if ($Configuration -eq 'Debug') { 'd' } else { '' }
     foreach ($Module in @('Core', 'Gui', 'Widgets', 'Xml', 'Concurrent',
-        'Network', 'SerialPort', 'SerialBus', 'Sql')) {
+        'Network', 'SerialPort', 'SerialBus', 'Sql', 'StateMachine')) {
         "Qt6${Module}${Suffix}.dll"
     }
     "platforms/qwindows${Suffix}.dll"

@@ -33,7 +33,7 @@ import os,pathlib,sys
 args=sys.argv[1:]; assert 'sqlite' not in args
 assert args[-1].endswith('XvFuncCollection/XvFuncSystem.dll')
 out=pathlib.Path(args[args.index('--dir')+1]); suffix='d' if '--debug' in args else ''
-for m in ['Core','Gui','Widgets','Xml','Concurrent','Network','SerialPort','SerialBus','Sql']:
+for m in ['Core','Gui','Widgets','Xml','Concurrent','Network','SerialPort','SerialBus','Sql','StateMachine']:
     if m=='Sql' and os.environ['FAULT']=='missing_sql': continue
     (out/('Qt6'+m+suffix+'.dll')).write_text('fixture')
 for part,base in [('platforms','qwindows'),('sqldrivers','qsqlite')]:

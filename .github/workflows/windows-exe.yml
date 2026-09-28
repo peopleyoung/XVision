@@ -29,7 +29,8 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ${{ runner.temp }}/xvision-sdk
-          key: xvision-win64-vs2019-qt640-opencv4100-contrib-onnx1181-v1
+          key: xvision-win64-vs2019-qt640-opencv4100-contrib-onnx1181-v2
+          restore-keys: xvision-win64-vs2019-qt640-opencv4100-contrib-onnx1181-v1
       - name: Install Windows toolchain and SDKs
         run: ./XVision/scripts/Prepare-WindowsBuild.ps1 -SdkDirectory "$env:RUNNER_TEMP/xvision-sdk"
       - name: Save installed SDK cache
@@ -37,7 +38,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: ${{ runner.temp }}/xvision-sdk
-          key: xvision-win64-vs2019-qt640-opencv4100-contrib-onnx1181-v1
+          key: xvision-win64-vs2019-qt640-opencv4100-contrib-onnx1181-v2
       - name: Build, test, and package full-feature Release
         run: ./XVision/scripts/Package-WindowsBuild.ps1 -Configuration Release -KeepStaging
       - name: Upload Windows executable package
