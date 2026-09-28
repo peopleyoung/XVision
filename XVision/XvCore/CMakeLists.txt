@@ -43,8 +43,6 @@ list(APPEND CORE_INCLUDE_DIR
 
 #添加工程库
 list(APPEND CORE_LIBS
-    XvTokenMsg
-    XvData
     XvDisplay
     XLog        #日志库
     XLanguage   #多语言库
@@ -53,9 +51,7 @@ list(APPEND CORE_LIBS
 
 #添加QT库
 list(APPEND CORE_LIBS
-    Qt${QT_VERSION_MAJOR}::Core
     Qt${QT_VERSION_MAJOR}::Widgets
-    Qt${QT_VERSION_MAJOR}::Xml
     Qt${QT_VERSION_MAJOR}::Concurrent
 )
 
@@ -96,7 +92,21 @@ include_directories(${CORE_INCLUDE_DIR})
 
 
 
-target_link_libraries(${PROJECT_NAME} PRIVATE ${CORE_LIBS})
+# XvCore public headers expose token messaging, data values and XML types.
+target_include_directories(XvCore PUBLIC
+    "${CMAKE_CURRENT_SOURCE_DIR}/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../XvData/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../XvTokenMsg/include"
+)
+target_link_libraries(XvCore
+    PUBLIC
+        XvTokenMsg
+        XvData
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Xml
+    PRIVATE ${CORE_LIBS}
+)
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE XVCORE_LIBRARY)
 
