@@ -411,6 +411,18 @@ private:
         return document;
     }
 
+    static QDomElement findFunctionElementById(QDomDocument &document,
+                                                const QString &id)
+    {
+        const QDomNodeList functions=document.elementsByTagName("Function");
+        for(int index=0;index<functions.count();++index)
+        {
+            const QDomElement function=functions.at(index).toElement();
+            if(function.attribute("id")==id) return function;
+        }
+        return QDomElement();
+    }
+
     static QDomElement findFunctionElementByRole(QDomDocument &document,
                                                   const QString &role)
     {
@@ -2709,7 +2721,10 @@ private slots:
         const auto rejectMutation=[&](const std::function<void(QDomDocument&)> &mutate)
         {
             QDomDocument document=parseDocument(projectPath);
+            const QByteArray original=document.toByteArray();
             mutate(document);
+            QVERIFY2(document.toByteArray()!=original,
+                     "The invalid template fixture must actually modify the XML");
             QVERIFY(writeDocument(invalidPath,document));
             expectLoadRejected(invalidPath,restoredProject);
         };
@@ -2743,23 +2758,29 @@ private slots:
                                      QCryptographicHash::hash(
                                          payload,QCryptographicHash::Sha256).toHex()));
         });
-        rejectMutation([](QDomDocument &document) {
-            QDomElement function=ProjectXmlTest::findFunctionElementByRole(
-                        document,"OTemplateMatch");
+        rejectMutation([&](QDomDocument &document) {
+            QDomElement function=ProjectXmlTest::findFunctionElementById(
+                        document,matcherId);
+            QVERIFY(!function.isNull());
             QDomElement data=function.firstChildElement("PersistentData");
+            QVERIFY(!data.isNull());
             function.appendChild(data.cloneNode(true));
         });
-        rejectMutation([](QDomDocument &document) {
-            QDomElement function=ProjectXmlTest::findFunctionElementByRole(
-                        document,"OTemplateMatch");
+        rejectMutation([&](QDomDocument &document) {
+            QDomElement function=ProjectXmlTest::findFunctionElementById(
+                        document,matcherId);
+            QVERIFY(!function.isNull());
             QDomElement data=function.firstChildElement("PersistentData");
+            QVERIFY(!data.isNull());
             QDomElement value=data.firstChildElement("OpenCvTemplate");
             data.appendChild(value.cloneNode(true));
         });
-        rejectMutation([](QDomDocument &document) {
-            QDomElement function=ProjectXmlTest::findFunctionElementByRole(
-                        document,"OTemplateMatch");
+        rejectMutation([&](QDomDocument &document) {
+            QDomElement function=ProjectXmlTest::findFunctionElementById(
+                        document,matcherId);
+            QVERIFY(!function.isNull());
             QDomElement data=function.firstChildElement("PersistentData");
+            QVERIFY(!data.isNull());
             data.appendChild(document.createElement("UnknownTemplateData"));
         });
         rejectMutation([](QDomDocument &document) {
