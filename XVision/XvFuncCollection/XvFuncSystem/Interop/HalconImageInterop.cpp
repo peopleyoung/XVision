@@ -91,6 +91,7 @@ bool toHalcon(const QImage &source,HalconCpp::HImage &target,QString *error)
             candidate.GenImage1("byte",width,height,pixels.data());
         }
         else if(source.format()==QImage::Format_RGB888
+                || source.format()==QImage::Format_RGB32
                 || source.format()==QImage::Format_RGBA8888
                 || source.format()==QImage::Format_ARGB32)
         {

@@ -1451,7 +1451,18 @@ private slots:
         QVERIFY(original.contains("valueType=\"XMatchResult\""));
         QVERIFY(original.contains("valueType=\"XDetectionResult\""));
         QVERIFY(original.contains("className=\"dent\""));
-        QVERIFY(original.contains("score=\"0.95\""));
+        // Persisted doubles retain round-trip precision, not a fixed decimal spelling.
+        const QDomDocument serializedDocument=parseDocument(path);
+        const QDomNodeList serializedItems=serializedDocument.elementsByTagName("Item");
+        bool foundExpectedScore=false;
+        for(int index=0;index<serializedItems.count();++index)
+        {
+            bool validScore=false;
+            const double score=serializedItems.at(index).toElement()
+                    .attribute("score").toDouble(&validScore);
+            if(validScore && score==0.95) foundExpectedScore=true;
+        }
+        QVERIFY(foundExpectedScore);
 
         QVERIFY(manager->loadXvProject(path));
         XvProject *restoredProject=manager->getXvProject();
@@ -1613,7 +1624,7 @@ private slots:
         QCOMPARE(grayResult.constScanLine(0)[0],uchar(1));
         QCOMPARE(grayResult.constScanLine(1)[2],uchar(6));
 
-        const QList<QImage::Format> formats={QImage::Format_RGB888,
+        const QList<QImage::Format> formats={QImage::Format_RGB888,QImage::Format_RGB32,
                                              QImage::Format_RGBA8888,
                                              QImage::Format_ARGB32};
         for(QImage::Format format:formats)
@@ -1790,7 +1801,10 @@ private slots:
         QVERIFY(matcher->paramSubscribe("inputImage",acquisition,"outputImage"));
         QCOMPARE(flow->runOnce(),Ret_Xv_Success);
         QTRY_VERIFY_WITH_TIMEOUT(!flow->isRunning(),5000);
-        QCOMPARE(flow->getXvFuncRunStatus(),EXvFlowRunStatus::Ok);
+        QVERIFY2(flow->getXvFuncRunStatus()==EXvFlowRunStatus::Ok,
+                 qPrintable(QString("acquisition: %1; matcher: %2; log: %3")
+                            .arg(acquisition->getXvFuncRunMsg(),matcher->getXvFuncRunMsg(),
+                                 logOutput->getXvFuncRunMsg())));
         QVERIFY(count->value()>=1);
         QCOMPARE(logOutput->getXvFuncRunStatus(),EXvFuncRunStatus::Ok);
 
@@ -2923,7 +2937,11 @@ private slots:
         QVERIFY(!xml.contains("role=\"StarFeatureDetector\""));
         QVERIFY(!xml.contains("role=\"LbpCascade\""));
         QVERIFY(!xml.contains("inputImage"));
-        QVERIFY(!xml.contains("descriptor"));
+        // descriptorSize/descriptorChannels are persistent configuration values.
+        // Only descriptor payloads and runtime feature objects must be absent.
+        QVERIFY(!xml.contains("name=\"descriptor\""));
+        QVERIFY(!xml.contains("name=\"descriptors\""));
+        QVERIFY(!xml.contains("type=\"XFeatureSet\""));
 
         QVERIFY(manager->loadXvProject(path));
         XvFlow *restoredFlow=manager->getXvProject()->getXvFlow(flowId);
@@ -3772,6 +3790,9 @@ private slots:
         QCOMPARE(project->runOnce(),Ret_Xv_Success);
         QTRY_VERIFY_WITH_TIMEOUT(!project->isRunning(),5000);
         disconnect(startConnection);
+        QVERIFY2(captureFlow->getXvFuncRunStatus()==EXvFlowRunStatus::Ok,
+                 qPrintable(QString("acquisition: %1; matcher: %2")
+                            .arg(acquisition->getXvFuncRunMsg(),matcher->getXvFuncRunMsg())));
         QCOMPARE(startedFlows,QStringList({captureFlowId,afterFlowId}));
         QCOMPARE(project->projectRunInfo().runStatus,EXvProjectRunStatus::Ok);
         QVERIFY(matcherCount->value()>=1);
