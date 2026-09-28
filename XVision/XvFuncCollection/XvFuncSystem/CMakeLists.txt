@@ -184,6 +184,11 @@ target_link_libraries(${PROJECT_NAME} PRIVATE ${_LIBS})
 
 
 target_compile_definitions(XvFuncSystem PRIVATE XVFUNCSYSTEM_LIBRARY)
+# HalconCpp.h includes Windows.h; keep its macros out of std::numeric_limits.
+# Public propagation also protects consumers of the plugin's HALCON headers.
+if(WIN32)
+    target_compile_definitions(XvFuncSystem PUBLIC NOMINMAX)
+endif()
 if(XVISION_ENABLE_OPENCV)
     target_compile_definitions(XvFuncSystem PRIVATE XVISION_ENABLE_OPENCV=1)
 endif()
