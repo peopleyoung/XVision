@@ -26,7 +26,7 @@ def save(name, nodes, initializers=(), padding=0):
 
 save("identity.onnx", [helper.make_node("Identity", ["input"], ["output"])])
 save("identity-32mb.onnx", [helper.make_node("Identity", ["input"], ["output"])], padding=32*1024*1024)
-rng = np.random.default_rng(19)
+rng = np.random.RandomState(19)  # Match the recorded baseline (MT19937).
 nodes, weights = [], []
 previous = "input"
 for index in range(6):
