@@ -22,7 +22,7 @@ private slots:
     void pluginLoadsAndExposesCurrentRoles()
     {
         const QStringList arguments=QCoreApplication::arguments();
-        QCOMPARE(arguments.count(),3);
+        QVERIFY(arguments.count()>=3);
 
         QPluginLoader loader(arguments.at(1));
         QObject *instance=loader.instance();
@@ -428,7 +428,7 @@ int main(int argc,char *argv[])
 {
     // Registering operator metadata creates QPixmap icons.
     QGuiApplication application(argc,argv);
-    if(application.arguments().size()!=3)
+    if(application.arguments().size()<3)
     {
         qCritical("Usage: XvSystemPluginTests <plugin-path> <compatibility-matrix>");
         return 1;
@@ -436,6 +436,8 @@ int main(int argc,char *argv[])
     SystemPluginTest test;
     // Keep the two application inputs available through QCoreApplication,
     // but do not let Qt Test interpret them as test-function selectors.
-    return QTest::qExec(&test,1,argv);
+    QStringList testArguments{application.arguments().first()};
+    testArguments.append(application.arguments().mid(3));
+    return QTest::qExec(&test,testArguments);
 }
 #include "tst_systemplugin.moc"

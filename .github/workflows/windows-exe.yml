@@ -49,12 +49,13 @@ jobs:
           if-no-files-found: error
           retention-days: 7
       - name: Upload build diagnostics
-        if: failure()
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: XVision-Windows-build-diagnostics
           path: |
             XVision/build/windows-msvc2019-release/Testing/Temporary/*.log
+            XVision/build/windows-msvc2019-release/Testing/QtTest/*.txt
             XVision/build/windows-msvc2019-release/CMakeFiles/CMakeConfigureLog.yaml
           if-no-files-found: ignore
           retention-days: 7

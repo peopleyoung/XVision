@@ -2,6 +2,10 @@ find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Gui Network SerialBus Ser
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Gui Network SerialBus SerialPort Sql Test Widgets Xml)
 include(../3rdparty/Common3rdparty.cmake)
 
+# Keep Qt Test output even when Windows GUI startup/output capture fails.
+set(XVISION_QT_TEST_LOG_DIR "${CMAKE_BINARY_DIR}/Testing/QtTest")
+file(MAKE_DIRECTORY "${XVISION_QT_TEST_LOG_DIR}")
+
 set(CMAKE_AUTOMOC ON)
 
 set(VISIONMASTER_MATRIX
@@ -57,8 +61,10 @@ target_link_libraries(XvVisionMasterDataTests PRIVATE
 add_test(NAME visionmaster_data
     COMMAND ${CMAKE_COMMAND} -E env
         "QT_QPA_PLATFORM=offscreen"
-        "PATH=$<TARGET_FILE_DIR:XvVisionMasterDataTests>$<SEMICOLON>$ENV{QTDIR}/bin$<SEMICOLON>$ENV{PATH}"
+        "PATH=$<TARGET_FILE_DIR:XvVisionMasterDataTests>$<SEMICOLON>$<TARGET_FILE_DIR:XVision>$<SEMICOLON>$ENV{QTDIR}/bin$<SEMICOLON>$ENV{PATH}"
         $<TARGET_FILE:XvVisionMasterDataTests>
+        -o "${XVISION_QT_TEST_LOG_DIR}/visionmaster_data.txt,txt"
+        -o "-,txt"
 )
 
 set(XVISION_ONNX_TEST_MODEL "" CACHE FILEPATH
@@ -115,6 +121,8 @@ add_test(NAME visionmaster_backend_boundary
         "XVISION_ONNX_EXECUTION_TEST_MODEL=${XVISION_ONNX_EXECUTION_TEST_MODEL}"
         "PATH=$<TARGET_FILE_DIR:XvVisionBackendBoundaryTests>$<SEMICOLON>$ENV{QTDIR}/bin$<SEMICOLON>$ENV{PATH}"
         $<TARGET_FILE:XvVisionBackendBoundaryTests>
+        -o "${XVISION_QT_TEST_LOG_DIR}/visionmaster_backend_boundary.txt,txt"
+        -o "-,txt"
 )
 
 add_executable(XvOpenCvImageOperatorTests
@@ -149,6 +157,8 @@ add_test(NAME opencv_image_operators
         "QT_QPA_PLATFORM=offscreen"
         "PATH=$<TARGET_FILE_DIR:XVision>$<SEMICOLON>$<TARGET_FILE_DIR:XvFuncSystem>$<SEMICOLON>$<TARGET_FILE_DIR:XvCore>$<SEMICOLON>$ENV{QTDIR}/bin$<SEMICOLON>$ENV{PATH}"
         $<TARGET_FILE:XvOpenCvImageOperatorTests>
+        -o "${XVISION_QT_TEST_LOG_DIR}/opencv_image_operators.txt,txt"
+        -o "-,txt"
 )
 
 add_executable(XvOpenCvMorphologyDetectorTests
@@ -184,6 +194,8 @@ add_test(NAME opencv_morphology_detectors
         "QT_QPA_PLATFORM=offscreen"
         "PATH=$<TARGET_FILE_DIR:XVision>$<SEMICOLON>$<TARGET_FILE_DIR:XvFuncSystem>$<SEMICOLON>$<TARGET_FILE_DIR:XvCore>$<SEMICOLON>$ENV{QTDIR}/bin$<SEMICOLON>$ENV{PATH}"
         $<TARGET_FILE:XvOpenCvMorphologyDetectorTests>
+        -o "${XVISION_QT_TEST_LOG_DIR}/opencv_morphology_detectors.txt,txt"
+        -o "-,txt"
 )
 
 add_executable(XvOpenCvTemplatingTests
@@ -219,6 +231,8 @@ add_test(NAME opencv_template_rectification
         "QT_QPA_PLATFORM=offscreen"
         "PATH=$<TARGET_FILE_DIR:XVision>$<SEMICOLON>$<TARGET_FILE_DIR:XvFuncSystem>$<SEMICOLON>$<TARGET_FILE_DIR:XvCore>$<SEMICOLON>$ENV{QTDIR}/bin$<SEMICOLON>$ENV{PATH}"
         $<TARGET_FILE:XvOpenCvTemplatingTests>
+        -o "${XVISION_QT_TEST_LOG_DIR}/opencv_template_rectification.txt,txt"
+        -o "-,txt"
 )
 
 add_executable(XvGeometryMeasurementTests
@@ -248,6 +262,8 @@ add_test(NAME geometry_measurement
         "QT_QPA_PLATFORM=offscreen"
         "PATH=$<TARGET_FILE_DIR:XVision>$<SEMICOLON>$<TARGET_FILE_DIR:XvFuncSystem>$<SEMICOLON>$<TARGET_FILE_DIR:XvCore>$<SEMICOLON>$ENV{QTDIR}/bin$<SEMICOLON>$ENV{PATH}"
         $<TARGET_FILE:XvGeometryMeasurementTests>
+        -o "${XVISION_QT_TEST_LOG_DIR}/geometry_measurement.txt,txt"
+        -o "-,txt"
 )
 
 add_executable(XvDetectRecordTests
@@ -278,6 +294,8 @@ add_test(NAME detect_record
         "QT_QPA_PLATFORM=offscreen"
         "PATH=$<TARGET_FILE_DIR:XVision>$<SEMICOLON>$<TARGET_FILE_DIR:XvFuncSystem>$<SEMICOLON>$<TARGET_FILE_DIR:XvCore>$<SEMICOLON>$ENV{QTDIR}/bin$<SEMICOLON>$ENV{PATH}"
         $<TARGET_FILE:XvDetectRecordTests>
+        -o "${XVISION_QT_TEST_LOG_DIR}/detect_record.txt,txt"
+        -o "-,txt"
 )
 
 add_executable(XvCommunicationOperatorTests
@@ -310,6 +328,8 @@ add_test(NAME communication_operators
         "QT_QPA_PLATFORM=offscreen"
         "PATH=$<TARGET_FILE_DIR:XVision>$<SEMICOLON>$<TARGET_FILE_DIR:XvFuncSystem>$<SEMICOLON>$<TARGET_FILE_DIR:XvCore>$<SEMICOLON>$ENV{QTDIR}/bin$<SEMICOLON>$ENV{PATH}"
         $<TARGET_FILE:XvCommunicationOperatorTests>
+        -o "${XVISION_QT_TEST_LOG_DIR}/communication_operators.txt,txt"
+        -o "-,txt"
 )
 
 add_executable(XvSourceNotificationTests
@@ -347,6 +367,8 @@ add_test(NAME source_notification
         "QT_QPA_PLATFORM=offscreen"
         "PATH=$<TARGET_FILE_DIR:XVision>$<SEMICOLON>$<TARGET_FILE_DIR:XvFuncSystem>$<SEMICOLON>$<TARGET_FILE_DIR:XvCore>$<SEMICOLON>$ENV{QTDIR}/bin$<SEMICOLON>$ENV{PATH}"
         $<TARGET_FILE:XvSourceNotificationTests>
+        -o "${XVISION_QT_TEST_LOG_DIR}/source_notification.txt,txt"
+        -o "-,txt"
 )
 
 add_executable(XvOnnxOperatorTests
@@ -393,6 +415,8 @@ add_test(NAME onnx_operators
         "QT_QPA_PLATFORM=offscreen"
         "PATH=$<TARGET_FILE_DIR:XVision>$<SEMICOLON>$<TARGET_FILE_DIR:XvFuncSystem>$<SEMICOLON>$<TARGET_FILE_DIR:XvCore>$<SEMICOLON>$ENV{QTDIR}/bin$<SEMICOLON>$ENV{PATH}"
         $<TARGET_FILE:XvOnnxOperatorTests>
+        -o "${XVISION_QT_TEST_LOG_DIR}/onnx_operators.txt,txt"
+        -o "-,txt"
 )
 
 add_executable(XvCorePersistenceTests
@@ -459,6 +483,8 @@ add_test(NAME projectxml
         "QT_QPA_PLATFORM=offscreen"
         "PATH=$<TARGET_FILE_DIR:XVision>$<SEMICOLON>$<TARGET_FILE_DIR:XvFuncSystem>$<SEMICOLON>$<TARGET_FILE_DIR:XvCamera>$<SEMICOLON>$ENV{QTDIR}/bin$<SEMICOLON>$ENV{PATH}"
         $<TARGET_FILE:XvCorePersistenceTests>
+        -o "${XVISION_QT_TEST_LOG_DIR}/projectxml.txt,txt"
+        -o "-,txt"
 )
 
 add_executable(XvCameraTests
@@ -483,8 +509,10 @@ target_link_libraries(XvCameraTests PRIVATE
 add_test(NAME camera
     COMMAND ${CMAKE_COMMAND} -E env
         "QT_QPA_PLATFORM=offscreen"
-        "PATH=$<TARGET_FILE_DIR:XvCameraTests>$<SEMICOLON>$ENV{QTDIR}/bin$<SEMICOLON>$ENV{PATH}"
+        "PATH=$<TARGET_FILE_DIR:XvCameraTests>$<SEMICOLON>$<TARGET_FILE_DIR:XVision>$<SEMICOLON>$ENV{QTDIR}/bin$<SEMICOLON>$ENV{PATH}"
         $<TARGET_FILE:XvCameraTests>
+        -o "${XVISION_QT_TEST_LOG_DIR}/camera.txt,txt"
+        -o "-,txt"
 )
 
 add_executable(XvSystemPluginTests
@@ -516,4 +544,29 @@ add_test(NAME systemplugin
         $<TARGET_FILE:XvSystemPluginTests>
         $<TARGET_FILE:XvFuncSystem>
         "${VISIONMASTER_MATRIX}"
+        -o "${XVISION_QT_TEST_LOG_DIR}/systemplugin.txt,txt"
+        -o "-,txt"
 )
+
+# The SDK is intentionally not installed at Qt's compiled-in prefix on CI.
+# Resolve GUI platform plugins explicitly for build-tree tests; package tests
+# separately use only the staged runtime and staged plugins.
+if(WIN32)
+    set_tests_properties(
+        visionmaster_data
+        visionmaster_backend_boundary
+        opencv_image_operators
+        opencv_morphology_detectors
+        opencv_template_rectification
+        geometry_measurement
+        detect_record
+        communication_operators
+        source_notification
+        onnx_operators
+        projectxml
+        camera
+        systemplugin
+        PROPERTIES ENVIRONMENT
+            "QT_PLUGIN_PATH=$ENV{QTDIR}/plugins;QT_LOGGING_TO_CONSOLE=1"
+    )
+endif()
