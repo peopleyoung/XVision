@@ -1,6 +1,6 @@
 #include <QtTest>
 
-#include <QCoreApplication>
+#include <QGuiApplication>
 #include <QFile>
 #include <QMap>
 #include <QPluginLoader>
@@ -426,7 +426,8 @@ private slots:
 
 int main(int argc,char *argv[])
 {
-    QCoreApplication application(argc,argv);
+    // Registering operator metadata creates QPixmap icons.
+    QGuiApplication application(argc,argv);
     if(application.arguments().size()!=3)
     {
         qCritical("Usage: XvSystemPluginTests <plugin-path> <compatibility-matrix>");
