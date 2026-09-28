@@ -60,8 +60,14 @@ $QtDirectory = Join-Path $QtBase '6.4.0/msvc2019_64'
 if (-not (Test-Path -LiteralPath (Join-Path $QtDirectory 'bin/qmake.exe'))) {
     Invoke-BuildTool 'python' @(
         '-m', 'aqt', 'install-qt', 'windows', 'desktop', '6.4.0', 'win64_msvc2019_64',
-        '--outputdir', $QtBase, '--modules', 'qtserialport', 'qtserialbus', 'qtsvg'
+        '--outputdir', $QtBase, '--modules', 'qtserialport', 'qtserialbus'
     )
+}
+
+foreach ($QtComponent in @('Qt6Core', 'Qt6Svg', 'Qt6SerialPort', 'Qt6SerialBus', 'Qt6Sql')) {
+    if (-not (Test-Path -LiteralPath (Join-Path $QtDirectory "bin/$QtComponent.dll"))) {
+        throw "Qt installation is missing $QtComponent."
+    }
 }
 
 $OpenCvRoot = Join-Path $SdkDirectory 'opencv'
