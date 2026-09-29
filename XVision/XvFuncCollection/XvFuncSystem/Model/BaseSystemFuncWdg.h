@@ -1,11 +1,13 @@
-﻿#ifndef BASESYSTEMFUNCWDG_H
+#ifndef BASESYSTEMFUNCWDG_H
 #define BASESYSTEMFUNCWDG_H
 
 #include "XFramelessWidget.h"
 #include "XvFunc.h"
+#include <QPointer>
 #include "XLanguage.h"
 using namespace XvCore;
 
+class QScrollArea;
 class QLabel;
 class QComboBox;
 class QLineEdit;
@@ -16,12 +18,13 @@ class BaseSystemFuncWdg: public XFramelessWidget
 public:
     explicit BaseSystemFuncWdg(XvFunc *func,QWidget *parent = nullptr);
     ~BaseSystemFuncWdg();
+    QWidget *centralWidget() const { return m_parameterContent; }
 protected:
     ///获取算子
     template<typename T>
     T *getFunc()
     {
-        return dynamic_cast<T*>(m_func);
+        return dynamic_cast<T*>(m_func.data());
     }
 public:
     // QVariant payload; explicitly registered for both Qt 5 and Qt 6.
@@ -41,7 +44,7 @@ public:
             return func&&(!resultName.isEmpty());
         }
 
-        XvFunc* func=nullptr;
+        QPointer<XvFunc> func;
         QString resultName="";
 
     };
@@ -71,8 +74,11 @@ protected:
 
     ///初始化界面
     virtual void initFrm();
-    ///初始化固定尺寸
-    virtual void initFixedSize();
+    ///初始化可调整的首选尺寸
+    virtual void initPreferredSize();
+    void prepareParameterLayout();
+    void scheduleParameterRebuild();
+    virtual void rebuildParameters() {}
     ///显示事件
     void showEvent(QShowEvent *event) override;
     ///隐藏事件
@@ -89,7 +95,11 @@ protected slots:
     ///关闭事件响应
     virtual void onClose(){};
 protected:
-    XvFunc* m_func=nullptr;
+    QPointer<XvFunc> m_func;
+    QWidget *m_parameterContent=nullptr;
+    QScrollArea *m_parameterScroll=nullptr;
+    bool m_rebuildPending=false;
+    bool m_geometryInitialized=false;
     bool m_bShowing=false;//是否正在显示
 
 

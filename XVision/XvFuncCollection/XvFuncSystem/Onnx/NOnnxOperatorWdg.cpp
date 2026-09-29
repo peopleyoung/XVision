@@ -1,4 +1,4 @@
-﻿#include "NOnnxOperatorWdg.h"
+#include "NOnnxOperatorWdg.h"
 
 #include "NClassification.h"
 #include "NInference.h"
@@ -15,7 +15,7 @@
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QPlainTextEdit>
-#include <QScrollArea>
+#include <QGroupBox>
 #include <QSpinBox>
 #include <QStyle>
 #include <QToolButton>
@@ -37,7 +37,8 @@ QDoubleSpinBox *unitSpin(QWidget *parent)
 QPlainTextEdit *classEditor(QWidget *parent)
 {
     auto editor=new QPlainTextEdit(parent);
-    editor->setMaximumHeight(84);
+    editor->setMinimumHeight(80);
+    editor->setMaximumHeight(140);
     return editor;
 }
 }
@@ -45,12 +46,10 @@ QPlainTextEdit *classEditor(QWidget *parent)
 NOnnxOperatorWdg::NOnnxOperatorWdg(NOnnxBase *function,QWidget *parent)
     :BaseSystemFuncWdg(function,parent)
 {
-    auto rootLayout=new QVBoxLayout(centralWidget());
-    auto scroll=new QScrollArea(centralWidget());
-    scroll->setWidgetResizable(true);
-    auto content=new QWidget(scroll);
+    auto content=centralWidget();
     auto contentLayout=new QVBoxLayout(content);
-    auto commonForm=new QFormLayout();
+    auto commonGroup=new QGroupBox(getLang("XvFuncSystem_NOnnx_Preprocessing","模型与预处理"),content);
+    auto commonForm=new QFormLayout(commonGroup);
 
     m_mode=new QComboBox(content);
     m_inputBinding=new QComboBox(content);
@@ -60,7 +59,7 @@ NOnnxOperatorWdg::NOnnxOperatorWdg(NOnnxBase *function,QWidget *parent)
     m_modelPath=new QLineEdit(modelRow);
     m_modelPath->setReadOnly(true);
     m_selectModel=new QToolButton(modelRow);
-    m_selectModel->setIcon(style()->standardIcon(QStyle::SP_DialogOpenButton));
+    m_selectModel->setIcon(QIcon(":/images/UiOpen.svg"));
     m_selectModel->setToolTip(getLang("XvFuncSystem_NOnnx_SelectModel","选择ONNX模型"));
     modelLayout->addWidget(m_modelPath,1);
     modelLayout->addWidget(m_selectModel);
@@ -89,9 +88,9 @@ NOnnxOperatorWdg::NOnnxOperatorWdg(NOnnxBase *function,QWidget *parent)
     commonForm->addRow(getLang("XvFuncSystem_NOnnx_PixelScale","像素比例")+":",m_pixelScale);
     commonForm->addRow(getLang("XvFuncSystem_NOnnx_Mean","均值")+":",m_meanValues);
     commonForm->addRow(getLang("XvFuncSystem_NOnnx_Std","标准差")+":",m_stdValues);
-    contentLayout->addLayout(commonForm);
+    contentLayout->addWidget(commonGroup);
 
-    m_classificationPanel=new QWidget(content);
+    m_classificationPanel=new QGroupBox(getLang("XvFuncSystem_NOnnx_ClassificationResults","分类输出"),content);
     auto classificationForm=new QFormLayout(m_classificationPanel);
     m_applySoftmax=new QCheckBox(m_classificationPanel);
     m_topK=new QSpinBox(m_classificationPanel);
@@ -103,7 +102,7 @@ NOnnxOperatorWdg::NOnnxOperatorWdg(NOnnxBase *function,QWidget *parent)
     classificationForm->addRow(getLang("XvFuncSystem_NOnnx_ClassNames","类别名称")+":",m_classificationNames);
     contentLayout->addWidget(m_classificationPanel);
 
-    m_detectionPanel=new QWidget(content);
+    m_detectionPanel=new QGroupBox(getLang("XvFuncSystem_NOnnx_DetectionResults","检测输出"),content);
     auto detectionForm=new QFormLayout(m_detectionPanel);
     m_normalizedCoordinates=new QCheckBox(m_detectionPanel);
     m_confidenceThreshold=unitSpin(m_detectionPanel);
@@ -119,7 +118,7 @@ NOnnxOperatorWdg::NOnnxOperatorWdg(NOnnxBase *function,QWidget *parent)
     detectionForm->addRow(getLang("XvFuncSystem_NOnnx_ClassNames","类别名称")+":",m_detectionNames);
     contentLayout->addWidget(m_detectionPanel);
 
-    m_segmentationPanel=new QWidget(content);
+    m_segmentationPanel=new QGroupBox(getLang("XvFuncSystem_NOnnx_SegmentationResults","分割输出"),content);
     auto segmentationForm=new QFormLayout(m_segmentationPanel);
     m_outputLayout=new QComboBox(m_segmentationPanel);
     m_binaryThreshold=unitSpin(m_segmentationPanel);
@@ -131,14 +130,13 @@ NOnnxOperatorWdg::NOnnxOperatorWdg(NOnnxBase *function,QWidget *parent)
     segmentationForm->addRow(getLang("XvFuncSystem_NOnnx_ClassNames","类别名称")+":",m_segmentationNames);
     contentLayout->addWidget(m_segmentationPanel);
     contentLayout->addStretch(1);
-    scroll->setWidget(content);
-    rootLayout->addWidget(scroll);
     initFrm();
 }
 
 void NOnnxOperatorWdg::initFrm()
 {
-    setFixedSize(620,720);
+    setMinimumSize(400,280);
+    resize(700,680);
     auto function=getFunc<NOnnxBase>();
     if(!function) return;
 

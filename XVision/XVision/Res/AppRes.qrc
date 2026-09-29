@@ -2,6 +2,7 @@
     <qresource prefix="/">
         <file>style/Light_Default.css</file>
         <file>style/TechBlue.css</file>
+        <file>images/Ui/OperatorSearch.svg</file>
         <file>translations/qtbase_zh_CN.qm</file>
         <file>translations/xvision_zh_CN.qm</file>
         <file>images/LightStyle/Close.svg</file>
@@ -52,5 +53,7 @@
         <file>images/Ui/AppMainWindowVariantManager.svg</file>
         <file>images/Ui/UiXvWorkManagerFlowExport.svg</file>
         <file>images/Ui/UiXvWorkManagerFlowImport.svg</file>
+        <file>images/Ui/SmallChevronDown.svg</file>
+        <file>images/Ui/SmallChevronUp.svg</file>
     </qresource>
 </RCC>

@@ -2,6 +2,23 @@
 #include <QElapsedTimer>
 #include <QPlainTextEdit>
 #include <QToolButton>
+#include <QComboBox>
+#include <QPointer>
+#include <QScrollArea>
+#include <QScrollBar>
+#include <QScreen>
+#include <QFrame>
+#include <QAbstractSpinBox>
+#include <QDir>
+#include <QElapsedTimer>
+#include <memory>
+#include "SystemXvFactoryPlugin.h"
+#include "UiAppearance.h"
+#include <QListWidget>
+#include <QLineEdit>
+#include "ImageAcquisition.h"
+#include "TcpText.h"
+#include "NClassification.h"
 #include <thread>
 
 #include "FrmLogShow.h"
@@ -27,7 +44,10 @@ private slots:
     {
         XLang->init();
         qRegisterMetaType<XLogger::ELogType>();
-        QVERIFY(XvFuncAsm->registerXvFunc(Delayer::staticMetaObject));
+        applyUiAppearance(*qApp);
+        SystemXvFactoryPlugin factory;
+        QString error;
+        QVERIFY2(XvFuncAsm->registerPlugin(factory.getPlgXvFunc(),factory.getPlgXvFuncPresets(),&error),qPrintable(error));
     }
     void toolboxCreatesVisibleDrawerOnFirstClick()
     {
@@ -40,17 +60,146 @@ private slots:
         for(auto button:toolbox.findChildren<QToolButton*>())
             if(button->property("Type").isValid()) { category=button;break; }
         QVERIFY(category);
-        // XMatDrawer initializes its animation by processing queued events.
-        QTimer::singleShot(0,category,[category]() { category->click(); });
         category->click();
         QTRY_COMPARE_WITH_TIMEOUT(host.findChildren<FrmXvFuncType*>().size(),1,1000);
         auto contents=host.findChild<FrmXvFuncType*>();
         QTRY_VERIFY_WITH_TIMEOUT(contents->isVisible(),1000);
         QTRY_VERIFY_WITH_TIMEOUT(contents->visibleRegion().boundingRect().height()>50,1000);
-        for(auto drawer:host.findChildren<XMatDrawer*>())
-            if(drawer->isAncestorOf(contents)) QCOMPARE(drawer->geometry(),host.rect());
+        auto panel=host.findChild<QFrame*>("operatorPopup");
+        QVERIFY(panel);
+        QCOMPARE(panel->height(),host.height());
+        QVERIFY(panel->width()<=host.width());
         category->click();
         QCOMPARE(host.findChildren<FrmXvFuncType*>().size(),1);
+        auto search=toolbox.findChild<QLineEdit*>("operatorSearch");
+        QVERIFY(search);search->setText("Delayer");
+        QTRY_VERIFY_WITH_TIMEOUT(panel->isVisible(),1000);
+        auto list=contents->findChild<QListWidget*>("operatorList");
+        QVERIFY(list);QCOMPARE(list->count(),123);
+        int matches=0;
+        for(int index=0;index<list->count();++index)
+            if(!list->item(index)->isHidden()) ++matches;
+        QCOMPARE(matches,1);
+        search->setText("no-such-operator");
+        QTRY_VERIFY_WITH_TIMEOUT(list->item(0)->isHidden(),1000);
+        QCOMPARE(host.findChildren<FrmXvFuncType*>().size(),1);
+    }
+    void acquisitionWindowCanResize()
+    {
+        ImageAcquisition function;
+        const auto before=QApplication::topLevelWidgets();
+        function.onShowFunc();
+        QWidget *window=nullptr;
+        for(auto candidate:QApplication::topLevelWidgets())
+            if(!before.contains(candidate) && candidate->isVisible()) window=candidate;
+        QVERIFY(window);
+        QCoreApplication::processEvents();
+        QVERIFY2(window->minimumSize()!=window->maximumSize(),
+                 "Acquisition parameters are locked to a fixed window size");
+        window->resize(640,420);
+        QCoreApplication::processEvents();
+        QVERIFY2(window->height()<=440,"Parameter window cannot fit a small desktop");
+        window->close();
+    }
+    void communicationWindowFitsSmallDesktop()
+    {
+        TcpText function;
+        const auto before=QApplication::topLevelWidgets();
+        function.onShowFunc();
+        QWidget *window=nullptr;
+        for(auto candidate:QApplication::topLevelWidgets())
+            if(!before.contains(candidate) && candidate->isVisible()) window=candidate;
+        QVERIFY(window);
+        window->resize(640,420);
+        QCoreApplication::processEvents();
+        qInfo()<<"LAYOUT communication window"<<window->size();
+        QVERIFY2(window->height()<=440,"Long parameter form forces the whole dialog beyond the available height");
+        auto scroll=window->findChild<QScrollArea*>();
+        QVERIFY2(scroll,"Long parameter forms need a scrollable content area");
+        QVERIFY(scroll->verticalScrollBar()->maximum()>0);
+        window->close();
+    }
+    void communicationEditorsSurviveTheirOwnSignal()
+    {
+        TcpText function;
+        const auto before=QApplication::topLevelWidgets();
+        function.onShowFunc();
+        QWidget *window=nullptr;
+        for(auto candidate:QApplication::topLevelWidgets())
+            if(!before.contains(candidate) && candidate->isVisible()) window=candidate;
+        QVERIFY(window);
+        QPointer<QComboBox> frameMode;
+        for(auto combo:window->findChildren<QComboBox*>())
+            if(combo->count()==3 && combo->findData(2)>=0) frameMode=combo;
+        QVERIFY(frameMode);
+        frameMode->setCurrentIndex(1);
+        QVERIFY2(frameMode,"Changing frame mode synchronously destroys the QComboBox that is still emitting its signal");
+        QCoreApplication::processEvents();
+        window->close();
+    }
+    void allParameterWindowsFit_data()
+    {
+        QTest::addColumn<QString>("role");
+        for(const auto &info:XvFuncAsm->getXvFuncInfos())
+            QTest::newRow(info.role.toUtf8().constData())<<info.role;
+    }
+    void allParameterWindowsFit()
+    {
+        QFETCH(QString,role);
+        std::unique_ptr<XvFunc> function(XvFuncAsm->createNewXvFunc(role));
+        QVERIFY(function);
+        const auto before=QApplication::topLevelWidgets();
+        QElapsedTimer timer;timer.start();
+        function->onShowFunc();
+        QWidget *window=nullptr;
+        for(auto candidate:QApplication::topLevelWidgets())
+            if(!before.contains(candidate) && candidate->isVisible()) window=candidate;
+        if(!window)
+        {
+            QCOMPARE(function->funcRole(),QString("ElapsedTimer"));
+            return;
+        }
+        const QSize target=QSize(640,420).boundedTo(qApp->primaryScreen()->availableGeometry().size()-QSize(32,32));
+        window->resize(target);
+        QCoreApplication::processEvents();
+        QVERIFY2(window->width()<=target.width()+2 && window->height()<=target.height()+2,
+                 qPrintable(role+QString(" is oversized: %1x%2").arg(window->width()).arg(window->height())));
+        QVERIFY(window->minimumSize()!=window->maximumSize());
+        auto scroll=window->findChild<QScrollArea*>("operatorParameterScroll");
+        QVERIFY2(scroll,qPrintable(role));
+        for(auto editor:scroll->widget()->findChildren<QWidget*>())
+        {
+            const bool field=qobject_cast<QComboBox*>(editor) || qobject_cast<QAbstractSpinBox*>(editor)
+                    || (qobject_cast<QLineEdit*>(editor)
+                        && !qobject_cast<QAbstractSpinBox*>(editor->parentWidget())
+                        && !qobject_cast<QComboBox*>(editor->parentWidget()));
+            if(!field || !editor->isVisibleTo(scroll->widget())) continue;
+            QVERIFY2(editor->height()>=qMax(30,window->fontMetrics().height()+12),
+                     qPrintable(role+" compressed editor: "+editor->objectName()));
+            scroll->ensureWidgetVisible(editor,4,4);
+            const QRect bounds(editor->mapTo(scroll->viewport(),QPoint()),editor->size());
+            QVERIFY2(scroll->viewport()->rect().intersects(bounds),
+                     qPrintable(role+" unreachable editor: "+editor->objectName()));
+        }
+        QVERIFY2(timer.elapsed()<1000,qPrintable(role+" took more than 1 s to create its parameter window"));
+        const QString screenshots=QString::fromLocal8Bit(qgetenv("XVISION_UI_SCREENSHOT_DIR"));
+        if(!screenshots.isEmpty() && QStringList{"NObjectDetection.Yolov5","TcpText","ImageAcquisition.Camera","ORegionDetector"}.contains(role))
+        {
+            QDir().mkpath(screenshots);scroll->verticalScrollBar()->setValue(0);
+            window->grab().save(screenshots+"/"+role+".png");
+        }
+        window->close();
+    }
+    void destroyedSidebarReleasesExternalPanel()
+    {
+        QWidget host;host.resize(700,500);host.show();
+        auto toolbox=new FrmXvFuncAsm(&host);toolbox->setDrawerParWidget(&host);toolbox->show();
+        QToolButton *button=nullptr;
+        for(auto candidate:toolbox->findChildren<QToolButton*>())
+            if(candidate->property("Type").isValid()) { button=candidate;break; }
+        QVERIFY(button);button->click();
+        QPointer<QFrame> panel=host.findChild<QFrame*>("operatorPopup");
+        QVERIFY(panel);delete toolbox;QVERIFY(panel.isNull());
     }
     void logBurstKeepsGuiResponsive()
     {

@@ -1,3 +1,4 @@
+#include "SystemXvFactoryPlugin.h"
 #include <QtTest>
 
 #include <QDomDocument>
@@ -534,188 +535,9 @@ private slots:
         QVERIFY(assembly->registerXvFunc(GeometryPersistentFunc::staticMetaObject));
         QVERIFY(assembly->registerXvFunc(PortFixtureFunc::staticMetaObject));
 
-        XvFuncPreset directoryPreset;
-        directoryPreset.alias="SrcImageFilesNodeData";
-        directoryPreset.displayName="SrcImageFilesNodeData";
-        directoryPreset.canonicalRole="ImageAcquisition";
-        directoryPreset.properties.insert("acqType",
-                                          static_cast<int>(ImageAcquisition::Dir));
-        XvFuncPreset cannyPreset;
-        cannyPreset.alias="Canny";
-        cannyPreset.displayName="Canny";
-        cannyPreset.canonicalRole="OImageAnalysis";
-        cannyPreset.properties.insert("mode",static_cast<int>(OImageAnalysis::Canny));
-        XvFuncPreset qrPreset;
-        qrPreset.alias="QRCode";
-        qrPreset.displayName="QRCode";
-        qrPreset.canonicalRole="OCodeDetector";
-        XvFuncPreset blackHatPreset;
-        blackHatPreset.alias="BlackHat";
-        blackHatPreset.displayName="BlackHat";
-        blackHatPreset.canonicalRole="OMorphology";
-        blackHatPreset.properties.insert("mode",static_cast<int>(OMorphology::BlackHat));
-        XvFuncPreset houghLinesPreset;
-        houghLinesPreset.alias="HoughLinesP";
-        houghLinesPreset.displayName="HoughLinesP";
-        houghLinesPreset.canonicalRole="ORegionDetector";
-        houghLinesPreset.properties.insert("mode",
-                                          static_cast<int>(ORegionDetector::HoughLinesP));
-        XvFuncPreset starPreset;
-        starPreset.alias="StarFeatureDetector";
-        starPreset.displayName="StarFeatureDetector";
-        starPreset.canonicalRole="OPointFeature";
-        starPreset.properties.insert("mode",static_cast<int>(OPointFeature::Star));
-        XvFuncPreset lbpPreset;
-        lbpPreset.alias="LbpCascade";
-        lbpPreset.displayName="LbpCascade";
-        lbpPreset.canonicalRole="OCascadeDetector";
-        lbpPreset.properties.insert("mode",static_cast<int>(OCascadeDetector::Lbp));
-        XvFuncPreset videoPreset;
-        videoPreset.alias="SrcVideoFilesNodeData";
-        videoPreset.displayName="SrcVideoFilesNodeData";
-        videoPreset.canonicalRole="ImageAcquisition";
-        videoPreset.properties.insert("acqType",
-                                      static_cast<int>(ImageAcquisition::Video));
-        XvFuncPreset dialogPreset;
-        dialogPreset.alias="ShowDialogNotifyMessageOutputNodeData";
-        dialogPreset.displayName="ShowDialogNotifyMessageOutputNodeData";
-        dialogPreset.canonicalRole="NotificationOutput";
-        dialogPreset.properties.insert("mode",static_cast<int>(NotificationOutput::Dialog));
-        QList<XvFuncPreset> onnxPresets;
-        const auto addOnnxPreset=[&](const QString &alias,const QString &role,int mode)
-        {
-            XvFuncPreset preset;
-            preset.alias=alias;
-            preset.displayName=alias;
-            preset.canonicalRole=role;
-            preset.properties.insert("mode",mode);
-            onnxPresets.append(preset);
-        };
-        addOnnxPreset("InferOnnxNodeData","NInference",NInference::Generic);
-        addOnnxPreset("AgeInferOnnxNodeData","NInference",NInference::Age);
-        addOnnxPreset("ClsOnnxNodeData","NClassification",NClassification::Generic);
-        addOnnxPreset("GenderClsOnnxNodeData","NClassification",NClassification::Gender);
-        addOnnxPreset("ObjDetectOnnxNodeData","NObjectDetection",NObjectDetection::Generic);
-        addOnnxPreset("Yolov3","NObjectDetection",NObjectDetection::Yolov3);
-        addOnnxPreset("Yolov5OnnxNodeData","NObjectDetection",NObjectDetection::Yolov5);
-        addOnnxPreset("Yolov5FaceOnnxNodeData","NObjectDetection",NObjectDetection::Yolov5Face);
-        addOnnxPreset("SemSegOnnxNodeData","NSemanticSegmentation",
-                      NSemanticSegmentation::Generic);
-        addOnnxPreset("HumanSemSegOnnxNodeData","NSemanticSegmentation",
-                      NSemanticSegmentation::Human);
-        QList<XvFuncPreset> templatePresets;
-        const auto addTemplatePreset=[&](const QString &alias,const QString &role,int mode)
-        {
-            XvFuncPreset preset;
-            preset.alias=alias;
-            preset.displayName=alias;
-            preset.canonicalRole=role;
-            preset.properties.insert("mode",mode);
-            templatePresets.append(preset);
-        };
-        addTemplatePreset("Base64TemplateMatchNodeData","OTemplateMatch",
-                          OTemplateMatch::Base64);
-        addTemplatePreset("FeaturePointTemplateMatch","OTemplateMatch",
-                          OTemplateMatch::Feature);
-        addTemplatePreset("ShapeTemplateMatch","OTemplateMatch",
-                          OTemplateMatch::Shape);
-        addTemplatePreset("HSVTemplateMatch","OTemplateMatch",OTemplateMatch::Hsv);
-        addTemplatePreset("ForegroundRotatedRectRectification","ORectification",
-                          ORectification::ForegroundRotatedRect);
-        addTemplatePreset("TakeoffForegroundInfo","ORectification",
-                          ORectification::ForegroundExtract);
-        addTemplatePreset("RotatedRectRectification","ORectification",
-                          ORectification::RotatedRect);
-        QList<XvFuncPreset> geometryPresets;
-        XvFuncPreset createShapePreset;
-        createShapePreset.alias="CreateShapeNodeData";
-        createShapePreset.displayName="CreateShapeNodeData";
-        createShapePreset.canonicalRole="GeometryCreate";
-        geometryPresets.append(createShapePreset);
-        const auto addGeometryPreset=[&](const QString &alias,GeometryMeasure::Mode mode)
-        {
-            XvFuncPreset preset;
-            preset.alias=alias;
-            preset.displayName=alias;
-            preset.canonicalRole="GeometryMeasure";
-            preset.properties.insert("mode",static_cast<int>(mode));
-            geometryPresets.append(preset);
-        };
-        addGeometryPreset("CircleToCircleMesauseNodeData",GeometryMeasure::CircleCircle);
-        addGeometryPreset("LineToCircleMesauseNodeData",GeometryMeasure::LineCircle);
-        addGeometryPreset("LineToLineAngleMesauseNodeData",GeometryMeasure::LineLineAngle);
-        addGeometryPreset("LineToLineMesauseNodeData",GeometryMeasure::LineLine);
-        addGeometryPreset("PointToCircleMesauseNodeData",GeometryMeasure::PointCircle);
-        addGeometryPreset("PointToLineMesauseNodeData",GeometryMeasure::PointLine);
-        addGeometryPreset("PointToPointMesauseNodeData",GeometryMeasure::PointPoint);
-        QList<XvFuncPreset> recordPresets;
-        const auto addRecordPreset=[&](const QString &alias,DetectRecord::Mode mode)
-        {
-            XvFuncPreset preset;
-            preset.alias=alias;
-            preset.displayName=alias;
-            preset.canonicalRole="DetectRecord";
-            preset.properties.insert("mode",static_cast<int>(mode));
-            recordPresets.append(preset);
-        };
-        addRecordPreset("DetectRecordNodeData",DetectRecord::Record);
-        addRecordPreset("ClassDetectRecordNodeData",DetectRecord::ClassRecord);
-        addRecordPreset("ObjectDetectRecordNodeData",DetectRecord::ObjectRecord);
-        addRecordPreset("HasDetectRecordNodeData",DetectRecord::HasRecord);
-        QList<XvFuncPreset> communicationPresets;
-        const auto addCommunicationPreset=[&](const QString &alias,const QString &role,int mode)
-        {
-            XvFuncPreset preset;
-            preset.alias=alias;
-            preset.displayName=alias;
-            preset.canonicalRole=role;
-            preset.properties.insert("mode",mode);
-            communicationPresets.append(preset);
-        };
-        addCommunicationPreset("HttpReadJsonNodeData","HttpJson",HttpJson::Read);
-        addCommunicationPreset("HttpWriteJsonNodeData","HttpJson",HttpJson::Write);
-        addCommunicationPreset("TcpReadStringNodeData","TcpText",TcpText::Read);
-        addCommunicationPreset("TcpWriteStringNodeData","TcpText",TcpText::Write);
-        addCommunicationPreset("UdpReadStringNodeData","UdpText",UdpText::Read);
-        addCommunicationPreset("UdpWriteStringNodeData","UdpText",UdpText::Write);
-        addCommunicationPreset("SerialReadByteNodeData","SerialData",SerialData::ReadBytes);
-        addCommunicationPreset("SerialReadStringNodeData","SerialData",SerialData::ReadText);
-        addCommunicationPreset("SerialWriteByteNodeData","SerialData",SerialData::WriteBytes);
-        addCommunicationPreset("SerialWriteStringNodeData","SerialData",SerialData::WriteText);
-        addCommunicationPreset("IntReadableModbusNodeData","ModbusRegister",
-                               ModbusRegister::ReadInt32);
-        addCommunicationPreset("ShortWriteableModbusNodeData","ModbusRegister",
-                               ModbusRegister::WriteInt16);
-        QList<XvFuncPreset> flowPresets;
-        XvFuncPreset conditionPreset;
-        conditionPreset.alias="OpenCVConditionNodeData";
-        conditionPreset.displayName=conditionPreset.alias;
-        conditionPreset.canonicalRole="ConditionalFlow";
-        flowPresets.append(conditionPreset);
-        const auto addLoopPreset=[&](const QString &alias,LoopFlow::Mode mode)
-        {
-            XvFuncPreset preset;
-            preset.alias=alias;
-            preset.displayName=alias;
-            preset.canonicalRole="LoopFlow";
-            preset.properties.insert("mode",static_cast<int>(mode));
-            flowPresets.append(preset);
-        };
-        addLoopPreset("ForNodeData",LoopFlow::For);
-        addLoopPreset("ForeachSplitResultImageNodeData",LoopFlow::ForeachImages);
-        QList<XvFuncPreset> presets={directoryPreset,cannyPreset,qrPreset,
-                                     blackHatPreset,houghLinesPreset,
-                                     starPreset,lbpPreset,videoPreset,
-                                     dialogPreset};
-        presets.append(onnxPresets);
-        presets.append(templatePresets);
-        presets.append(geometryPresets);
-        presets.append(recordPresets);
-        presets.append(communicationPresets);
-        presets.append(flowPresets);
+        SystemXvFactoryPlugin factory;
         QString error;
-        QVERIFY2(assembly->registerPlugin({},presets,&error),
-                 qPrintable(error));
+        QVERIFY2(assembly->registerPlugin({},factory.getPlgXvFuncPresets(),&error),qPrintable(error));
     }
 
     void cleanup()
@@ -1303,7 +1125,7 @@ private slots:
         const QString flowId=flow->flowId();
 
         auto acquisition=qobject_cast<ImageAcquisition*>(
-                    flow->createXvFunc("SrcImageFilesNodeData"));
+                    flow->createXvFunc("ImageAcquisition.Dir"));
         QVERIFY2(acquisition,qPrintable(flow->lastErrorMsg()));
         const QString functionId=acquisition->funcId();
         QCOMPARE(acquisition->funcRole(),QString("ImageAcquisition"));
@@ -1312,7 +1134,7 @@ private slots:
         QVERIFY(manager->saveXvProject(path));
         const QByteArray xml=readFile(path);
         QVERIFY(xml.contains("role=\"ImageAcquisition\""));
-        QVERIFY(!xml.contains("SrcImageFilesNodeData"));
+        QVERIFY(!xml.contains("ImageAcquisition.Dir"));
 
         QVERIFY(manager->loadXvProject(path));
         XvFlow *restoredFlow=manager->getXvProject()->getXvFlow(flowId);
@@ -1337,9 +1159,9 @@ private slots:
         QVERIFY(flow);
         const QString flowId=flow->flowId();
         auto video=qobject_cast<ImageAcquisition*>(
-                    flow->createXvFunc("SrcVideoFilesNodeData"));
+                    flow->createXvFunc("ImageAcquisition.Video"));
         auto notification=qobject_cast<NotificationOutput*>(
-                    flow->createXvFunc("ShowDialogNotifyMessageOutputNodeData"));
+                    flow->createXvFunc("NotificationOutput.Dialog"));
         QVERIFY2(video,qPrintable(flow->lastErrorMsg()));
         QVERIFY2(notification,qPrintable(flow->lastErrorMsg()));
         QCOMPARE(video->funcRole(),QString("ImageAcquisition"));
@@ -1360,8 +1182,8 @@ private slots:
         const QByteArray xml=readFile(path);
         QVERIFY(xml.contains("role=\"ImageAcquisition\""));
         QVERIFY(xml.contains("role=\"NotificationOutput\""));
-        QVERIFY(!xml.contains("SrcVideoFilesNodeData"));
-        QVERIFY(!xml.contains("ShowDialogNotifyMessageOutputNodeData"));
+        QVERIFY(!xml.contains("ImageAcquisition.Video"));
+        QVERIFY(!xml.contains("NotificationOutput.Dialog"));
         QVERIFY(!xml.contains("videoEndOfStream"));
         QVERIFY(!xml.contains("publishedMessage"));
 
@@ -1390,16 +1212,16 @@ private slots:
         QVERIFY(directory.isValid());
         const QString path=directory.filePath("onnx-aliases.xvproj");
         const QList<QPair<QString,QPair<QString,int>>> aliases={
-            {"InferOnnxNodeData",{"NInference",NInference::Generic}},
-            {"AgeInferOnnxNodeData",{"NInference",NInference::Age}},
-            {"ClsOnnxNodeData",{"NClassification",NClassification::Generic}},
-            {"GenderClsOnnxNodeData",{"NClassification",NClassification::Gender}},
-            {"ObjDetectOnnxNodeData",{"NObjectDetection",NObjectDetection::Generic}},
-            {"Yolov3",{"NObjectDetection",NObjectDetection::Yolov3}},
-            {"Yolov5OnnxNodeData",{"NObjectDetection",NObjectDetection::Yolov5}},
-            {"Yolov5FaceOnnxNodeData",{"NObjectDetection",NObjectDetection::Yolov5Face}},
-            {"SemSegOnnxNodeData",{"NSemanticSegmentation",NSemanticSegmentation::Generic}},
-            {"HumanSemSegOnnxNodeData",{"NSemanticSegmentation",NSemanticSegmentation::Human}}
+            {"NInference",{"NInference",NInference::Generic}},
+            {"NInference.Age",{"NInference",NInference::Age}},
+            {"NClassification",{"NClassification",NClassification::Generic}},
+            {"NClassification.Gender",{"NClassification",NClassification::Gender}},
+            {"NObjectDetection",{"NObjectDetection",NObjectDetection::Generic}},
+            {"NObjectDetection.Yolov3",{"NObjectDetection",NObjectDetection::Yolov3}},
+            {"NObjectDetection.Yolov5",{"NObjectDetection",NObjectDetection::Yolov5}},
+            {"NObjectDetection.Yolov5Face",{"NObjectDetection",NObjectDetection::Yolov5Face}},
+            {"NSemanticSegmentation",{"NSemanticSegmentation",NSemanticSegmentation::Generic}},
+            {"NSemanticSegmentation.Human",{"NSemanticSegmentation",NSemanticSegmentation::Human}}
         };
         XvCoreManager *manager=XvCoreManager::getInstance();
         XvProject *project=manager->createNewXvProject("ONNX aliases");
@@ -1418,7 +1240,8 @@ private slots:
         }
         QVERIFY(manager->saveXvProject(path));
         const QByteArray xml=readFile(path);
-        for(const auto &alias:aliases) QVERIFY(!xml.contains(alias.first.toUtf8()));
+        for(const auto &alias:aliases) if(alias.first.contains('.'))
+                QVERIFY(!xml.contains(("role=\""+alias.first+"\"").toUtf8()));
         for(const QString &role:{QString("NInference"),QString("NClassification"),
                                  QString("NObjectDetection"),
                                  QString("NSemanticSegmentation")})
@@ -1442,13 +1265,13 @@ private slots:
         const QString projectPath=directory.filePath("geometry.xvproj");
         const QString flowPath=directory.filePath("geometry.xvflow");
         const QList<QPair<QString,int>> measureAliases={
-            {"CircleToCircleMesauseNodeData",GeometryMeasure::CircleCircle},
-            {"LineToCircleMesauseNodeData",GeometryMeasure::LineCircle},
-            {"LineToLineAngleMesauseNodeData",GeometryMeasure::LineLineAngle},
-            {"LineToLineMesauseNodeData",GeometryMeasure::LineLine},
-            {"PointToCircleMesauseNodeData",GeometryMeasure::PointCircle},
-            {"PointToLineMesauseNodeData",GeometryMeasure::PointLine},
-            {"PointToPointMesauseNodeData",GeometryMeasure::PointPoint}
+            {"GeometryMeasure",GeometryMeasure::CircleCircle},
+            {"GeometryMeasure.LineCircle",GeometryMeasure::LineCircle},
+            {"GeometryMeasure.LineLineAngle",GeometryMeasure::LineLineAngle},
+            {"GeometryMeasure.LineLine",GeometryMeasure::LineLine},
+            {"GeometryMeasure.PointCircle",GeometryMeasure::PointCircle},
+            {"GeometryMeasure.PointLine",GeometryMeasure::PointLine},
+            {"GeometryMeasure.PointPoint",GeometryMeasure::PointPoint}
         };
 
         XvCoreManager *manager=XvCoreManager::getInstance();
@@ -1458,7 +1281,7 @@ private slots:
         QVERIFY(flow);
         const QString flowId=flow->flowId();
 
-        auto creator=qobject_cast<GeometryCreate*>(flow->createXvFunc("CreateShapeNodeData"));
+        auto creator=qobject_cast<GeometryCreate*>(flow->createXvFunc("GeometryCreate"));
         QVERIFY2(creator,qPrintable(flow->lastErrorMsg()));
         QCOMPARE(creator->funcRole(),QString("GeometryCreate"));
         creator->setShapeType(GeometryCreate::Rectangle);
@@ -1505,8 +1328,9 @@ private slots:
         QVERIFY(!xml.contains("annotationStart"));
         QVERIFY(!xml.contains("measurement\""));
         QVERIFY(!xml.contains("rawValue"));
-        for(const auto &entry:measureAliases) QVERIFY(!xml.contains(entry.first.toUtf8()));
-        QVERIFY(!xml.contains("CreateShapeNodeData"));
+        for(const auto &entry:measureAliases) if(entry.first.contains('.'))
+                QVERIFY(!xml.contains(("role=\""+entry.first+"\"").toUtf8()));
+        QVERIFY(xml.contains("role=\"GeometryCreate\""));
 
         QVERIFY(manager->loadXvProject(projectPath));
         XvFlow *restored=manager->getXvProject()->getXvFlow(flowId);
@@ -1560,10 +1384,10 @@ private slots:
         const QString flowPath=directory.filePath("detect-record.xvflow");
         const QString databasePath=directory.filePath("records.sqlite");
         const QList<QPair<QString,int>> aliases={
-            {"DetectRecordNodeData",DetectRecord::Record},
-            {"ClassDetectRecordNodeData",DetectRecord::ClassRecord},
-            {"ObjectDetectRecordNodeData",DetectRecord::ObjectRecord},
-            {"HasDetectRecordNodeData",DetectRecord::HasRecord}
+            {"DetectRecord",DetectRecord::Record},
+            {"DetectRecord.ClassRecord",DetectRecord::ClassRecord},
+            {"DetectRecord.ObjectRecord",DetectRecord::ObjectRecord},
+            {"DetectRecord.HasRecord",DetectRecord::HasRecord}
         };
 
         XvCoreManager *manager=XvCoreManager::getInstance();
@@ -1620,7 +1444,8 @@ private slots:
         QVERIFY(!xml.contains("name=\"latestRecord\""));
         QVERIFY(!xml.contains("name=\"recordCount\""));
         QVERIFY(!xml.contains("name=\"insertedRecordId\""));
-        for(const auto &alias:aliases) QVERIFY(!xml.contains(alias.first.toUtf8()));
+        for(const auto &alias:aliases) if(alias.first.contains('.'))
+                QVERIFY(!xml.contains(("role=\""+alias.first+"\"").toUtf8()));
 
         QVERIFY(manager->loadXvProject(projectPath));
         XvFlow *restored=manager->getXvProject()->getXvFlow(flowId);
@@ -1679,18 +1504,18 @@ private slots:
         const QString projectPath=directory.filePath("communication.xvproj");
         const QString flowPath=directory.filePath("communication.xvflow");
         const QList<QPair<QString,QPair<QString,int>>> aliases={
-            {"HttpReadJsonNodeData",{"HttpJson",HttpJson::Read}},
-            {"HttpWriteJsonNodeData",{"HttpJson",HttpJson::Write}},
-            {"TcpReadStringNodeData",{"TcpText",TcpText::Read}},
-            {"TcpWriteStringNodeData",{"TcpText",TcpText::Write}},
-            {"UdpReadStringNodeData",{"UdpText",UdpText::Read}},
-            {"UdpWriteStringNodeData",{"UdpText",UdpText::Write}},
-            {"SerialReadByteNodeData",{"SerialData",SerialData::ReadBytes}},
-            {"SerialReadStringNodeData",{"SerialData",SerialData::ReadText}},
-            {"SerialWriteByteNodeData",{"SerialData",SerialData::WriteBytes}},
-            {"SerialWriteStringNodeData",{"SerialData",SerialData::WriteText}},
-            {"IntReadableModbusNodeData",{"ModbusRegister",ModbusRegister::ReadInt32}},
-            {"ShortWriteableModbusNodeData",{"ModbusRegister",ModbusRegister::WriteInt16}}
+            {"HttpJson",{"HttpJson",HttpJson::Read}},
+            {"HttpJson.Write",{"HttpJson",HttpJson::Write}},
+            {"TcpText",{"TcpText",TcpText::Read}},
+            {"TcpText.Write",{"TcpText",TcpText::Write}},
+            {"UdpText",{"UdpText",UdpText::Read}},
+            {"UdpText.Write",{"UdpText",UdpText::Write}},
+            {"SerialData",{"SerialData",SerialData::ReadBytes}},
+            {"SerialData.ReadText",{"SerialData",SerialData::ReadText}},
+            {"SerialData.WriteBytes",{"SerialData",SerialData::WriteBytes}},
+            {"SerialData.WriteText",{"SerialData",SerialData::WriteText}},
+            {"ModbusRegister",{"ModbusRegister",ModbusRegister::ReadInt32}},
+            {"ModbusRegister.WriteInt16",{"ModbusRegister",ModbusRegister::WriteInt16}}
         };
 
         XvCoreManager *manager=XvCoreManager::getInstance();
@@ -1711,10 +1536,10 @@ private slots:
             QCOMPARE(function->funcRole(),alias.second.first);
             QCOMPARE(function->property("mode").toInt(),alias.second.second);
             expectedById.insert(function->funcId(),alias.second);
-            if(alias.first=="HttpReadJsonNodeData") httpReader=qobject_cast<HttpJson*>(function);
-            if(alias.first=="HttpWriteJsonNodeData") httpWriter=qobject_cast<HttpJson*>(function);
-            if(alias.first=="SerialReadByteNodeData") byteReader=qobject_cast<SerialData*>(function);
-            if(alias.first=="SerialWriteByteNodeData") byteWriter=qobject_cast<SerialData*>(function);
+            if(alias.first=="HttpJson") httpReader=qobject_cast<HttpJson*>(function);
+            if(alias.first=="HttpJson.Write") httpWriter=qobject_cast<HttpJson*>(function);
+            if(alias.first=="SerialData") byteReader=qobject_cast<SerialData*>(function);
+            if(alias.first=="SerialData.WriteBytes") byteWriter=qobject_cast<SerialData*>(function);
         }
         QVERIFY(httpReader);
         QVERIFY(httpWriter);
@@ -1752,7 +1577,8 @@ private slots:
         QVERIFY(!xml.contains("<Value name=\"byteInput\""));
         QVERIFY(!xml.contains("name=\"statusCode\""));
         QVERIFY(!xml.contains("name=\"bytesTransferred\""));
-        for(const auto &alias:aliases) QVERIFY(!xml.contains(alias.first.toUtf8()));
+        for(const auto &alias:aliases) if(alias.first.contains('.'))
+                QVERIFY(!xml.contains(("role=\""+alias.first+"\"").toUtf8()));
 
         QVERIFY(manager->loadXvProject(projectPath));
         XvFlow *restored=manager->getXvProject()->getXvFlow(flowId);
@@ -1809,14 +1635,14 @@ private slots:
         const QString flowPath=directory.filePath("template-rectification.xvflow");
         const QString invalidPath=directory.filePath("template-rectification-invalid.xvproj");
         const QList<QPair<QString,QPair<QString,int>>> aliases={
-            {"Base64TemplateMatchNodeData",{"OTemplateMatch",OTemplateMatch::Base64}},
-            {"FeaturePointTemplateMatch",{"OTemplateMatch",OTemplateMatch::Feature}},
-            {"ShapeTemplateMatch",{"OTemplateMatch",OTemplateMatch::Shape}},
-            {"HSVTemplateMatch",{"OTemplateMatch",OTemplateMatch::Hsv}},
-            {"ForegroundRotatedRectRectification",
+            {"OTemplateMatch",{"OTemplateMatch",OTemplateMatch::Base64}},
+            {"OTemplateMatch.Feature",{"OTemplateMatch",OTemplateMatch::Feature}},
+            {"OTemplateMatch.Shape",{"OTemplateMatch",OTemplateMatch::Shape}},
+            {"OTemplateMatch.Hsv",{"OTemplateMatch",OTemplateMatch::Hsv}},
+            {"ORectification",
              {"ORectification",ORectification::ForegroundRotatedRect}},
-            {"TakeoffForegroundInfo",{"ORectification",ORectification::ForegroundExtract}},
-            {"RotatedRectRectification",{"ORectification",ORectification::RotatedRect}}
+            {"ORectification.ForegroundExtract",{"ORectification",ORectification::ForegroundExtract}},
+            {"ORectification.RotatedRect",{"ORectification",ORectification::RotatedRect}}
         };
 
         XvCoreManager *manager=XvCoreManager::getInstance();
@@ -1835,9 +1661,9 @@ private slots:
             QCOMPARE(function->funcRole(),alias.second.first);
             QCOMPARE(function->property("mode").toInt(),alias.second.second);
             expectedById.insert(function->funcId(),alias.second);
-            if(alias.first=="Base64TemplateMatchNodeData")
+            if(alias.first=="OTemplateMatch")
                 assetMatcher=qobject_cast<OTemplateMatch*>(function);
-            if(alias.first=="RotatedRectRectification")
+            if(alias.first=="ORectification.RotatedRect")
                 configuredRectification=qobject_cast<ORectification*>(function);
         }
         QVERIFY(assetMatcher && configuredRectification);
@@ -1881,7 +1707,8 @@ private slots:
         QVERIFY(!xml.contains("foregroundRegion"));
         QVERIFY(!xml.contains("rectifiedRoi"));
         QVERIFY(!xml.contains("transform"));
-        for(const auto &alias:aliases) QVERIFY(!xml.contains(alias.first.toUtf8()));
+        for(const auto &alias:aliases) if(alias.first.contains('.'))
+                QVERIFY(!xml.contains(("role=\""+alias.first+"\"").toUtf8()));
 
         QVERIFY(manager->loadXvProject(projectPath));
         XvProject *restoredProject=manager->getXvProject();
@@ -2133,12 +1960,12 @@ private slots:
         QVERIFY(flow);
         const QString flowId=flow->flowId();
 
-        auto analysis=qobject_cast<OImageAnalysis*>(flow->createXvFunc("Canny"));
-        auto morphology=qobject_cast<OMorphology*>(flow->createXvFunc("BlackHat"));
-        auto region=qobject_cast<ORegionDetector*>(flow->createXvFunc("HoughLinesP"));
-        auto code=qobject_cast<OCodeDetector*>(flow->createXvFunc("QRCode"));
-        auto feature=qobject_cast<OPointFeature*>(flow->createXvFunc("StarFeatureDetector"));
-        auto cascade=qobject_cast<OCascadeDetector*>(flow->createXvFunc("LbpCascade"));
+        auto analysis=qobject_cast<OImageAnalysis*>(flow->createXvFunc("OImageAnalysis"));
+        auto morphology=qobject_cast<OMorphology*>(flow->createXvFunc("OMorphology"));
+        auto region=qobject_cast<ORegionDetector*>(flow->createXvFunc("ORegionDetector.HoughLinesP"));
+        auto code=qobject_cast<OCodeDetector*>(flow->createXvFunc("OCodeDetector"));
+        auto feature=qobject_cast<OPointFeature*>(flow->createXvFunc("OPointFeature.Star"));
+        auto cascade=qobject_cast<OCascadeDetector*>(flow->createXvFunc("OCascadeDetector.Lbp"));
         QVERIFY2(analysis && morphology && region && code && feature && cascade,
                  qPrintable(flow->lastErrorMsg()));
         const QString functionId=analysis->funcId();
@@ -2168,12 +1995,9 @@ private slots:
         QVERIFY(xml.contains("role=\"OCodeDetector\""));
         QVERIFY(xml.contains("role=\"OPointFeature\""));
         QVERIFY(xml.contains("role=\"OCascadeDetector\""));
-        QVERIFY(!xml.contains("role=\"Canny\""));
-        QVERIFY(!xml.contains("role=\"BlackHat\""));
-        QVERIFY(!xml.contains("role=\"HoughLinesP\""));
-        QVERIFY(!xml.contains("role=\"QRCode\""));
-        QVERIFY(!xml.contains("role=\"StarFeatureDetector\""));
-        QVERIFY(!xml.contains("role=\"LbpCascade\""));
+        QVERIFY(!xml.contains("role=\"ORegionDetector.HoughLinesP\""));
+        QVERIFY(!xml.contains("role=\"OPointFeature.Star\""));
+        QVERIFY(!xml.contains("role=\"OCascadeDetector.Lbp\""));
         QVERIFY(!xml.contains("inputImage"));
         // descriptorSize/descriptorChannels are persistent configuration values.
         // Only descriptor payloads and runtime feature objects must be absent.
@@ -2401,7 +2225,7 @@ private slots:
         QVERIFY(flow);
         const QString flowId=flow->flowId();
         auto condition=qobject_cast<ConditionalFlow*>(
-                    flow->createXvFunc("OpenCVConditionNodeData"));
+                    flow->createXvFunc("ConditionalFlow"));
         auto trueNode=qobject_cast<PortFixtureFunc*>(
                     flow->createXvFunc("PortFixtureFunc"));
         auto falseNode=qobject_cast<PortFixtureFunc*>(
@@ -2460,7 +2284,7 @@ private slots:
         QVERIFY(project);
 
         XvFlow *forFlow=project->createXvFlow("For loop");
-        auto loop=qobject_cast<LoopFlow*>(forFlow->createXvFunc("ForNodeData"));
+        auto loop=qobject_cast<LoopFlow*>(forFlow->createXvFunc("LoopFlow"));
         auto body=qobject_cast<IterationCaptureFunc*>(
                     forFlow->createXvFunc("IterationCaptureFunc"));
         auto done=qobject_cast<PortFixtureFunc*>(
@@ -2522,7 +2346,7 @@ private slots:
 
         XvFlow *foreachFlow=project->createXvFlow("Foreach images");
         auto foreachLoop=qobject_cast<LoopFlow*>(
-                    foreachFlow->createXvFunc("ForeachSplitResultImageNodeData"));
+                    foreachFlow->createXvFunc("LoopFlow.ForeachImages"));
         auto foreachBody=qobject_cast<PortFixtureFunc*>(
                     foreachFlow->createXvFunc("PortFixtureFunc"));
         auto foreachDone=qobject_cast<PortFixtureFunc*>(
@@ -2577,7 +2401,7 @@ private slots:
         QVERIFY(project);
         XvFlow *flow=project->createXvFlow("Loop");
         auto loop=qobject_cast<LoopFlow*>(
-                    flow->createXvFunc("ForeachSplitResultImageNodeData"));
+                    flow->createXvFunc("LoopFlow.ForeachImages"));
         QVERIFY(loop);
         const QString flowId=flow->flowId();
         const QString loopId=loop->funcId();

@@ -1,4 +1,4 @@
-﻿#include "CommunicationOperatorWdg.h"
+#include "CommunicationOperatorWdg.h"
 
 #include "CommunicationOperatorBase.h"
 #include "XVisionRuntimeData.h"
@@ -76,7 +76,7 @@ CommunicationOperatorWdg::CommunicationOperatorWdg(CommunicationOperatorBase *fu
         const int propertyIndex=func->metaObject()->indexOfProperty("mode");
         if(propertyIndex>=0)
             func->metaObject()->property(propertyIndex).write(func,m_mode->itemData(index));
-        rebuildParameters();
+        scheduleParameterRebuild();
     });
     setMinimumSize(560,360);
 }
@@ -107,10 +107,10 @@ void CommunicationOperatorWdg::rebuildParameters()
     {
         XObject *object=func->getParamsByName(name);
         QWidget *editor=createParameterEditor(object);
+        if(editor) editor->setObjectName(name);
         if(editor) m_form->addRow(getUiText(object->dispalyName().isEmpty()?name:object->dispalyName()),editor);
     }
-    adjustSize();
-    resize(qMax(width(),560),qMax(height(),360));
+    prepareParameterLayout();
 }
 
 QWidget *CommunicationOperatorWdg::createParameterEditor(XObject *object)
@@ -130,7 +130,7 @@ QWidget *CommunicationOperatorWdg::createParameterEditor(XObject *object)
             {
                 if(index<0) return;
                 value->setValue(editor->itemData(index).toInt());
-                if(value->objectName()=="frameMode") rebuildParameters();
+                if(value->objectName()=="frameMode") scheduleParameterRebuild();
             });
             return bindableEditor(object,editor);
         }
@@ -151,7 +151,7 @@ QWidget *CommunicationOperatorWdg::createParameterEditor(XObject *object)
         {
             value->setValue(candidate);
             if(value->objectName()=="useJsonInput" || value->objectName()=="useByteInput"
-                    || value->objectName()=="appendDelimiter") rebuildParameters();
+                    || value->objectName()=="appendDelimiter") scheduleParameterRebuild();
         });
         return bindableEditor(object,editor);
     }

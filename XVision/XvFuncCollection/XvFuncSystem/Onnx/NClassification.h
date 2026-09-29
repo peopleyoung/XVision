@@ -1,4 +1,4 @@
-﻿#ifndef NCLASSIFICATION_H
+#ifndef NCLASSIFICATION_H
 #define NCLASSIFICATION_H
 
 #include "NOnnxBase.h"
@@ -67,7 +67,7 @@ public slots:
     void onShowFunc() override;
 
 protected:
-    QPixmap funcIcon() override { return QPixmap(":/image/XvFuncType_MachineLearning.svg"); }
+
     EXvFuncRunStatus run() override;
     XvBaseParam *getParam() const override { return m_param; }
     XvBaseResult *getResult() const override { return m_result; }

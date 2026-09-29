@@ -146,11 +146,6 @@ EXvFuncRunStatus UdpText::run()
     return EXvFuncRunStatus::Ok;
 }
 
-QPixmap UdpText::funcIcon()
-{
-    return QPixmap(":/images/LogOutput.svg");
-}
-
 void UdpText::onShowFunc()
 {
     if(!m_widget) m_widget=new CommunicationOperatorWdg(this);

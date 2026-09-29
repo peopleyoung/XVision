@@ -1,4 +1,4 @@
-﻿#include "LogOutputWdg.h"
+#include "LogOutputWdg.h"
 #include "ui_LogOutputWdg.h"
 #include <QMetaEnum>
 #include <XLogger>
@@ -18,7 +18,7 @@ LogOutputWdg::~LogOutputWdg()
 
 void LogOutputWdg::initFrm()
 {
-    initFixedSize();
+    initPreferredSize();
     auto func=getFunc<LogOutput>();
     if(!func) return;
     auto cmbLogTypeVal=ui->cmbLogTypeVal;

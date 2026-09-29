@@ -1,4 +1,4 @@
-﻿#include "DelayerWdg.h"
+#include "DelayerWdg.h"
 #include "ui_DelayerWdg.h"
 
 DelayerWdg::DelayerWdg(Delayer *func,QWidget *parent) :
@@ -16,7 +16,7 @@ DelayerWdg::~DelayerWdg()
 
 void DelayerWdg::initFrm()
 {
-    initFixedSize();
+    initPreferredSize();
     auto func=getFunc<Delayer>();
     if(!func) return;
     auto ms=func->param->dealyMs;

@@ -1,4 +1,4 @@
-﻿#include "SystemXvFactoryPlugin.h"
+#include "SystemXvFactoryPlugin.h"
 #include "ImageAcquisition.h"
 #include "BaseDataWriter.h"
 #include "BaseDataBoolCalc.h"
@@ -53,32 +53,14 @@ using namespace XvCore;
 
 namespace
 {
-XvFuncPreset acquisitionPreset(const QString &alias,ImageAcquisition::AcqType type)
+XvFuncPreset modePreset(const QString &role,const QString &modeKey,
+                        const QString &label,int value,const QString &property="mode")
 {
     XvFuncPreset preset;
-    preset.alias=alias;
-    preset.displayName=getUiText(alias);
-    preset.canonicalRole="ImageAcquisition";
-    preset.properties.insert("acqType",static_cast<int>(type));
-    return preset;
-}
-
-XvFuncPreset modePreset(const QString &alias,const QString &canonicalRole,int mode)
-{
-    XvFuncPreset preset;
-    preset.alias=alias;
-    preset.displayName=getUiText(alias);
-    preset.canonicalRole=canonicalRole;
-    preset.properties.insert("mode",mode);
-    return preset;
-}
-
-XvFuncPreset rolePreset(const QString &alias,const QString &canonicalRole)
-{
-    XvFuncPreset preset;
-    preset.alias=alias;
-    preset.displayName=getUiText(alias);
-    preset.canonicalRole=canonicalRole;
+    preset.alias=role+"."+modeKey;
+    preset.displayName=getLang("XvOperator_"+preset.alias,label);
+    preset.canonicalRole=role;
+    preset.properties.insert(property,value);
     return preset;
 }
 }
@@ -151,194 +133,92 @@ QList<QMetaObject> SystemXvFactoryPlugin::getPlgXvFunc()
 
 QList<XvFuncPreset> SystemXvFactoryPlugin::getPlgXvFuncPresets()
 {
+    // Only distinct non-default configurations belong in the catalog.
+    // Historical compatibility IDs intentionally have no registration or fallback.
     QList<XvFuncPreset> presets;
-    const QStringList directoryAliases={
-        "SrcImageFilesNodeData",
-        "OpenCVSrcImageFilesNodeData",
-        "OpenCVBitholderSrcImageFilesNodeData",
-        "OpenCVBoardSrcImageFilesNodeData",
-        "OpenCVCardoorSrcImageFilesNodeData",
-        "OpenCVHalconSrcImageFilesNodeData",
-        "OpenCVPillbagSrcImageFilesNodeData",
-        "OpenCVPillMagnesiumSrcImageFilesNodeData",
-        "OpenCVPipeJointsSrcImageFilesNodeData",
-        "OpenCVRadiusGaugesSrcImageFilesNodeData",
-        "OpenCVWoodSrcImageFilesNodeData",
-        "PersonSrcImageFilesNodeData"
-    };
-    for(const QString &alias:directoryAliases)
-        presets.append(acquisitionPreset(alias,ImageAcquisition::Dir));
-    presets.append(acquisitionPreset("CameraCaptureNodeData",ImageAcquisition::Camera));
-    presets.append(acquisitionPreset("CameraNodeData",ImageAcquisition::Camera));
-    presets.append(acquisitionPreset("SrcVideoFilesNodeData",ImageAcquisition::Video));
-
-    presets.append(modePreset("OKOutputNodeData","NotificationOutput",
-                              NotificationOutput::Ok));
-    presets.append(modePreset("NGOutputNodeData","NotificationOutput",
-                              NotificationOutput::Ng));
-    presets.append(modePreset("ShowInfoNotifyMessageOutputNodeData","NotificationOutput",
-                              NotificationOutput::Info));
-    presets.append(modePreset("ShowSuccessNotifyMessageOutputNodeData","NotificationOutput",
-                              NotificationOutput::Success));
-    presets.append(modePreset("ShowWarnNotifyMessageOutputNodeData","NotificationOutput",
-                              NotificationOutput::Warning));
-    presets.append(modePreset("ShowErrorNotifyMessageOutputNodeData","NotificationOutput",
-                              NotificationOutput::Error));
-    presets.append(modePreset("ShowFatalNotifyMessageOutputNodeData","NotificationOutput",
-                              NotificationOutput::Fatal));
-    presets.append(modePreset("ShowDialogNotifyMessageOutputNodeData","NotificationOutput",
-                              NotificationOutput::Dialog));
-
-    presets.append(rolePreset("OpenCVConditionNodeData","ConditionalFlow"));
-    presets.append(modePreset("ForNodeData","LoopFlow",LoopFlow::For));
-    presets.append(modePreset("ForeachSplitResultImageNodeData","LoopFlow",
-                              LoopFlow::ForeachImages));
-
-    presets.append(modePreset("InferOnnxNodeData","NInference",NInference::Generic));
-    presets.append(modePreset("AgeInferOnnxNodeData","NInference",NInference::Age));
-    presets.append(modePreset("ClsOnnxNodeData","NClassification",NClassification::Generic));
-    presets.append(modePreset("GenderClsOnnxNodeData","NClassification",NClassification::Gender));
-    presets.append(modePreset("ObjDetectOnnxNodeData","NObjectDetection",
-                              NObjectDetection::Generic));
-    presets.append(modePreset("Yolov3","NObjectDetection",NObjectDetection::Yolov3));
-    presets.append(modePreset("Yolov5OnnxNodeData","NObjectDetection",
-                              NObjectDetection::Yolov5));
-    presets.append(modePreset("Yolov5FaceOnnxNodeData","NObjectDetection",
-                              NObjectDetection::Yolov5Face));
-    presets.append(modePreset("SemSegOnnxNodeData","NSemanticSegmentation",
-                              NSemanticSegmentation::Generic));
-    presets.append(modePreset("HumanSemSegOnnxNodeData","NSemanticSegmentation",
-                              NSemanticSegmentation::Human));
-
-    presets.append(modePreset("Base64TemplateMatchNodeData","OTemplateMatch",
-                              OTemplateMatch::Base64));
-    presets.append(modePreset("FeaturePointTemplateMatch","OTemplateMatch",
-                              OTemplateMatch::Feature));
-    presets.append(modePreset("ShapeTemplateMatch","OTemplateMatch",
-                              OTemplateMatch::Shape));
-    presets.append(modePreset("HSVTemplateMatch","OTemplateMatch",
-                              OTemplateMatch::Hsv));
-    presets.append(modePreset("ForegroundRotatedRectRectification","ORectification",
-                              ORectification::ForegroundRotatedRect));
-    presets.append(modePreset("TakeoffForegroundInfo","ORectification",
-                              ORectification::ForegroundExtract));
-    presets.append(modePreset("RotatedRectRectification","ORectification",
-                              ORectification::RotatedRect));
-
-    presets.append(rolePreset("CreateShapeNodeData","GeometryCreate"));
-    presets.append(modePreset("CircleToCircleMesauseNodeData","GeometryMeasure",
-                              GeometryMeasure::CircleCircle));
-    presets.append(modePreset("LineToCircleMesauseNodeData","GeometryMeasure",
-                              GeometryMeasure::LineCircle));
-    presets.append(modePreset("LineToLineAngleMesauseNodeData","GeometryMeasure",
-                              GeometryMeasure::LineLineAngle));
-    presets.append(modePreset("LineToLineMesauseNodeData","GeometryMeasure",
-                              GeometryMeasure::LineLine));
-    presets.append(modePreset("PointToCircleMesauseNodeData","GeometryMeasure",
-                              GeometryMeasure::PointCircle));
-    presets.append(modePreset("PointToLineMesauseNodeData","GeometryMeasure",
-                              GeometryMeasure::PointLine));
-    presets.append(modePreset("PointToPointMesauseNodeData","GeometryMeasure",
-                              GeometryMeasure::PointPoint));
-
-    presets.append(modePreset("DetectRecordNodeData","DetectRecord",
-                              DetectRecord::Record));
-    presets.append(modePreset("ClassDetectRecordNodeData","DetectRecord",
-                              DetectRecord::ClassRecord));
-    presets.append(modePreset("ObjectDetectRecordNodeData","DetectRecord",
-                              DetectRecord::ObjectRecord));
-    presets.append(modePreset("HasDetectRecordNodeData","DetectRecord",
-                              DetectRecord::HasRecord));
-
-    presets.append(modePreset("HttpReadJsonNodeData","HttpJson",HttpJson::Read));
-    presets.append(modePreset("HttpWriteJsonNodeData","HttpJson",HttpJson::Write));
-    presets.append(modePreset("TcpReadStringNodeData","TcpText",TcpText::Read));
-    presets.append(modePreset("TcpWriteStringNodeData","TcpText",TcpText::Write));
-    presets.append(modePreset("UdpReadStringNodeData","UdpText",UdpText::Read));
-    presets.append(modePreset("UdpWriteStringNodeData","UdpText",UdpText::Write));
-    presets.append(modePreset("SerialReadByteNodeData","SerialData",SerialData::ReadBytes));
-    presets.append(modePreset("SerialReadStringNodeData","SerialData",SerialData::ReadText));
-    presets.append(modePreset("SerialWriteByteNodeData","SerialData",SerialData::WriteBytes));
-    presets.append(modePreset("SerialWriteStringNodeData","SerialData",SerialData::WriteText));
-    presets.append(modePreset("IntReadableModbusNodeData","ModbusRegister",
-                              ModbusRegister::ReadInt32));
-    presets.append(modePreset("ShortWriteableModbusNodeData","ModbusRegister",
-                              ModbusRegister::WriteInt16));
-
-    presets.append(modePreset("AddSutract","OImageArithmetic",OImageArithmetic::AddSubtract));
-    presets.append(modePreset("BitwiseNot","OImageArithmetic",OImageArithmetic::BitwiseNot));
-    presets.append(modePreset("MultiplayDivide","OImageArithmetic",OImageArithmetic::MultiplyDivide));
-    presets.append(modePreset("Pow","OImageArithmetic",OImageArithmetic::Pow));
-
-    presets.append(modePreset("Blur","OImageFilter",OImageFilter::BoxBlur));
-    presets.append(modePreset("GaussianBlur","OImageFilter",OImageFilter::GaussianBlur));
-    presets.append(modePreset("DetailEnhance","OImageFilter",OImageFilter::DetailEnhance));
-    presets.append(modePreset("EdgePreservingFilter","OImageFilter",OImageFilter::EdgePreserving));
-    presets.append(modePreset("PencilSketch","OImageFilter",OImageFilter::PencilSketch));
-    presets.append(modePreset("Stylization","OImageFilter",OImageFilter::Stylization));
-
-    presets.append(modePreset("CvtColor","OImageColor",OImageColor::Convert));
-    presets.append(modePreset("HSVInRange","OImageColor",OImageColor::HsvInRange));
-    presets.append(modePreset("Normalize","OImageColor",OImageColor::Normalize));
-    presets.append(modePreset("SplitBGR","OImageColor",OImageColor::SplitBgr));
-
-    presets.append(modePreset("Threshold","OImageThreshold",OImageThreshold::Threshold));
-    presets.append(modePreset("PixelThresholdIfConditionNodeData","OImageThreshold",
-                              OImageThreshold::PixelCondition));
-
-    presets.append(modePreset("Flip","OImageTransform",OImageTransform::Flip));
-    presets.append(modePreset("HomographyTransform","OImageTransform",OImageTransform::Homography));
-    presets.append(modePreset("Repeat","OImageTransform",OImageTransform::Repeat));
-    presets.append(modePreset("Resize","OImageTransform",OImageTransform::Resize));
-    presets.append(modePreset("Rotate","OImageTransform",OImageTransform::Rotate));
-    presets.append(modePreset("Transpose","OImageTransform",OImageTransform::Transpose));
-    presets.append(modePreset("WarpAffineTransform","OImageTransform",OImageTransform::WarpAffine));
-    presets.append(modePreset("WarpPerspectiveTransform","OImageTransform",
-                              OImageTransform::WarpPerspective));
-
-    presets.append(modePreset("Canny","OImageAnalysis",OImageAnalysis::Canny));
-    presets.append(modePreset("Hist","OImageAnalysis",OImageAnalysis::Histogram));
-    presets.append(modePreset("Hog","OImageAnalysis",OImageAnalysis::Hog));
-    presets.append(modePreset("Subdiv2D","OImageAnalysis",OImageAnalysis::Subdiv2d));
-
-    presets.append(modePreset("DnnSuperres","OImageModel",OImageModel::SuperResolution));
-    presets.append(modePreset("MOG","OImageModel",OImageModel::BackgroundSubtraction));
-    presets.append(modePreset("SVM","OImageModel",OImageModel::Svm));
-
-    presets.append(modePreset("SeamlessCloneBackground","OImageComposition",
-                              OImageComposition::Background));
-    presets.append(modePreset("SeamlessClone","OImageComposition",
-                              OImageComposition::SeamlessClone));
-    presets.append(modePreset("Stitching","OImageComposition",OImageComposition::Stitching));
-
-    presets.append(modePreset("BlackHat","OMorphology",OMorphology::BlackHat));
-    presets.append(modePreset("Close","OMorphology",OMorphology::Close));
-    presets.append(modePreset("Dilate","OMorphology",OMorphology::Dilate));
-    presets.append(modePreset("Erode","OMorphology",OMorphology::Erode));
-    presets.append(modePreset("Gradient","OMorphology",OMorphology::Gradient));
-    presets.append(modePreset("Open","OMorphology",OMorphology::Open));
-    presets.append(modePreset("TopHat","OMorphology",OMorphology::TopHat));
-
-    presets.append(modePreset("BlobDetector","ORegionDetector",ORegionDetector::Blob));
-    presets.append(modePreset("FindContours","ORegionDetector",ORegionDetector::Contours));
-    presets.append(modePreset("HoughCircles","ORegionDetector",ORegionDetector::HoughCircles));
-    presets.append(modePreset("RenderBlobs","ORegionDetector",ORegionDetector::RenderBlobs));
-    presets.append(modePreset("HoughLines","ORegionDetector",ORegionDetector::HoughLines));
-    presets.append(modePreset("HoughLinesP","ORegionDetector",ORegionDetector::HoughLinesP));
-
-    presets.append(rolePreset("QRCode","OCodeDetector"));
-
-    presets.append(modePreset("CornerHarris","OPointFeature",OPointFeature::Harris));
-    presets.append(modePreset("CornerSubPix","OPointFeature",OPointFeature::Subpixel));
-    presets.append(modePreset("AKazeFeatureDetector","OPointFeature",OPointFeature::Akaze));
-    presets.append(modePreset("BriskFeatureDetector","OPointFeature",OPointFeature::Brisk));
-    presets.append(modePreset("FastFeatureDetector","OPointFeature",OPointFeature::Fast));
-    presets.append(modePreset("FreakFeatureDetector","OPointFeature",OPointFeature::Freak));
-    presets.append(modePreset("KazeFeatureDetector","OPointFeature",OPointFeature::Kaze));
-    presets.append(modePreset("MserFeatureDetector","OPointFeature",OPointFeature::Mser));
-    presets.append(modePreset("StarFeatureDetector","OPointFeature",OPointFeature::Star));
-
-    presets.append(modePreset("HaarCascade","OCascadeDetector",OCascadeDetector::Haar));
-    presets.append(modePreset("LbpCascade","OCascadeDetector",OCascadeDetector::Lbp));
+    presets.append(modePreset("ImageAcquisition","Camera",QStringLiteral("相机采集"),ImageAcquisition::Camera,"acqType"));
+    presets.append(modePreset("ImageAcquisition","Dir",QStringLiteral("文件夹图像采集"),ImageAcquisition::Dir,"acqType"));
+    presets.append(modePreset("ImageAcquisition","Video",QStringLiteral("视频采集"),ImageAcquisition::Video,"acqType"));
+    presets.append(modePreset("ORectification","ForegroundExtract",QStringLiteral("前景提取"),ORectification::ForegroundExtract));
+    presets.append(modePreset("ORectification","RotatedRect",QStringLiteral("旋转矩形校正"),ORectification::RotatedRect));
+    presets.append(modePreset("OPointFeature","Akaze",QStringLiteral("AKAZE 特征检测"),OPointFeature::Akaze));
+    presets.append(modePreset("OPointFeature","Brisk",QStringLiteral("BRISK 特征检测"),OPointFeature::Brisk));
+    presets.append(modePreset("OPointFeature","Fast",QStringLiteral("FAST 特征检测"),OPointFeature::Fast));
+    presets.append(modePreset("OPointFeature","Freak",QStringLiteral("FREAK 特征描述"),OPointFeature::Freak));
+    presets.append(modePreset("OPointFeature","Kaze",QStringLiteral("KAZE 特征检测"),OPointFeature::Kaze));
+    presets.append(modePreset("OPointFeature","Mser",QStringLiteral("MSER 区域检测"),OPointFeature::Mser));
+    presets.append(modePreset("OPointFeature","Star",QStringLiteral("STAR 特征检测"),OPointFeature::Star));
+    presets.append(modePreset("OPointFeature","Subpixel",QStringLiteral("亚像素角点"),OPointFeature::Subpixel));
+    presets.append(modePreset("OTemplateMatch","Feature",QStringLiteral("特征点模板匹配"),OTemplateMatch::Feature));
+    presets.append(modePreset("OTemplateMatch","Hsv",QStringLiteral("HSV 模板匹配"),OTemplateMatch::Hsv));
+    presets.append(modePreset("OTemplateMatch","Shape",QStringLiteral("形状模板匹配"),OTemplateMatch::Shape));
+    presets.append(modePreset("OImageAnalysis","Histogram",QStringLiteral("直方图"),OImageAnalysis::Histogram));
+    presets.append(modePreset("OImageAnalysis","Hog",QStringLiteral("方向梯度特征"),OImageAnalysis::Hog));
+    presets.append(modePreset("OImageAnalysis","Subdiv2d",QStringLiteral("平面细分"),OImageAnalysis::Subdiv2d));
+    presets.append(modePreset("OImageArithmetic","BitwiseNot",QStringLiteral("按位取反"),OImageArithmetic::BitwiseNot));
+    presets.append(modePreset("OImageArithmetic","MultiplyDivide",QStringLiteral("乘除运算"),OImageArithmetic::MultiplyDivide));
+    presets.append(modePreset("OImageArithmetic","Pow",QStringLiteral("幂运算"),OImageArithmetic::Pow));
+    presets.append(modePreset("OImageColor","HsvInRange",QStringLiteral("HSV 范围筛选"),OImageColor::HsvInRange));
+    presets.append(modePreset("OImageColor","Normalize",QStringLiteral("归一化"),OImageColor::Normalize));
+    presets.append(modePreset("OImageColor","SplitBgr",QStringLiteral("BGR 通道分离"),OImageColor::SplitBgr));
+    presets.append(modePreset("OImageComposition","SeamlessClone",QStringLiteral("无缝融合"),OImageComposition::SeamlessClone));
+    presets.append(modePreset("OImageComposition","Stitching",QStringLiteral("图像拼接"),OImageComposition::Stitching));
+    presets.append(modePreset("OImageFilter","DetailEnhance",QStringLiteral("细节增强"),OImageFilter::DetailEnhance));
+    presets.append(modePreset("OImageFilter","EdgePreserving",QStringLiteral("保边滤波"),OImageFilter::EdgePreserving));
+    presets.append(modePreset("OImageFilter","GaussianBlur",QStringLiteral("高斯滤波"),OImageFilter::GaussianBlur));
+    presets.append(modePreset("OImageFilter","PencilSketch",QStringLiteral("铅笔素描"),OImageFilter::PencilSketch));
+    presets.append(modePreset("OImageFilter","Stylization",QStringLiteral("风格化"),OImageFilter::Stylization));
+    presets.append(modePreset("OImageModel","BackgroundSubtraction",QStringLiteral("背景消除"),OImageModel::BackgroundSubtraction));
+    presets.append(modePreset("OImageModel","Svm",QStringLiteral("支持向量机"),OImageModel::Svm));
+    presets.append(modePreset("OImageThreshold","PixelCondition",QStringLiteral("像素阈值条件"),OImageThreshold::PixelCondition));
+    presets.append(modePreset("OImageTransform","Homography",QStringLiteral("单应变换"),OImageTransform::Homography));
+    presets.append(modePreset("OImageTransform","Repeat",QStringLiteral("图像重复"),OImageTransform::Repeat));
+    presets.append(modePreset("OImageTransform","Resize",QStringLiteral("尺寸调整"),OImageTransform::Resize));
+    presets.append(modePreset("OImageTransform","Rotate",QStringLiteral("图像旋转"),OImageTransform::Rotate));
+    presets.append(modePreset("OImageTransform","Transpose",QStringLiteral("图像转置"),OImageTransform::Transpose));
+    presets.append(modePreset("OImageTransform","WarpAffine",QStringLiteral("仿射变换"),OImageTransform::WarpAffine));
+    presets.append(modePreset("OImageTransform","WarpPerspective",QStringLiteral("透视变换"),OImageTransform::WarpPerspective));
+    presets.append(modePreset("OMorphology","Close",QStringLiteral("闭运算"),OMorphology::Close));
+    presets.append(modePreset("OMorphology","Dilate",QStringLiteral("膨胀运算"),OMorphology::Dilate));
+    presets.append(modePreset("OMorphology","Erode",QStringLiteral("腐蚀运算"),OMorphology::Erode));
+    presets.append(modePreset("OMorphology","Gradient",QStringLiteral("形态学梯度"),OMorphology::Gradient));
+    presets.append(modePreset("OMorphology","Open",QStringLiteral("开运算"),OMorphology::Open));
+    presets.append(modePreset("OMorphology","TopHat",QStringLiteral("顶帽运算"),OMorphology::TopHat));
+    presets.append(modePreset("GeometryMeasure","LineCircle",QStringLiteral("直线到圆测量"),GeometryMeasure::LineCircle));
+    presets.append(modePreset("GeometryMeasure","LineLine",QStringLiteral("直线到直线测量"),GeometryMeasure::LineLine));
+    presets.append(modePreset("GeometryMeasure","LineLineAngle",QStringLiteral("直线夹角测量"),GeometryMeasure::LineLineAngle));
+    presets.append(modePreset("GeometryMeasure","PointCircle",QStringLiteral("点到圆测量"),GeometryMeasure::PointCircle));
+    presets.append(modePreset("GeometryMeasure","PointLine",QStringLiteral("点到直线测量"),GeometryMeasure::PointLine));
+    presets.append(modePreset("GeometryMeasure","PointPoint",QStringLiteral("点到点测量"),GeometryMeasure::PointPoint));
+    presets.append(modePreset("OCascadeDetector","Lbp",QStringLiteral("LBP 级联检测"),OCascadeDetector::Lbp));
+    presets.append(modePreset("ORegionDetector","Contours",QStringLiteral("轮廓提取"),ORegionDetector::Contours));
+    presets.append(modePreset("ORegionDetector","HoughCircles",QStringLiteral("霍夫圆检测"),ORegionDetector::HoughCircles));
+    presets.append(modePreset("ORegionDetector","HoughLines",QStringLiteral("霍夫直线检测"),ORegionDetector::HoughLines));
+    presets.append(modePreset("ORegionDetector","HoughLinesP",QStringLiteral("概率霍夫直线"),ORegionDetector::HoughLinesP));
+    presets.append(modePreset("ORegionDetector","RenderBlobs",QStringLiteral("斑点绘制"),ORegionDetector::RenderBlobs));
+    presets.append(modePreset("HttpJson","Write",QStringLiteral("HTTP 写入数据"),HttpJson::Write));
+    presets.append(modePreset("ModbusRegister","WriteInt16",QStringLiteral("Modbus 写入整数"),ModbusRegister::WriteInt16));
+    presets.append(modePreset("SerialData","ReadText",QStringLiteral("串口读取文本"),SerialData::ReadText));
+    presets.append(modePreset("SerialData","WriteBytes",QStringLiteral("串口写入字节"),SerialData::WriteBytes));
+    presets.append(modePreset("SerialData","WriteText",QStringLiteral("串口写入文本"),SerialData::WriteText));
+    presets.append(modePreset("TcpText","Write",QStringLiteral("TCP 写入文本"),TcpText::Write));
+    presets.append(modePreset("UdpText","Write",QStringLiteral("UDP 写入文本"),UdpText::Write));
+    presets.append(modePreset("NClassification","Gender",QStringLiteral("性别分类"),NClassification::Gender));
+    presets.append(modePreset("NInference","Age",QStringLiteral("年龄估计"),NInference::Age));
+    presets.append(modePreset("NObjectDetection","Yolov3",QStringLiteral("YOLOv3 目标检测"),NObjectDetection::Yolov3));
+    presets.append(modePreset("NObjectDetection","Yolov5",QStringLiteral("YOLOv5 目标检测"),NObjectDetection::Yolov5));
+    presets.append(modePreset("NObjectDetection","Yolov5Face",QStringLiteral("YOLOv5 人脸检测"),NObjectDetection::Yolov5Face));
+    presets.append(modePreset("NSemanticSegmentation","Human",QStringLiteral("人体分割"),NSemanticSegmentation::Human));
+    presets.append(modePreset("DetectRecord","ClassRecord",QStringLiteral("保存分类记录"),DetectRecord::ClassRecord));
+    presets.append(modePreset("DetectRecord","HasRecord",QStringLiteral("查询检测记录"),DetectRecord::HasRecord));
+    presets.append(modePreset("DetectRecord","ObjectRecord",QStringLiteral("保存目标记录"),DetectRecord::ObjectRecord));
+    presets.append(modePreset("LoopFlow","ForeachImages",QStringLiteral("遍历图像"),LoopFlow::ForeachImages));
+    presets.append(modePreset("NotificationOutput","Dialog",QStringLiteral("弹窗通知"),NotificationOutput::Dialog));
+    presets.append(modePreset("NotificationOutput","Error",QStringLiteral("错误通知"),NotificationOutput::Error));
+    presets.append(modePreset("NotificationOutput","Fatal",QStringLiteral("严重错误通知"),NotificationOutput::Fatal));
+    presets.append(modePreset("NotificationOutput","Info",QStringLiteral("信息通知"),NotificationOutput::Info));
+    presets.append(modePreset("NotificationOutput","Ng",QStringLiteral("不合格结果输出"),NotificationOutput::Ng));
+    presets.append(modePreset("NotificationOutput","Success",QStringLiteral("成功通知"),NotificationOutput::Success));
+    presets.append(modePreset("NotificationOutput","Warning",QStringLiteral("警告通知"),NotificationOutput::Warning));
     return presets;
 }

@@ -1,4 +1,4 @@
-﻿#ifndef OPENCVIMAGEOPERATORBASE_H
+#ifndef OPENCVIMAGEOPERATORBASE_H
 #define OPENCVIMAGEOPERATORBASE_H
 
 #include "XVFuncSystemGlobal.h"
@@ -46,7 +46,7 @@ public slots:
     void onShowFunc() override;
 
 protected:
-    QPixmap funcIcon() override;
+
     EXvFuncRunStatus run() final;
 
     virtual bool processImage(const QImage &source,QImage &candidate,QString &error)=0;

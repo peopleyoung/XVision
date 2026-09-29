@@ -1,4 +1,4 @@
-﻿#include "BaseDataStringProcessWdg.h"
+#include "BaseDataStringProcessWdg.h"
 #include "ui_BaseDataStringProcessWdg.h"
 
 BaseDataStringProcessWdg::BaseDataStringProcessWdg(BaseDataStringProcess *func,QWidget *parent) :
@@ -16,7 +16,7 @@ BaseDataStringProcessWdg::~BaseDataStringProcessWdg()
 
 void BaseDataStringProcessWdg::initFrm()
 {
-    initFixedSize();
+    initPreferredSize();
     auto func=getFunc<BaseDataStringProcess>();
     if(!func) return;
 

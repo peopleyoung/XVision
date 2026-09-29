@@ -1,4 +1,4 @@
-﻿#ifndef BASEDATAWRITER_H
+#ifndef BASEDATAWRITER_H
 #define BASEDATAWRITER_H
 
 #include "XVFuncSystemGlobal.h"
@@ -43,7 +43,7 @@ public:
         return {"boolResult","intResult","realResult","stringResult"};
     }
 protected:
-    QPixmap funcIcon() override { return QPixmap(":/images/BaseDataWriter.svg");}
+
     EXvFuncRunStatus run() override;
     XvBaseResult *getResult() const override { return result;};
 protected:

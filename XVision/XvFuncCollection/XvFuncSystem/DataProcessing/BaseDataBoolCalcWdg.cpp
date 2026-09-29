@@ -1,4 +1,4 @@
-﻿#include "BaseDataBoolCalcWdg.h"
+#include "BaseDataBoolCalcWdg.h"
 #include "ui_BaseDataBoolCalcWdg.h"
 
 BaseDataBoolCalcWdg::BaseDataBoolCalcWdg(BaseDataBoolCalc *func,QWidget *parent) :
@@ -16,7 +16,7 @@ BaseDataBoolCalcWdg::~BaseDataBoolCalcWdg()
 
 void BaseDataBoolCalcWdg::initFrm()
 {
-    initFixedSize();
+    initPreferredSize();
 
     auto func=getFunc<BaseDataBoolCalc>();
     if(!func) return;

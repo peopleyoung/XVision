@@ -130,11 +130,6 @@ EXvFuncRunStatus ModbusRegister::run()
     return EXvFuncRunStatus::Ok;
 }
 
-QPixmap ModbusRegister::funcIcon()
-{
-    return QPixmap(":/images/LogOutput.svg");
-}
-
 void ModbusRegister::onShowFunc()
 {
     if(!m_widget) m_widget=new CommunicationOperatorWdg(this);

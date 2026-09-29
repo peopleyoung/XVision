@@ -165,11 +165,6 @@ EXvFuncRunStatus TcpText::run()
     return EXvFuncRunStatus::Ok;
 }
 
-QPixmap TcpText::funcIcon()
-{
-    return QPixmap(":/images/LogOutput.svg");
-}
-
 void TcpText::onShowFunc()
 {
     if(!m_widget) m_widget=new CommunicationOperatorWdg(this);

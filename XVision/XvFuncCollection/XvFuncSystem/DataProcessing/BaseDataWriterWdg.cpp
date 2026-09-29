@@ -1,4 +1,4 @@
-﻿#include "BaseDataWriterWdg.h"
+#include "BaseDataWriterWdg.h"
 #include "ui_BaseDataWriterWdg.h"
 
 using namespace XvCore;
@@ -17,7 +17,7 @@ BaseDataWriterWdg::~BaseDataWriterWdg()
 
 void BaseDataWriterWdg::initFrm()
 {
-    initFixedSize();
+    initPreferredSize();
     auto func=getFunc<BaseDataWriter>();
     if(!func) return;
     auto rBool=func->result->boolResult;

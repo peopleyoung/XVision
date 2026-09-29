@@ -1,33 +1,27 @@
-﻿#ifndef FRMXVFUNCTYPE_H
+#ifndef FRMXVFUNCTYPE_H
 #define FRMXVFUNCTYPE_H
-
 #include "BaseWidget.h"
 #include "XvCoreDef.h"
-
-namespace Ui {
-class FrmXvFuncType;
-}
-
-class FrmXvFuncType : public BaseWidget
+class QLabel;
+class QListWidget;
+class FrmXvFuncType:public BaseWidget
 {
     Q_OBJECT
-
 public:
-    explicit FrmXvFuncType(const XvCore::XvFuncTypeInfo &info, const QList<XvCore::XvFuncInfo> &lst,QWidget *parent = nullptr);
-    ~FrmXvFuncType();
-
+    explicit FrmXvFuncType(const XvCore::XvFuncTypeInfo &info,
+                           const QList<XvCore::XvFuncInfo> &operators,QWidget *parent=nullptr);
+    void setOperators(const XvCore::XvFuncTypeInfo &info,const QList<XvCore::XvFuncInfo> &operators);
+    void setFilterText(const QString &text);
+signals:
+    void closeDrawer();
 protected:
     void initFrm() override;
-signals:
-    void closeDrawer();  
-protected slots:
-    void onCloseDrawer();
-
 private:
-    Ui::FrmXvFuncType *ui;
     XvCore::XvFuncTypeInfo m_typeInfo;
-    QList<XvCore::XvFuncInfo> m_lstXvFuncInfos;
-
+    QList<XvCore::XvFuncInfo> m_operators;
+    QListWidget *m_list=nullptr;
+    QLabel *m_title=nullptr;
+    QLabel *m_count=nullptr;
+    QLabel *m_empty=nullptr;
 };
-
-#endif // FRMXVFUNCTYPE_H
+#endif

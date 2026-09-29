@@ -227,9 +227,9 @@ if (-not $SkipTests) {
         $env:QT_PLUGIN_PATH = $PackageDirectory
         Push-Location $PackageDirectory
         try {
-            $MatrixPath = Join-Path (Split-Path -Parent $SourceDir) 'doc/开发工作/VisionMaster算子兼容矩阵.csv'
-            Invoke-Checked $PluginTest @((Join-Path $PluginDestination 'XvFuncSystem.dll'), $MatrixPath) `
-                "Packaged plugin failed to load or validate its 39 roles / 126 presets."
+            $CatalogPath = Join-Path (Split-Path -Parent $SourceDir) 'doc/开发工作/算子目录.csv'
+            Invoke-Checked $PluginTest @((Join-Path $PluginDestination 'XvFuncSystem.dll'), $CatalogPath) `
+                "Packaged plugin failed to load or validate its 39 roles / 84 presets."
         } finally {
             Pop-Location
         }
@@ -275,7 +275,7 @@ $ManifestLines = @(
     "OpenCV: enabled ($($SdkRuntimeNames[0]))",
     "ONNX Runtime: enabled ($($SdkRuntimeNames[1]))",
     "First-party tests: $(if ($SkipTests) { 'SKIPPED - package not runtime-verified' } else { 'passed' })",
-    "Packaged plugin test: $(if ($SkipTests) { 'SKIPPED' } else { 'passed (39 roles / 126 presets)' })",
+    "Packaged plugin test: $(if ($SkipTests) { 'SKIPPED' } else { 'passed (39 roles / 84 presets)' })",
     "Git commit: $GitCommit",
     "",
     "Files and SHA256:"

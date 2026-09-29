@@ -1,4 +1,4 @@
-﻿#include "BaseDataRealCalcWdg.h"
+#include "BaseDataRealCalcWdg.h"
 #include "ui_BaseDataRealCalcWdg.h"
 
 BaseDataRealCalcWdg::BaseDataRealCalcWdg(BaseDataRealCalc *func,QWidget *parent) :
@@ -16,7 +16,7 @@ BaseDataRealCalcWdg::~BaseDataRealCalcWdg()
 
 void BaseDataRealCalcWdg::initFrm()
 {
-    initFixedSize();
+    initPreferredSize();
     auto func=getFunc<BaseDataRealCalc>();
     if(!func) return;
     auto p1=func->param->realParam1;

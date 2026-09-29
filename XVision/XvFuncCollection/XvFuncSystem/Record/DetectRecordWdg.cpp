@@ -1,4 +1,4 @@
-﻿#include "DetectRecordWdg.h"
+#include "DetectRecordWdg.h"
 
 #include "DetectRecord.h"
 #include "XVisionRuntimeData.h"
@@ -39,7 +39,7 @@ DetectRecordWdg::DetectRecordWdg(DetectRecord *func,QWidget *parent)
     {
         if(index<0) return;
         func->setMode(DetectRecord::Mode(m_mode->itemData(index).toInt()));
-        rebuildParameters();
+        scheduleParameterRebuild();
     });
     setMinimumSize(520,320);
 }
@@ -71,8 +71,7 @@ void DetectRecordWdg::rebuildParameters()
         if(editor)
             m_form->addRow(getUiText(object->dispalyName().isEmpty()?name:object->dispalyName()),editor);
     }
-    adjustSize();
-    resize(qMax(width(),520),qMax(height(),320));
+    prepareParameterLayout();
 }
 
 QWidget *DetectRecordWdg::createParameterEditor(XObject *object)
@@ -107,7 +106,7 @@ QWidget *DetectRecordWdg::createParameterEditor(XObject *object)
         connect(editor,&QCheckBox::toggled,this,[this,value](bool candidate)
         {
             value->setValue(candidate);
-            if(value->objectName()=="useRecordInput") rebuildParameters();
+            if(value->objectName()=="useRecordInput") scheduleParameterRebuild();
         });
         return editor;
     }
@@ -129,7 +128,7 @@ QWidget *DetectRecordWdg::createParameterEditor(XObject *object)
         auto layout=new QHBoxLayout(container);
         layout->setContentsMargins(0,0,0,0);
         auto browse=new QToolButton(container);
-        browse->setIcon(style()->standardIcon(QStyle::SP_DialogSaveButton));
+        browse->setIcon(QIcon(":/images/UiSave.svg"));
         browse->setToolTip(getLang("XvFuncSystem_DetectRecord_SelectDatabase",
                                   "选择数据库文件"));
         layout->addWidget(editor,1);

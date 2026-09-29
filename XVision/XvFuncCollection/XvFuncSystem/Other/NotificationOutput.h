@@ -1,4 +1,4 @@
-﻿#ifndef NOTIFICATIONOUTPUT_H
+#ifndef NOTIFICATIONOUTPUT_H
 #define NOTIFICATIONOUTPUT_H
 
 #include "XVFuncSystemGlobal.h"
@@ -70,7 +70,7 @@ public slots:
     void onShowFunc() override;
 
 protected:
-    QPixmap funcIcon() override { return QPixmap(":/images/LogOutput.svg"); }
+
     EXvFuncRunStatus run() override;
     XvBaseParam *getParam() const override { return m_param; }
     XvBaseResult *getResult() const override { return m_result; }

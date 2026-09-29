@@ -1,299 +1,143 @@
-﻿#include "FrmXvFuncAsm.h"
-#include "ui_FrmXvFuncAsm.h"
-#include <QScrollBar>
-#include <QScopedValueRollback>
-
-#include "XvFuncAssembly.h"
-
+#include "FrmXvFuncAsm.h"
 #include "FrmXvFuncType.h"
+#include "XvFuncAssembly.h"
+#include <QApplication>
+#include <QButtonGroup>
+#include <QFrame>
+#include <QKeyEvent>
+#include <QLabel>
+#include <QLineEdit>
+#include <QScrollArea>
+#include <QSignalBlocker>
+#include <QTimer>
+#include <QToolButton>
+#include <QVBoxLayout>
 
-#include "XvCoreManager.h"
-#include "LangDef.h"
-
-
-#define XvFuncType_Btn_Property "Type"///算子类型按钮属性
-
-const static int FrmXvFuncAsm_Width=56; ///窗口固定尺寸
-const static int CS_XvFuncType_Btn_Size=44;///算子类型按钮尺寸
-
-FrmXvFuncAsm::FrmXvFuncAsm(QWidget *parent) :
-    BaseWidget(parent),
-    ui(new Ui::FrmXvFuncAsm)
+FrmXvFuncAsm::FrmXvFuncAsm(QWidget *parent):BaseWidget(parent)
 {
-    ui->setupUi(this);
     initFrm();
+    qApp->installEventFilter(this);
 }
 
 FrmXvFuncAsm::~FrmXvFuncAsm()
 {
-    delete ui;
+    qApp->removeEventFilter(this);
+    // The panel belongs visually to the canvas, but its lifetime follows the sidebar.
+    delete m_panel.data();
 }
-
-void FrmXvFuncAsm::setDrawerParWidget(QWidget *drawerParWidget)
-{
-    m_drawerParWidget=drawerParWidget;
-    foreach (auto drawer, m_mapXMatDrawerType)
-    {
-        drawer->setParent(drawerParWidget);
-    }
-    if(m_drawerAllTypeXvFuncs)
-    {
-        m_drawerAllTypeXvFuncs->setParent(m_drawerParWidget);
-    }
-}
-
-
-
-bool FrmXvFuncAsm::eventFilter(QObject *watched, QEvent *event)
-{
-    auto type=event->type();
-    if(type==QEvent::HoverMove)
-    {
-
-        auto btn=qobject_cast<QToolButton*>(watched);
-        if(btn)
-        {
-            auto pos=  mapToParent(btn->rect().topRight());
-            auto xvFuncType= btn->property(XvFuncType_Btn_Property);
-            if(xvFuncType.isValid())
-            {
-                auto type=xvFuncType.value<XvCore::EXvFuncType>();
-               if(m_drawerCurSingleTypeXvFuncs)
-               {
-                  if(!m_drawerCurSingleTypeXvFuncs->isCloseState())
-                  {
-                    onShowXvFuncTypeDrawer(btn->geometry(),type);
-                  }
-               }
-            }
-        }
-    }
-
-    return BaseWidget::eventFilter(watched,event);
-}
-
-void FrmXvFuncAsm::resizeEvent(QResizeEvent *event)
-{
-    auto scArea=ui->scAreaXvFuncAsm;
-    auto scAreaWc=ui->scAreaWcXvFuncAsm;
-    if(scArea->height()<scAreaWc->height())
-    {
-       ui->hLine1->setVisible(true);
-       ui->btnXvFuncUp->setVisible(true);
-       ui->btnXvFuncDown->setVisible(true);
-    }
-    else
-    {
-       ui->hLine1->setVisible(false);
-       ui->btnXvFuncUp->setVisible(false);
-       ui->btnXvFuncDown->setVisible(false);
-    }
-    return BaseWidget::resizeEvent(event);
-}
-
 
 void FrmXvFuncAsm::initFrm()
-{    
-    auto funcAddBtn=[&](QVBoxLayout *layout,QWidget *parent,QIcon icon,XvCore::EXvFuncType type,QString tip="",QString text="")
+{
+    setObjectName("operatorSidebar");
+    setWindowTitle(getLang("OperatorSidebar_Title","算子工具箱"));
+    setFixedWidth(176);
+    auto root=new QVBoxLayout(this);
+    root->setContentsMargins(10,14,10,10);root->setSpacing(10);
+    auto title=new QLabel(getLang("OperatorSidebar_Library","算子库"),this);
+    title->setObjectName("operatorSidebarTitle");root->addWidget(title);
+    m_search=new QLineEdit(this);
+    m_search->setObjectName("operatorSearch");
+    m_search->setPlaceholderText(getLang("OperatorSidebar_Search","搜索算子…"));
+    m_search->setClearButtonEnabled(true);
+    m_search->addAction(QIcon(":/images/Ui/OperatorSearch.svg"),QLineEdit::LeadingPosition);
+    root->addWidget(m_search);
+    auto scroll=new QScrollArea(this);
+    scroll->setWidgetResizable(true);scroll->setFrameShape(QFrame::NoFrame);
+    scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    auto content=new QWidget(scroll);auto layout=new QVBoxLayout(content);
+    layout->setContentsMargins(0,0,0,0);layout->setSpacing(4);
+    m_categories=new QButtonGroup(this);m_categories->setExclusive(true);
+    int count=0;
+    for(const auto &category:XvFuncAsm->getXvFuncTypeInfos())
     {
-        auto fmH=CS_XvFuncType_Btn_Size;
-        XMatToolButton* btn = new XMatToolButton(parent);
-        U_initSetButton(btn,text,tip,icon,24,QSize(fmH,fmH),QSize(fmH,fmH));
-        btn->setToolButtonStyle(Qt::ToolButtonIconOnly);
-        btn->setAccessibleName(text);
-        btn->setProperty(XvFuncType_Btn_Property,QVariant::fromValue(type));
-        btn->installEventFilter(this);
-        layout->addWidget(btn);
-        connect(btn,&QToolButton::clicked,this,[&]()
-        {
-            auto btn=qobject_cast<QToolButton*>(sender());
-            if(btn)
-            {
-                auto xvFuncType= btn->property(XvFuncType_Btn_Property);
-                if(xvFuncType.isValid())
-                {
-                    auto type=xvFuncType.value<XvCore::EXvFuncType>();
-                    onShowXvFuncTypeDrawer(btn->geometry(),type);
-                }
-            }
-
+        const auto operators=XvFuncAsm->getXvFuncInfos(category.type);
+        if(operators.isEmpty()) continue;
+        ++count;
+        auto button=new QToolButton(content);
+        button->setObjectName("operatorCategory");
+        button->setProperty("Type",QVariant::fromValue(category.type));
+        button->setText(category.name+QString("  %1").arg(operators.size()));
+        button->setToolTip(category.name);
+        button->setAccessibleName(category.name);
+        button->setIcon(QIcon(category.icon));button->setIconSize(QSize(20,20));
+        button->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+        button->setCheckable(true);button->setMinimumHeight(36);
+        button->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Fixed);
+        m_categories->addButton(button);layout->addWidget(button);
+        connect(button,&QToolButton::clicked,this,[this,category]() {
+            m_searchTimer->stop();
+            const QSignalBlocker blocker(m_search);m_search->clear();
+            showCategory(category.type);
         });
-    };
-
-
-
-    this->setWindowTitle(QStringLiteral("算子工具箱"));
-    this->setMinimumWidth(FrmXvFuncAsm_Width);
-    this->setMaximumWidth(FrmXvFuncAsm_Width);
-    this->setAttribute(Qt::WA_Hover);
-    this->installEventFilter(this);
-
-
-    ///初始化左侧算子工具栏模块
-    auto scArea=ui->scAreaXvFuncAsm;
-    scArea->setWidgetResizable(true);
-    scArea->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
-    scArea->setLineWidth(1);
-    scArea->setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
-    scArea->setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
-    scArea->verticalScrollBar()->hide();
-    scArea->verticalScrollBar()->resize(0,0);
-    scArea->horizontalScrollBar()->hide();
-    scArea->horizontalScrollBar()->resize(0,0);
-    auto scAreaWcXvFuncAsm=ui->scAreaWcXvFuncAsm;
-
-    ///添加算子分类按钮及算子单独类型窗口
-    QVBoxLayout *vLayout = new QVBoxLayout(scAreaWcXvFuncAsm);
-    vLayout->setObjectName("verticalLayout");
-    vLayout->setContentsMargins(6, 8, 6, 8);
-    vLayout->setSpacing(6);
-    scAreaWcXvFuncAsm->setLayout(vLayout);
-
-
-
-    auto lst=XvFuncAsm->getXvFuncTypeInfos();
-    foreach (auto info, lst)
-    {
-        if(info.type==XvCore::EXvFuncType::Null)//NULL类型不添加
-        {
-            continue;
-        }
-        auto lstTemp=XvFuncAsm->getXvFuncInfos(info.type);
-        if(lstTemp.count()==0)
-        {
-            continue; // Do not offer empty category drawers.
-        }
-
-        funcAddBtn(vLayout,scAreaWcXvFuncAsm,info.icon,info.type,
-                   getLang("XvFuncCategory_Count","%1（%2 个算子）")
-                       .arg(info.name).arg(lstTemp.count()),info.name);
-
     }
-
-    vLayout->addSpacerItem(new QSpacerItem(20, 40, QSizePolicy::Minimum ,QSizePolicy::Expanding ));
-
-
-
-    ///下侧按钮初始化
-
-    auto btnShowXvFuncAsm=ui->btnShowXvFuncAsm;  
-    U_initSetButton(btnShowXvFuncAsm,getLang(App_Ui_FrmXvFuncAsmExpand,"展开"),getLang(App_Ui_FrmXvFuncAsmExpand,"展开"),
-                    QIcon(":/images/Ui/FrmXvFuncAsmExpand.svg"),0,QSize(CS_XvFuncType_Btn_Size,20),QSize(CS_XvFuncType_Btn_Size,20));
-
-    btnShowXvFuncAsm->setVisible(false);
-    ui->hLine2->setVisible(false);
-    m_drawerAllTypeXvFuncs=new XMatDrawer(m_drawerParWidget?m_drawerParWidget:this);
-    m_drawerAllTypeXvFuncs->setClickOutsideToClose(true);
-    m_drawerAllTypeXvFuncs->setOverlayMode(false);
-    m_drawerAllTypeXvFuncs->installEventFilter(this);
-    auto layout= new QVBoxLayout();
-    layout->setContentsMargins(0,0,0,0);
-    m_drawerAllTypeXvFuncs->setDrawerLayout(layout);
-
-    //废弃该功能↑
-    //xie.y 20230322 todo:需要设置抽屉m_drawerAllTypeXvFuncs(废弃该功能)
-
-
-
-    auto btnUp=ui->btnXvFuncUp;
-    U_initSetButton(btnUp,getLang(App_Ui_FrmXvFuncAsmUp,"向上滚动"),getLang(App_Ui_FrmXvFuncAsmUp,"向上滚动"),
-                    QIcon(":/images/Ui/FrmXvFuncAsmUp.svg"),0,QSize(CS_XvFuncType_Btn_Size,20),QSize(CS_XvFuncType_Btn_Size,20));
-
-    connect(btnUp,&QToolButton::clicked,this,[&]()
-    {
-        auto scArea=ui->scAreaXvFuncAsm;
-        auto bar=scArea->verticalScrollBar();
-        auto curVal= bar->value();
-        auto newVal=curVal-bar->singleStep();
-        bar->setValue(newVal);
+    layout->addStretch(1);scroll->setWidget(content);root->addWidget(scroll,1);
+    auto total=new QLabel(getLang("OperatorSidebar_Total","%1 项算子 · %2 个分类")
+                         .arg(XvFuncAsm->getXvFuncInfos().size()).arg(count),this);
+    total->setObjectName("operatorSidebarSummary");root->addWidget(total);
+    m_searchTimer=new QTimer(this);m_searchTimer->setSingleShot(true);m_searchTimer->setInterval(80);
+    connect(m_search,&QLineEdit::textChanged,this,[this]() { m_searchTimer->start(); });
+    connect(m_searchTimer,&QTimer::timeout,this,[this]() {
+        if(m_search->text().trimmed().isEmpty()) { closePanel();return; }
+        showCategory(XvCore::EXvFuncType::Null,m_search->text());
     });
-
-    auto btnDown=ui->btnXvFuncDown;
-    U_initSetButton(btnDown,getLang(App_Ui_FrmXvFuncAsmDown,"向下滚动"),getLang(App_Ui_FrmXvFuncAsmDown,"向下滚动"),
-                    QIcon(":/images/Ui/FrmXvFuncAsmDown.svg"),0,QSize(CS_XvFuncType_Btn_Size,20),QSize(CS_XvFuncType_Btn_Size,20));
-
-    connect(btnDown,&QToolButton::clicked,this,[&]()
-    {
-        auto scArea=ui->scAreaXvFuncAsm;
-        auto bar=scArea->verticalScrollBar();
-        auto curVal= bar->value();
-        auto newVal=curVal+bar->singleStep();
-        bar->setValue(newVal);
-    });
-
 }
 
-void FrmXvFuncAsm::onShowXvFuncTypeDrawer(const QRect &rect,const XvCore::EXvFuncType &type)
+void FrmXvFuncAsm::setDrawerParWidget(QWidget *parent)
 {
-    if(m_creatingDrawer) return;
-    QScopedValueRollback<bool> creating(m_creatingDrawer,true);
-    auto funcCreateFrmType=[&](QMap<XvCore::EXvFuncType,XMatDrawer*> &map,const XvCore::EXvFuncType &type)
-    {
-        if(map.contains(type)) return;
-        auto info=XvFuncAsm->getXvFuncTypeInfo(type);
-        auto lst=XvFuncAsm->getXvFuncInfos(type);
-        FrmXvFuncType *frmType=new FrmXvFuncType(info,lst);
-        auto drawer=new XMatDrawer(m_drawerParWidget?m_drawerParWidget:this);
-        drawer->setClickOutsideToClose(true);
-        drawer->setOverlayMode(false);
-        auto layout= new QVBoxLayout();
-        drawer->setDrawerLayout(layout);
-        layout->addWidget(frmType);
-        layout->setContentsMargins(0,0,0,0);
-        drawer->setDrawerHeight(frmType->height());
-        drawer->setDrawerWidth(frmType->width());
-        drawer->installEventFilter(this);
-        connect(frmType,&FrmXvFuncType::closeDrawer,drawer,&XMatDrawer::closeDrawer);
-        map[type]=drawer;
-    };
+    if(m_panelParent) m_panelParent->removeEventFilter(this);
+    m_panelParent=parent;
+    if(m_panelParent) m_panelParent->installEventFilter(this);
+    if(m_panel) { m_panel->setParent(parent);m_panel->hide();updatePanelGeometry(); }
+}
 
-    funcCreateFrmType(m_mapXMatDrawerType,type);
-    auto drawer=m_mapXMatDrawerType[type];
-    if(m_drawerCurSingleTypeXvFuncs)
+void FrmXvFuncAsm::updatePanelGeometry()
+{
+    if(!m_panel || !m_panel->parentWidget()) return;
+    const QRect available=m_panel->parentWidget()->rect();
+    m_panel->setGeometry(0,0,qMin(360,available.width()),available.height());
+}
+
+void FrmXvFuncAsm::showCategory(XvCore::EXvFuncType type,const QString &query)
+{
+    if(m_panel && m_panel->isVisible() && type==m_currentType && query.isEmpty())
+    { closePanel();return; }
+    auto info=XvFuncAsm->getXvFuncTypeInfo(type);
+    const auto operators=type==XvCore::EXvFuncType::Null?XvFuncAsm->getXvFuncInfos():XvFuncAsm->getXvFuncInfos(type);
+    if(type==XvCore::EXvFuncType::Null) info.name=getLang("OperatorSidebar_Results","搜索结果");
+    if(!m_panel)
     {
-        if(m_drawerCurSingleTypeXvFuncs!=drawer)
-        {
-            m_drawerCurSingleTypeXvFuncs->closeDrawer();
-        }
-        m_drawerCurSingleTypeXvFuncs=nullptr;
+        m_panel=new QFrame(m_panelParent?m_panelParent.data():parentWidget());
+        m_panel->setObjectName("operatorPopup");
+        auto layout=new QVBoxLayout(m_panel);layout->setContentsMargins(0,0,0,0);
+        m_contents=new FrmXvFuncType(info,operators,m_panel);layout->addWidget(m_contents);
+        connect(m_contents,&FrmXvFuncType::closeDrawer,this,&FrmXvFuncAsm::closePanel);
     }
-    if(drawer)
+    else if(type!=m_currentType)
+        m_contents->setOperators(info,operators);
+    m_currentType=type;
+    m_contents->setFilterText(query);
+    updatePanelGeometry();m_panel->show();m_panel->raise();
+}
+
+void FrmXvFuncAsm::closePanel()
+{
+    if(m_panel) m_panel->hide();
+    m_categories->setExclusive(false);
+    for(auto button:m_categories->buttons()) button->setChecked(false);
+    m_categories->setExclusive(true);
+}
+
+bool FrmXvFuncAsm::eventFilter(QObject *watched,QEvent *event)
+{
+    if(watched==m_panelParent && event->type()==QEvent::Resize) updatePanelGeometry();
+    if(m_panel && m_panel->isVisible())
     {
-        auto btnTop=rect.top();
-        auto btnBottom=rect.bottom();
-        auto offsetBtnTopPos= this->mapToParent(QPoint(0,btnTop));
-        auto offsetBtnBottomPos= this->mapToParent(QPoint(0,btnBottom));
-        auto parWdg=qobject_cast<QWidget*>(drawer->parent());
-        if(parWdg)
-        {
-             // Parent geometry events already happened before lazy creation.
-             drawer->setGeometry(parWdg->rect());
-             auto drawerH=drawer->drawerHeight();
-             auto parH= parWdg->height();
-             if(offsetBtnTopPos.y()+drawerH>parH)
-             {
-                 auto offsetY=offsetBtnBottomPos.y()-drawerH;
-                 if(offsetY<0)
-                 {
-                     offsetY=0;
-                 }
-                 else if(offsetY+drawerH>parH)
-                 {
-                     offsetY=parH-drawerH;
-                 }
-                 drawer->setDrawerOffsetY(offsetY);
-             }
-             else
-             {
-               drawer->setDrawerOffsetY(offsetBtnTopPos.y());
-             }
-
-        }
-        // A child created after its visible parent needs an explicit show.
-        drawer->show();
-        drawer->openDrawer();
-        m_drawerCurSingleTypeXvFuncs=drawer;
+        if(event->type()==QEvent::KeyPress && static_cast<QKeyEvent*>(event)->key()==Qt::Key_Escape)
+        { closePanel();return true; }
+        if(event->type()==QEvent::MouseButtonPress)
+            if(auto widget=qobject_cast<QWidget*>(watched))
+                if(widget!=this && !isAncestorOf(widget) && widget!=m_panel && !m_panel->isAncestorOf(widget))
+                    closePanel();
     }
-
-
+    return BaseWidget::eventFilter(watched,event);
 }

@@ -22,7 +22,7 @@ protected slots:
 
 private:
     void reloadSelector();
-    void rebuildParameters();
+    void rebuildParameters() override;
     QWidget *createParameterEditor(XObject *object);
 
     QFormLayout *m_form=nullptr;

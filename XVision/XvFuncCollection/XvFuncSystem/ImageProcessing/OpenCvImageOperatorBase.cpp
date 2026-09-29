@@ -17,11 +17,6 @@ OpenCvImageOperatorBase::~OpenCvImageOperatorBase()
     delete m_widget;
 }
 
-QPixmap OpenCvImageOperatorBase::funcIcon()
-{
-    return QPixmap(":/images/OpenCvImage.svg");
-}
-
 EXvFuncRunStatus OpenCvImageOperatorBase::run()
 {
     auto source=getParamsByName("inputImage");

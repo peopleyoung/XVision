@@ -1,4 +1,4 @@
-﻿#ifndef LOGOUTPUT_H
+#ifndef LOGOUTPUT_H
 #define LOGOUTPUT_H
 
 #include "XVFuncSystemGlobal.h"
@@ -34,7 +34,7 @@ public:
 public slots:
     void onShowFunc() override;
 protected:
-    QPixmap funcIcon() override { return QPixmap(":/images/LogOutput.svg");}
+
     EXvFuncRunStatus run() override;
     XvBaseParam *getParam() const override { return param;};
 protected:

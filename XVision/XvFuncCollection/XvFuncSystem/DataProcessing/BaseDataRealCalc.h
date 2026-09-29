@@ -1,4 +1,4 @@
-﻿#ifndef BASEDATAREALCALC_H
+#ifndef BASEDATAREALCALC_H
 #define BASEDATAREALCALC_H
 
 
@@ -63,7 +63,7 @@ public:
 public slots:
     void onShowFunc() override;
 protected:
-    QPixmap funcIcon() override { return QPixmap(":/images/BaseDataRealCalc.svg");}
+
     EXvFuncRunStatus run() override;
     XvBaseParam *getParam() const override { return param;};
     XvBaseResult *getResult() const override { return result;};

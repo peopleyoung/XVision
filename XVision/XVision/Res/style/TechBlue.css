@@ -53,13 +53,6 @@ QSplitter::handle { background: #081321; }
 QProgressBar { background: #13263D; color: #E3EDF9; border: 1px solid #253E5C; border-radius: 4px; text-align: center; }
 QProgressBar::chunk { background: #2389E9; border-radius: 3px; }
 QCheckBox, QRadioButton { spacing: 7px; background: transparent; }
-.FrmXvFuncAsm, .FrmXvFuncAsm QScrollArea, .FrmXvFuncAsm #scAreaWcXvFuncAsm { background: #0C192A; }
-.FrmXvFuncAsm XMatToolButton { background: transparent; border: 1px solid transparent; border-radius: 7px; }
-.FrmXvFuncAsm XMatToolButton:hover { background: #193A5B; border-color: #315A85; }
-.FrmXvFuncAsm XMatToolButton:pressed, .FrmXvFuncAsm XMatToolButton:focus { background: #214D77; border-color: #4BB4FF; }
-.FrmXvFuncType, .FrmXvFuncType QScrollArea QWidget { background: #101F33; }
-.FrmXvFuncType #fmXvFuncTyps { background: #19324F; border-bottom: 1px solid #315A85; }
-.FrmXvFuncType #lbXvFuncType { color: #B9DFFF; font-weight: bold; }
 XFlowGraphicsView { qproperty-backgroundColor: #0B1728; qproperty-gridSmallColor: #14283F; qproperty-gridBigColor: #203B58; qproperty-magneticLineColor: #54BBFF; qproperty-magneticLineWidth: 1; }
 XMatScrollBar { qproperty-canvasColor: #0C192A; qproperty-backgroundColor: #0C192A; }
 XMatTabs { qproperty-inkColor: #54BBFF; qproperty-backgroundColor: #13263D; qproperty-textColor: #D8E9FF; }
@@ -74,3 +67,36 @@ XMatHLine, XMatVLine, #hlineTitle, #hlineMain, #hlineStatus { qproperty-lineColo
 .XTitleBar #minimumSizeBtn { qproperty-iconSize: 14px 14px; qproperty-icon: url(:/images/LightStyle/Minimize.svg); }
 .XTitleBar #maximumSizeBtn[maximumsized=true] { qproperty-iconSize: 14px 14px; qproperty-icon: url(:/images/LightStyle/Maximize.svg); }
 .XTitleBar #maximumSizeBtn[maximumsized=false] { qproperty-iconSize: 14px 14px; qproperty-icon: url(:/images/LightStyle/MaximizeMax.svg); }
+
+/* Compact operator catalog: one list view instead of many animated tile widgets. */
+#operatorSidebar { background: #0D1C2F; border-right: 1px solid #233D59; }
+#operatorSidebarTitle { color: #DDEFFF; font-size: 15px; font-weight: bold; padding: 2px 4px 5px; }
+#operatorSidebarSummary, #operatorPanelHint { color: #819DBB; font-size: 11px; }
+#operatorSearch { min-height: 26px; padding: 4px; border-radius: 6px; }
+#operatorCategory { text-align: left; padding: 5px 8px; background: transparent; border: 1px solid transparent; border-radius: 6px; color: #AFC6DD; }
+#operatorCategory:hover { color: #E3F3FF; background: #172F49; border-color: #294A6A; }
+#operatorCategory:checked { color: #DDF4FF; background: #183F64; border-color: #358FCC; }
+#operatorPopup { background: #101F33; border: 1px solid #315674; border-left: 2px solid #389CDB; }
+#operatorCatalogPanel { background: #101F33; }
+#operatorPanelTitle { color: #D8EDFF; font-size: 14px; font-weight: bold; }
+#operatorPanelCount { color: #75C7FF; background: #163A58; border-radius: 5px; padding: 3px 8px; }
+#operatorList { border: none; background: transparent; outline: none; }
+#operatorList::item { padding: 5px 8px; border: 1px solid transparent; border-radius: 5px; }
+#operatorList::item:hover { background: #18334F; border-color: #294F71; }
+#operatorList::item:selected { background: #1C496F; color: #ECF8FF; border-color: #3B8BBA; }
+#operatorParameterContent { background: #101F33; }
+#operatorParameterScroll { background: #101F33; border-top: 1px solid #233D59; }
+#operatorParameterContent QToolButton { min-width: 22px; min-height: 22px; }
+
+/* Custom subcontrols keep small icons legible against the dark blue fields. */
+QComboBox { padding-right: 28px; }
+QComboBox::drop-down { subcontrol-origin: padding; subcontrol-position: top right; width: 24px; border: none; border-left: 1px solid #294865; border-top-right-radius: 4px; border-bottom-right-radius: 4px; background: #142E46; }
+QComboBox::drop-down:hover { background: #20486A; }
+QComboBox::down-arrow { image: url(:/images/Ui/SmallChevronDown.svg); width: 12px; height: 12px; }
+QSpinBox, QDoubleSpinBox { padding-right: 26px; }
+QSpinBox::up-button, QDoubleSpinBox::up-button { subcontrol-origin: border; subcontrol-position: top right; width: 23px; border: none; border-left: 1px solid #294865; border-top-right-radius: 4px; background: #142E46; }
+QSpinBox::down-button, QDoubleSpinBox::down-button { subcontrol-origin: border; subcontrol-position: bottom right; width: 23px; border: none; border-left: 1px solid #294865; border-bottom-right-radius: 4px; background: #142E46; }
+QSpinBox::up-button:hover, QSpinBox::down-button:hover, QDoubleSpinBox::up-button:hover, QDoubleSpinBox::down-button:hover { background: #20486A; }
+QSpinBox::up-arrow, QDoubleSpinBox::up-arrow { image: url(:/images/Ui/SmallChevronUp.svg); width: 9px; height: 9px; }
+QSpinBox::down-arrow, QDoubleSpinBox::down-arrow { image: url(:/images/Ui/SmallChevronDown.svg); width: 9px; height: 9px; }
+#btnPin:checked { background: #24568A; border-bottom: 2px solid #64D6EF; }

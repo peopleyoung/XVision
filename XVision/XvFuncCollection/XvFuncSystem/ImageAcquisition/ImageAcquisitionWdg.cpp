@@ -1,4 +1,4 @@
-﻿#include "ImageAcquisitionWdg.h"
+#include "ImageAcquisitionWdg.h"
 #include "ui_ImageAcquisitionWdg.h"
 #include <QFileDialog>
 #include <QCheckBox>
@@ -31,7 +31,7 @@ ImageAcquisitionWdg::~ImageAcquisitionWdg()
 
 void ImageAcquisitionWdg::initFrm()
 {
-    initFixedSize();
+    initPreferredSize();
 
     auto func=getFunc<ImageAcquisition>();
     if(!func) return;
@@ -95,7 +95,7 @@ void ImageAcquisitionWdg::initFrm()
                 getLang("XvFuncSystem_ImageAcquisition_CameraDevice","相机设备"));
     ui->lbCameraTimeout->setText(
                 getLang("XvFuncSystem_ImageAcquisition_CameraTimeout","单帧超时"));
-    ui->btnCameraRefresh->setIcon(style()->standardIcon(QStyle::SP_BrowserReload));
+    ui->btnCameraRefresh->setIcon(QIcon(":/images/UiRefresh.svg"));
     ui->btnCameraRefresh->setToolTip(
                 getLang("XvFuncSystem_ImageAcquisition_CameraRefresh","刷新相机列表"));
     ui->spbCameraTimeout->setRange(0,60000);

@@ -23,7 +23,7 @@ public slots:
     void onShowFunc() override;
 
 protected:
-    QPixmap funcIcon() override;
+
 
 private:
     GeometryOperatorWdg *m_widget=nullptr;

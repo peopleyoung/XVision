@@ -253,11 +253,6 @@ EXvFuncRunStatus DetectRecord::run()
     return EXvFuncRunStatus::Ok;
 }
 
-QPixmap DetectRecord::funcIcon()
-{
-    return QPixmap(":/images/BaseDataWriter.svg");
-}
-
 void DetectRecord::onShowFunc()
 {
     if(!m_widget) m_widget=new DetectRecordWdg(this);

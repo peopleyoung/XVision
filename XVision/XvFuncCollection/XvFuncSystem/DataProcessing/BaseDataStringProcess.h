@@ -1,4 +1,4 @@
-﻿#ifndef BASEDATASTRINGPROCESS_H
+#ifndef BASEDATASTRINGPROCESS_H
 #define BASEDATASTRINGPROCESS_H
 
 #include "XVFuncSystemGlobal.h"
@@ -105,7 +105,7 @@ public:
 public slots:
     void onShowFunc() override;
 protected:
-    QPixmap funcIcon() override { return QPixmap(":/images/BaseDataStringProcess.svg");}
+
     EXvFuncRunStatus run() override;
 
     XvBaseParam *getParam() const override { return param;};

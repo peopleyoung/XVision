@@ -19,7 +19,7 @@ protected slots:
 
 private:
     void reloadMode();
-    void rebuildParameters();
+    void rebuildParameters() override;
     QWidget *createParameterEditor(XObject *object);
     QWidget *bindableEditor(XObject *object,QWidget *directEditor);
 

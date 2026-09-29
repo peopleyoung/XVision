@@ -1,4 +1,4 @@
-﻿#ifndef IMAGEACQUISITION_H
+#ifndef IMAGEACQUISITION_H
 #define IMAGEACQUISITION_H
 
 #include "XVFuncSystemGlobal.h"
@@ -203,7 +203,7 @@ protected:
 public slots:
     void onShowFunc() override;
 protected:
-    QPixmap funcIcon() override { return QPixmap(":/images/ImageAcquisition.svg");}
+
     EXvFuncRunStatus run() override;
     XvExecutionDirective executionDirective() const override;
     bool readPersistentData(const QDomElement &dataElement,

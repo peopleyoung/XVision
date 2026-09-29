@@ -66,7 +66,7 @@ protected:
     XvBaseParam *getParam() const override { return m_param; }
     XvBaseResult *getResult() const override { return m_result; }
     EXvFuncRunStatus run() override;
-    QPixmap funcIcon() override;
+
 
 private:
     TcpTextParam *m_param=nullptr;

@@ -235,11 +235,6 @@ EXvFuncRunStatus SerialData::run()
     return EXvFuncRunStatus::Ok;
 }
 
-QPixmap SerialData::funcIcon()
-{
-    return QPixmap(":/images/LogOutput.svg");
-}
-
 void SerialData::onShowFunc()
 {
     if(!m_widget) m_widget=new CommunicationOperatorWdg(this);

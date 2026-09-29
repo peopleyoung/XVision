@@ -1,4 +1,4 @@
-﻿#ifndef ELAPSEDTIMER_H
+#ifndef ELAPSEDTIMER_H
 #define ELAPSEDTIMER_H
 
 #include "XVFuncSystemGlobal.h"
@@ -37,7 +37,7 @@ public:
     QList<XvFunc *> sonFuncs() const override;
     bool release() override { return true;}
 protected:
-    QPixmap funcIcon() override { return QPixmap(":/images/ElapsedTimer.svg");}
+
     EXvFuncRunStatus runXvFunc() override;
     EXvFuncRunStatus run() override;
     XvBaseResult *getResult() const override { return result;};

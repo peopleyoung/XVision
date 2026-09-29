@@ -15,6 +15,9 @@ def case(name,config='Release',skip=False,skip_build=True,fault=''):
         for f in ['Package-WindowsBuild.ps1','Verify-WindowsBuild.ps1','WindowsBuild.Common.ps1']:
             shutil.copy2(ROOT/'XVision/scripts'/f,scripts/f)
         shutil.copytree(ROOT/'XVision/XVision/Res/translations',src/'XVision/Res/translations')
+        catalog=r/'doc/开发工作/算子目录.csv'
+        catalog.parent.mkdir(parents=True,exist_ok=True)
+        shutil.copy2(ROOT/'doc/开发工作/算子目录.csv',catalog)
         build=src/'build'/('windows-msvc2019-'+config.lower()); bins=build/('BinD' if config=='Debug' else 'Bin')
         suffix='d' if config=='Debug' else ''
         put(bins/'XVision.exe'); put(bins/'XvFuncCollection/XvFuncSystem.dll')
@@ -55,6 +58,10 @@ for part,base in [('platforms','qwindows'),('sqldrivers','qsqlite')]:
         put(build/f'tests/{config}/XvSystemPluginTests.exe','''#!/usr/bin/python3
 import os,pathlib,sys
 assert len(sys.argv)==3
+catalog=pathlib.Path(sys.argv[2])
+assert catalog.name=='算子目录.csv'
+lines=catalog.read_text(encoding='utf-8-sig').splitlines()
+assert lines[0]=='entry_id,canonical_role,property,value,display_name,category' and len(lines)==124
 assert '/Qt/' not in os.environ['PATH'] and '/build/' not in os.environ['PATH']
 pathlib.Path(os.environ['MARKER']+'.plugin').write_text('called')
 sys.exit(17 if os.environ['FAULT']=='plugin_fail' else 0)

@@ -1,4 +1,4 @@
-﻿#include "BaseDataIntCalcWdg.h"
+#include "BaseDataIntCalcWdg.h"
 #include "ui_BaseDataIntCalcWdg.h"
 
 BaseDataIntCalcWdg::BaseDataIntCalcWdg(BaseDataIntCalc *func,QWidget *parent) :
@@ -16,7 +16,7 @@ BaseDataIntCalcWdg::~BaseDataIntCalcWdg()
 
 void BaseDataIntCalcWdg::initFrm()
 {
-    initFixedSize();
+    initPreferredSize();
 
     auto func=getFunc<BaseDataIntCalc>();
     if(!func) return;

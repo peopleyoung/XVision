@@ -1,4 +1,4 @@
-﻿#ifndef DELAYER_H
+#ifndef DELAYER_H
 #define DELAYER_H
 
 #include "XVFuncSystemGlobal.h"
@@ -32,7 +32,7 @@ public:
 public slots:
     void onShowFunc() override;
 protected:
-    QPixmap funcIcon() override { return QPixmap(":/images/Delayer.svg");}
+
     EXvFuncRunStatus run() override;
     XvBaseParam *getParam() const override { return param;};
 protected:

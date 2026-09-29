@@ -1,4 +1,4 @@
-﻿#include "OpenCvImageOperatorWdg.h"
+#include "OpenCvImageOperatorWdg.h"
 
 #include <QCheckBox>
 #include <QComboBox>
@@ -88,7 +88,7 @@ OpenCvImageOperatorWdg::OpenCvImageOperatorWdg(OpenCvImageOperatorBase *func,QWi
     {
         if(index<0) return;
         func->setProperty("mode",m_mode->itemData(index));
-        rebuildParameters();
+        scheduleParameterRebuild();
     });
     setMinimumSize(460,260);
 }
@@ -117,10 +117,10 @@ void OpenCvImageOperatorWdg::rebuildParameters()
         XObject *object=func->getParamsByName(name);
         if(!object) continue;
         QWidget *editor=createParameterEditor(object);
+        if(editor) editor->setObjectName(name);
         if(editor) m_form->addRow(getUiText(object->dispalyName().isEmpty()?name:object->dispalyName()),editor);
     }
-    adjustSize();
-    resize(qMax(width(),460),qMax(height(),260));
+    prepareParameterLayout();
 }
 
 QWidget *OpenCvImageOperatorWdg::createParameterEditor(XObject *object)
@@ -170,7 +170,7 @@ QWidget *OpenCvImageOperatorWdg::createParameterEditor(XObject *object)
         {
             value->setValue(candidate);
             if(rebuildOnChange)
-                QTimer::singleShot(0,this,[this]() { rebuildParameters(); });
+                scheduleParameterRebuild();
         });
         return editor;
     }
@@ -194,7 +194,7 @@ QWidget *OpenCvImageOperatorWdg::createParameterEditor(XObject *object)
             auto layout=new QHBoxLayout(container);
             layout->setContentsMargins(0,0,0,0);
             auto browse=new QToolButton(container);
-            browse->setIcon(style()->standardIcon(QStyle::SP_DialogOpenButton));
+            browse->setIcon(QIcon(":/images/UiOpen.svg"));
             browse->setToolTip(getUiText("Select file"));
             layout->addWidget(editor,1);
             layout->addWidget(browse);

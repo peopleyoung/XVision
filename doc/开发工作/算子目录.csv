@@ -1,0 +1,124 @@
+entry_id,canonical_role,property,value,display_name,category
+ImageAcquisition,ImageAcquisition,acqType,0,图像采集,图像采集
+ImageAcquisition.Camera,ImageAcquisition,acqType,2,相机采集,图像采集
+ImageAcquisition.Dir,ImageAcquisition,acqType,1,文件夹图像采集,图像采集
+ImageAcquisition.Video,ImageAcquisition,acqType,3,视频采集,图像采集
+ORectification,ORectification,mode,0,OpenCV图像矫正,校正标定
+ORectification.ForegroundExtract,ORectification,mode,1,前景提取,校正标定
+ORectification.RotatedRect,ORectification,mode,2,旋转矩形校正,校正标定
+OPointFeature,OPointFeature,mode,0,特征点检测,定位
+OPointFeature.Akaze,OPointFeature,mode,2,AKAZE 特征检测,定位
+OPointFeature.Brisk,OPointFeature,mode,3,BRISK 特征检测,定位
+OPointFeature.Fast,OPointFeature,mode,4,FAST 特征检测,定位
+OPointFeature.Freak,OPointFeature,mode,5,FREAK 特征描述,定位
+OPointFeature.Kaze,OPointFeature,mode,6,KAZE 特征检测,定位
+OPointFeature.Mser,OPointFeature,mode,7,MSER 区域检测,定位
+OPointFeature.Star,OPointFeature,mode,8,STAR 特征检测,定位
+OPointFeature.Subpixel,OPointFeature,mode,1,亚像素角点,定位
+OTemplateMatch,OTemplateMatch,mode,0,OpenCV模板匹配,定位
+OTemplateMatch.Feature,OTemplateMatch,mode,1,特征点模板匹配,定位
+OTemplateMatch.Hsv,OTemplateMatch,mode,3,HSV 模板匹配,定位
+OTemplateMatch.Shape,OTemplateMatch,mode,2,形状模板匹配,定位
+OImageAnalysis,OImageAnalysis,mode,0,图像分析,图像处理
+OImageAnalysis.Histogram,OImageAnalysis,mode,1,直方图,图像处理
+OImageAnalysis.Hog,OImageAnalysis,mode,2,方向梯度特征,图像处理
+OImageAnalysis.Subdiv2d,OImageAnalysis,mode,3,平面细分,图像处理
+OImageArithmetic,OImageArithmetic,mode,0,图像运算,图像处理
+OImageArithmetic.BitwiseNot,OImageArithmetic,mode,1,按位取反,图像处理
+OImageArithmetic.MultiplyDivide,OImageArithmetic,mode,2,乘除运算,图像处理
+OImageArithmetic.Pow,OImageArithmetic,mode,3,幂运算,图像处理
+OImageColor,OImageColor,mode,0,色彩处理,图像处理
+OImageColor.HsvInRange,OImageColor,mode,1,HSV 范围筛选,图像处理
+OImageColor.Normalize,OImageColor,mode,2,归一化,图像处理
+OImageColor.SplitBgr,OImageColor,mode,3,BGR 通道分离,图像处理
+OImageComposition,OImageComposition,mode,0,图像合成,图像处理
+OImageComposition.SeamlessClone,OImageComposition,mode,1,无缝融合,图像处理
+OImageComposition.Stitching,OImageComposition,mode,2,图像拼接,图像处理
+OImageFilter,OImageFilter,mode,0,图像滤波,图像处理
+OImageFilter.DetailEnhance,OImageFilter,mode,2,细节增强,图像处理
+OImageFilter.EdgePreserving,OImageFilter,mode,3,保边滤波,图像处理
+OImageFilter.GaussianBlur,OImageFilter,mode,1,高斯滤波,图像处理
+OImageFilter.PencilSketch,OImageFilter,mode,4,铅笔素描,图像处理
+OImageFilter.Stylization,OImageFilter,mode,5,风格化,图像处理
+OImageModel,OImageModel,mode,0,图像模型,图像处理
+OImageModel.BackgroundSubtraction,OImageModel,mode,1,背景消除,图像处理
+OImageModel.Svm,OImageModel,mode,2,支持向量机,图像处理
+OImageThreshold,OImageThreshold,mode,0,图像阈值,图像处理
+OImageThreshold.PixelCondition,OImageThreshold,mode,1,像素阈值条件,图像处理
+OImageTransform,OImageTransform,mode,0,图像变换,图像处理
+OImageTransform.Homography,OImageTransform,mode,1,单应变换,图像处理
+OImageTransform.Repeat,OImageTransform,mode,2,图像重复,图像处理
+OImageTransform.Resize,OImageTransform,mode,3,尺寸调整,图像处理
+OImageTransform.Rotate,OImageTransform,mode,4,图像旋转,图像处理
+OImageTransform.Transpose,OImageTransform,mode,5,图像转置,图像处理
+OImageTransform.WarpAffine,OImageTransform,mode,6,仿射变换,图像处理
+OImageTransform.WarpPerspective,OImageTransform,mode,7,透视变换,图像处理
+OMorphology,OMorphology,mode,0,形态学处理,图像处理
+OMorphology.Close,OMorphology,mode,1,闭运算,图像处理
+OMorphology.Dilate,OMorphology,mode,2,膨胀运算,图像处理
+OMorphology.Erode,OMorphology,mode,3,腐蚀运算,图像处理
+OMorphology.Gradient,OMorphology,mode,4,形态学梯度,图像处理
+OMorphology.Open,OMorphology,mode,5,开运算,图像处理
+OMorphology.TopHat,OMorphology,mode,6,顶帽运算,图像处理
+GeometryCreate,GeometryCreate,-,-,几何创建,测量
+GeometryMeasure,GeometryMeasure,mode,0,几何测量,测量
+GeometryMeasure.LineCircle,GeometryMeasure,mode,1,直线到圆测量,测量
+GeometryMeasure.LineLine,GeometryMeasure,mode,3,直线到直线测量,测量
+GeometryMeasure.LineLineAngle,GeometryMeasure,mode,2,直线夹角测量,测量
+GeometryMeasure.PointCircle,GeometryMeasure,mode,4,点到圆测量,测量
+GeometryMeasure.PointLine,GeometryMeasure,mode,5,点到直线测量,测量
+GeometryMeasure.PointPoint,GeometryMeasure,mode,6,点到点测量,测量
+OCascadeDetector,OCascadeDetector,mode,0,级联目标检测,检测
+OCascadeDetector.Lbp,OCascadeDetector,mode,1,LBP 级联检测,检测
+ORegionDetector,ORegionDetector,mode,0,区域检测,检测
+ORegionDetector.Contours,ORegionDetector,mode,1,轮廓提取,检测
+ORegionDetector.HoughCircles,ORegionDetector,mode,2,霍夫圆检测,检测
+ORegionDetector.HoughLines,ORegionDetector,mode,4,霍夫直线检测,检测
+ORegionDetector.HoughLinesP,ORegionDetector,mode,5,概率霍夫直线,检测
+ORegionDetector.RenderBlobs,ORegionDetector,mode,3,斑点绘制,检测
+OCodeDetector,OCodeDetector,mode,0,二维码识别,识别
+HttpJson,HttpJson,mode,0,HTTP 数据通信,通讯
+HttpJson.Write,HttpJson,mode,1,HTTP 写入数据,通讯
+ModbusRegister,ModbusRegister,mode,0,Modbus寄存器,通讯
+ModbusRegister.WriteInt16,ModbusRegister,mode,1,Modbus 写入整数,通讯
+SerialData,SerialData,mode,0,串口数据,通讯
+SerialData.ReadText,SerialData,mode,1,串口读取文本,通讯
+SerialData.WriteBytes,SerialData,mode,2,串口写入字节,通讯
+SerialData.WriteText,SerialData,mode,3,串口写入文本,通讯
+TcpText,TcpText,mode,0,TCP文本,通讯
+TcpText.Write,TcpText,mode,1,TCP 写入文本,通讯
+UdpText,UdpText,mode,0,UDP文本,通讯
+UdpText.Write,UdpText,mode,1,UDP 写入文本,通讯
+NClassification,NClassification,mode,0,ONNX图像分类,机器学习
+NClassification.Gender,NClassification,mode,1,性别分类,机器学习
+NInference,NInference,mode,0,ONNX通用推理,机器学习
+NInference.Age,NInference,mode,1,年龄估计,机器学习
+NObjectDetection,NObjectDetection,mode,0,ONNX目标检测,机器学习
+NObjectDetection.Yolov3,NObjectDetection,mode,1,YOLOv3 目标检测,机器学习
+NObjectDetection.Yolov5,NObjectDetection,mode,2,YOLOv5 目标检测,机器学习
+NObjectDetection.Yolov5Face,NObjectDetection,mode,3,YOLOv5 人脸检测,机器学习
+NSemanticSegmentation,NSemanticSegmentation,mode,0,ONNX语义分割,机器学习
+NSemanticSegmentation.Human,NSemanticSegmentation,mode,1,人体分割,机器学习
+BaseDataBoolCalc,BaseDataBoolCalc,-,-,布尔计算,数据处理
+BaseDataIntCalc,BaseDataIntCalc,-,-,整数计算,数据处理
+BaseDataRealCalc,BaseDataRealCalc,-,-,浮点数计算,数据处理
+BaseDataStringProcess,BaseDataStringProcess,-,-,字符串处理,数据处理
+BaseDataWriter,BaseDataWriter,-,-,基础数据写入,数据处理
+DetectRecord,DetectRecord,mode,0,检测记录,数据处理
+DetectRecord.ClassRecord,DetectRecord,mode,1,保存分类记录,数据处理
+DetectRecord.HasRecord,DetectRecord,mode,3,查询检测记录,数据处理
+DetectRecord.ObjectRecord,DetectRecord,mode,2,保存目标记录,数据处理
+ConditionalFlow,ConditionalFlow,-,-,条件分支,逻辑
+LoopFlow,LoopFlow,mode,0,循环流程,逻辑
+LoopFlow.ForeachImages,LoopFlow,mode,1,遍历图像,逻辑
+Delayer,Delayer,-,-,延迟器,其他
+ElapsedTimer,ElapsedTimer,-,-,耗时统计,其他
+LogOutput,LogOutput,-,-,日志输出,其他
+NotificationOutput,NotificationOutput,mode,0,消息通知,其他
+NotificationOutput.Dialog,NotificationOutput,mode,7,弹窗通知,其他
+NotificationOutput.Error,NotificationOutput,mode,5,错误通知,其他
+NotificationOutput.Fatal,NotificationOutput,mode,6,严重错误通知,其他
+NotificationOutput.Info,NotificationOutput,mode,2,信息通知,其他
+NotificationOutput.Ng,NotificationOutput,mode,1,不合格结果输出,其他
+NotificationOutput.Success,NotificationOutput,mode,3,成功通知,其他
+NotificationOutput.Warning,NotificationOutput,mode,4,警告通知,其他

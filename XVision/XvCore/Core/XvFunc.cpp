@@ -1,4 +1,4 @@
-﻿#include "XvFunc.h"
+#include "XvFunc.h"
 #include <QUuid>
 #include <QElapsedTimer>
 #include <QSet>
@@ -77,7 +77,8 @@ void XvFunc::setFuncName(const QString &name)
 
 QPixmap XvFunc::funcIcon()
 {
-    return QPixmap(":/image/XvFuncIcon.svg");
+    const QPixmap icon(":/operators/"+funcRole()+".svg");
+    return icon.isNull()?QPixmap(":/image/XvFuncIcon.svg"):icon;
 }
 
 void XvFunc::setParFlow(XvFlow *flow)

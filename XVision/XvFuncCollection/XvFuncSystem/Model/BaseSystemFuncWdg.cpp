@@ -1,14 +1,20 @@
-﻿#include "BaseSystemFuncWdg.h"
+#include "BaseSystemFuncWdg.h"
 
 #include <QHBoxLayout>
 #include <QPlainTextEdit>
 #include <QLineEdit>
 #include <QComboBox>
 #include <QLabel>
+#include <QAbstractSpinBox>
+#include <QFormLayout>
+#include <QScrollArea>
+#include <QScreen>
+#include <QGuiApplication>
+#include <QTimer>
+#include <QWindow>
 
 #include "XTitleBar.h"
-#include "XMatToolButton.h"
-#include "XMatCheckBox.h"
+#include <QToolButton>
 
 #include "XvFlow.h"
 #include "XvProject.h"
@@ -16,16 +22,34 @@
 BaseSystemFuncWdg::BaseSystemFuncWdg(XvFunc *func, QWidget *parent)
     :XFramelessWidget(parent),m_func(func)
 {
+    m_parameterScroll=new QScrollArea(this);
+    m_parameterScroll->setObjectName("operatorParameterScroll");
+    m_parameterScroll->setWidgetResizable(true);
+    m_parameterScroll->setFrameShape(QFrame::NoFrame);
+    m_parameterScroll->setAlignment(Qt::AlignTop|Qt::AlignLeft);
+    m_parameterContent=new QWidget(m_parameterScroll);
+    m_parameterContent->setObjectName("operatorParameterContent");
+    m_parameterContent->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Preferred);
+    m_parameterScroll->setWidget(m_parameterContent);
+    XFramelessWidget::setCentralWidget(m_parameterScroll);
+    setMinimumSize(400,280);
+    resize(660,560);
     this->initFrm();
     if(func)
     {
         connect(func,&XvFunc::sgFuncRunEnd,this,[this]() {
             if(isVisible()) onFuncRunUpdate();
         });
+        connect(func,&QObject::destroyed,this,[this]() {
+            m_func.clear();
+            setEnabled(false);
+            hide();
+        });
         if(auto flow=func->parFlow())
         {
-            const auto updateEnabled=[this,flow]() {
-                const bool enabled=flow->isEditAllowed();
+            const auto updateEnabled=[this]() {
+                auto flow=m_func?m_func->parFlow():nullptr;
+                const bool enabled=flow && flow->isEditAllowed();
                 centralWidget()->setEnabled(enabled);
                 if(auto button=findChild<QToolButton*>("btnRun")) button->setEnabled(enabled);
             };
@@ -130,7 +154,7 @@ void BaseSystemFuncWdg::initCmbByBool(QComboBox *cmb)
 void BaseSystemFuncWdg::setCmbBind(XObject *param, QComboBox *cmb)
 {
     XvFunc::SubscribeInfo info;
-    if(m_func->getParamSubscribe(param->objectName(),info))
+    if(m_func && param && m_func->getParamSubscribe(param->objectName(),info))
     {
       setCmbBindResultTag(cmb,SBindResultTag(info.first,info.second));
     }
@@ -138,6 +162,7 @@ void BaseSystemFuncWdg::setCmbBind(XObject *param, QComboBox *cmb)
 
 void BaseSystemFuncWdg::setCmbWithCmbEnable(QComboBox *cmbBind, QComboBox *cmbVal, const QString &paramName)
 {
+    if(!m_func) return;
     auto idx=cmbBind->currentIndex();
     if(idx<0) return;
     if(idx==0)
@@ -162,6 +187,7 @@ void BaseSystemFuncWdg::setCmbWithCmbEnable(QComboBox *cmbBind, QComboBox *cmbVa
 
 void BaseSystemFuncWdg::setCmbWithLetEnable(QComboBox *cmbBind, QLineEdit *letVal, const QString &paramName)
 {
+    if(!m_func) return;
     auto idx=cmbBind->currentIndex();
     if(idx<0) return;
     if(idx==0)
@@ -186,6 +212,7 @@ void BaseSystemFuncWdg::setCmbWithLetEnable(QComboBox *cmbBind, QLineEdit *letVa
 
 void BaseSystemFuncWdg::setCmbWithPetEnable(QComboBox *cmbBind, QPlainTextEdit *letVal, const QString &paramName)
 {
+    if(!m_func) return;
     auto idx=cmbBind->currentIndex();
     if(idx<0) return;
     if(idx==0)
@@ -212,7 +239,7 @@ void BaseSystemFuncWdg::initFrm()
 {
     auto tb =this->titleBar();
     auto size=tb->height()-2;
-    auto btnRun=new XMatToolButton(this);
+    auto btnRun=new QToolButton(this);
     btnRun->setText("");
     btnRun->setObjectName("btnRun");
     btnRun->setMinimumSize(QSize(size, size));
@@ -231,12 +258,16 @@ void BaseSystemFuncWdg::initFrm()
         }
 
     });
-    auto ckb=new XMatCheckBox(this);
+    auto ckb=new QToolButton(this);
+    ckb->setObjectName("btnPin");
+    ckb->setCheckable(true);
+    ckb->setIcon(QIcon(":/images/UiPin.svg"));
+    ckb->setIconSize(QSize(18,18));
     ckb->setText("");
     QString strSetTop=getLang("XvFuncSystem_BaseSystemFuncWdg_SetTop","置顶");
     QString strSetTopCancel=getLang("XvFuncSystem_BaseSystemFuncWdg_SetTopCancel","取消置顶");
     ckb->setToolTip(strSetTop);
-    connect(ckb,&XMatCheckBox::toggled,this,[=]()
+    connect(ckb,&QToolButton::toggled,this,[=]()
     {
         bool bChecked=ckb->isChecked();
         if(bChecked)
@@ -246,7 +277,7 @@ void BaseSystemFuncWdg::initFrm()
         }
         else
         {
-            setWindowFlags(windowFlags() ^ Qt::WindowStaysOnTopHint);
+            setWindowFlags(windowFlags() & ~Qt::WindowStaysOnTopHint);
             ckb->setToolTip(strSetTop);
         }
         this->show();
@@ -257,9 +288,72 @@ void BaseSystemFuncWdg::initFrm()
     tb->rightLayout()->addWidget(ckb);   
 }
 
-void BaseSystemFuncWdg::initFixedSize()
+void BaseSystemFuncWdg::initPreferredSize()
 {
-    this->setFixedSize(this->centralWidget()->geometry().width()+10,this->centralWidget()->geometry().height()+20);
+    // Designer geometry supplies a starting size, never a permanent constraint.
+    const QSize hint=centralWidget()->sizeHint().expandedTo(centralWidget()->size());
+    resize(qBound(480,hint.width()+36,760),qBound(320,hint.height()+64,680));
+}
+
+void BaseSystemFuncWdg::prepareParameterLayout()
+{
+    if(!centralWidget()) return;
+    centralWidget()->setMaximumSize(QWIDGETSIZE_MAX,QWIDGETSIZE_MAX);
+    if(auto layout=centralWidget()->layout())
+    {
+        layout->setContentsMargins(16,16,16,16);
+        layout->setSizeConstraint(QLayout::SetMinimumSize);
+    }
+    for(auto form:centralWidget()->findChildren<QFormLayout*>())
+    {
+        form->setRowWrapPolicy(QFormLayout::WrapLongRows);
+        form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
+        form->setFormAlignment(Qt::AlignTop|Qt::AlignLeft);
+        form->setLabelAlignment(Qt::AlignLeft|Qt::AlignVCenter);
+        form->setHorizontalSpacing(14);
+        form->setVerticalSpacing(10);
+        for(int row=0;row<form->rowCount();++row)
+            if(auto item=form->itemAt(row,QFormLayout::LabelRole))
+                if(auto label=qobject_cast<QLabel*>(item->widget()))
+                {
+                    label->setWordWrap(true);
+                    label->setMaximumHeight(QWIDGETSIZE_MAX);
+                }
+    }
+    const int rowHeight=qMax(30,fontMetrics().height()+12);
+    for(auto editor:centralWidget()->findChildren<QWidget*>())
+    {
+        const bool input=qobject_cast<QComboBox*>(editor)
+                || qobject_cast<QAbstractSpinBox*>(editor)
+                || (qobject_cast<QLineEdit*>(editor)
+                    && !qobject_cast<QAbstractSpinBox*>(editor->parentWidget())
+                    && !qobject_cast<QComboBox*>(editor->parentWidget()));
+        if(input)
+        {
+            editor->setMinimumHeight(rowHeight);
+            editor->setMaximumHeight(qMax(editor->maximumHeight(),rowHeight));
+            editor->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Fixed);
+        }
+        if(auto combo=qobject_cast<QComboBox*>(editor))
+        {
+            combo->setSizeAdjustPolicy(QComboBox::AdjustToMinimumContentsLengthWithIcon);
+            combo->setMinimumContentsLength(10);
+        }
+    }
+    centralWidget()->updateGeometry();
+}
+
+void BaseSystemFuncWdg::scheduleParameterRebuild()
+{
+    if(m_rebuildPending) return;
+    m_rebuildPending=true;
+    QTimer::singleShot(0,this,[this]() {
+        m_rebuildPending=false;
+        if(!m_func) return;
+        // The emitting editor has left its signal handler before deletion.
+        rebuildParameters();
+        prepareParameterLayout();
+    });
 }
 
 void BaseSystemFuncWdg::showEvent(QShowEvent *event)
@@ -269,6 +363,19 @@ void BaseSystemFuncWdg::showEvent(QShowEvent *event)
     m_bShowing=false;
     onShow();
     m_bShowing=true;
+    prepareParameterLayout();
+    if(!m_geometryInitialized)
+    {
+        m_geometryInitialized=true;
+        QScreen *screen=windowHandle()?windowHandle()->screen():QGuiApplication::primaryScreen();
+        if(screen)
+        {
+            const QRect available=screen->availableGeometry().adjusted(16,16,-16,-16);
+            setMinimumSize(qMin(400,available.width()),qMin(280,available.height()));
+            resize(qMin(width(),available.width()),qMin(height(),available.height()));
+            move(available.center()-rect().center());
+        }
+    }
     if(m_func)
     {
         if(m_func->parFlow())

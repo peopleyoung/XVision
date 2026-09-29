@@ -1,4 +1,4 @@
-﻿#include "HttpJson.h"
+#include "HttpJson.h"
 
 #include "CommunicationOperatorWdg.h"
 #include "XLanguage.h"
@@ -177,11 +177,6 @@ EXvFuncRunStatus HttpJson::run()
     }
     setRunMsg(QString());
     return EXvFuncRunStatus::Ok;
-}
-
-QPixmap HttpJson::funcIcon()
-{
-    return QPixmap(":/images/LogOutput.svg");
 }
 
 void HttpJson::onShowFunc()

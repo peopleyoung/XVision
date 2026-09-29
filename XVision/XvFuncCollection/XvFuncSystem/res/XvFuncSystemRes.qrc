@@ -13,5 +13,48 @@
         <file>images/ImageAcquisitionWdgDirNext.svg</file>
         <file>images/LogOutput.svg</file>
         <file>images/OpenCvImage.svg</file>
+        <file>operators/BaseDataBoolCalc.svg</file>
+        <file>operators/BaseDataIntCalc.svg</file>
+        <file>operators/BaseDataRealCalc.svg</file>
+        <file>operators/BaseDataStringProcess.svg</file>
+        <file>operators/BaseDataWriter.svg</file>
+        <file>operators/ConditionalFlow.svg</file>
+        <file>operators/Delayer.svg</file>
+        <file>operators/DetectRecord.svg</file>
+        <file>operators/ElapsedTimer.svg</file>
+        <file>operators/GeometryCreate.svg</file>
+        <file>operators/GeometryMeasure.svg</file>
+        <file>operators/HttpJson.svg</file>
+        <file>operators/ImageAcquisition.svg</file>
+        <file>operators/LogOutput.svg</file>
+        <file>operators/LoopFlow.svg</file>
+        <file>operators/ModbusRegister.svg</file>
+        <file>operators/NClassification.svg</file>
+        <file>operators/NInference.svg</file>
+        <file>operators/NObjectDetection.svg</file>
+        <file>operators/NSemanticSegmentation.svg</file>
+        <file>operators/NotificationOutput.svg</file>
+        <file>operators/OCascadeDetector.svg</file>
+        <file>operators/OCodeDetector.svg</file>
+        <file>operators/OImageAnalysis.svg</file>
+        <file>operators/OImageArithmetic.svg</file>
+        <file>operators/OImageColor.svg</file>
+        <file>operators/OImageComposition.svg</file>
+        <file>operators/OImageFilter.svg</file>
+        <file>operators/OImageModel.svg</file>
+        <file>operators/OImageThreshold.svg</file>
+        <file>operators/OImageTransform.svg</file>
+        <file>operators/OMorphology.svg</file>
+        <file>operators/OPointFeature.svg</file>
+        <file>operators/ORectification.svg</file>
+        <file>operators/ORegionDetector.svg</file>
+        <file>operators/OTemplateMatch.svg</file>
+        <file>operators/SerialData.svg</file>
+        <file>operators/TcpText.svg</file>
+        <file>operators/UdpText.svg</file>
+        <file>images/UiOpen.svg</file>
+        <file>images/UiSave.svg</file>
+        <file>images/UiPin.svg</file>
+        <file>images/UiRefresh.svg</file>
     </qresource>
 </RCC>

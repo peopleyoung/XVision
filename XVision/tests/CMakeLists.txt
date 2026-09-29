@@ -1,4 +1,4 @@
-﻿find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Gui Network SerialBus SerialPort Sql Test Widgets Xml)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Gui Network SerialBus SerialPort Sql Test Widgets Xml)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Gui Network SerialBus SerialPort Sql Test Widgets Xml)
 include(../3rdparty/Common3rdparty.cmake)
 
@@ -8,27 +8,16 @@ file(MAKE_DIRECTORY "${XVISION_QT_TEST_LOG_DIR}")
 
 set(CMAKE_AUTOMOC ON)
 
-set(VISIONMASTER_MATRIX
-    "${CMAKE_CURRENT_SOURCE_DIR}/../../doc/开发工作/VisionMaster算子兼容矩阵.csv")
-set(VISIONMASTER_MATRIX_VERIFIER
-    "${CMAKE_CURRENT_SOURCE_DIR}/../scripts/VerifyVisionMasterMatrix.cmake")
-set(VISIONMASTER_GENERATED_DOCUMENT
-    "${CMAKE_CURRENT_SOURCE_DIR}/../../doc/开发工作/VisionMaster全算子适配清单.md")
-
-add_test(NAME visionmaster_matrix
-    COMMAND ${CMAKE_COMMAND}
-        -DMATRIX=${VISIONMASTER_MATRIX}
-        -DVERIFIER=${VISIONMASTER_MATRIX_VERIFIER}
-        -DTEST_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}/visionmaster-matrix-tests
-        -P ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/TestVisionMasterMatrix.cmake
-)
-add_test(NAME visionmaster_matrix_document
-    COMMAND ${CMAKE_COMMAND}
-        -DMATRIX=${VISIONMASTER_MATRIX}
-        -DOUTPUT=${CMAKE_CURRENT_BINARY_DIR}/VisionMaster全算子适配清单.md
-        -DEXPECTED_DOCUMENT=${VISIONMASTER_GENERATED_DOCUMENT}
-        -P ${VISIONMASTER_MATRIX_VERIFIER}
-)
+set(XVISION_OPERATOR_CATALOG
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../doc/开发工作/算子目录.csv")
+add_test(NAME operator_catalog
+    COMMAND ${CMAKE_COMMAND} -DCATALOG=${XVISION_OPERATOR_CATALOG}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/VerifyOperatorCatalog.cmake)
+add_test(NAME operator_catalog_rejections
+    COMMAND ${CMAKE_COMMAND} -DCATALOG=${XVISION_OPERATOR_CATALOG}
+        -DVERIFIER=${CMAKE_CURRENT_SOURCE_DIR}/../scripts/VerifyOperatorCatalog.cmake
+        -DTEST_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}/operator-catalog-tests
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/TestOperatorCatalog.cmake)
 
 add_test(NAME visionmaster_sdk_cmake
     COMMAND ${CMAKE_COMMAND}
@@ -551,7 +540,7 @@ add_test(NAME systemplugin
         "PATH=$<TARGET_FILE_DIR:XvFuncSystem>$<SEMICOLON>$<TARGET_FILE_DIR:XvCore>$<SEMICOLON>$ENV{QTDIR}/bin$<SEMICOLON>$ENV{PATH}"
         $<TARGET_FILE:XvSystemPluginTests>
         $<TARGET_FILE:XvFuncSystem>
-        "${VISIONMASTER_MATRIX}"
+        "${XVISION_OPERATOR_CATALOG}"
         -o "${XVISION_QT_TEST_LOG_DIR}/systemplugin.txt,txt"
         -o "-,txt"
 )
@@ -607,12 +596,9 @@ endif()
 # Real application widgets are compiled into the UI regression executable.
 add_executable(XvUiResponsivenessTests
     tst_uiresponsiveness.cpp
+    ../XVision/Utils/UiAppearance.cpp
     ../XVision/UiWork/UiXvFunc/FrmXvFuncAsm.cpp
-    ../XVision/UiWork/UiXvFunc/FrmXvFuncAsm.ui
     ../XVision/UiWork/UiXvFunc/FrmXvFuncType.cpp
-    ../XVision/UiWork/UiXvFunc/FrmXvFuncType.ui
-    ../XVision/UiWork/UiXvFunc/WdgItemXvFunc.cpp
-    ../XVision/UiWork/UiXvFunc/WdgItemXvFunc.ui
     ../XVision/Res/AppRes.qrc
     ../XVision/Model/BaseWidget.cpp
     ../XVision/UIOutput/FrmLogShow.cpp
@@ -626,7 +612,11 @@ target_include_directories(XvUiResponsivenessTests PRIVATE
     ${XVISION_UI_TEST_INCLUDES}
     ../XvFuncCollection/XvFuncSystem/Model
     ../XvFuncCollection/XvFuncSystem/include
-    ../XvFuncCollection/XvFuncSystem/Other)
+    ../XvFuncCollection/XvFuncSystem/Other
+    ../XvFuncCollection/XvFuncSystem/ImageAcquisition
+    ../XvFuncCollection/XvFuncSystem/Communication
+    ../XvFuncCollection/XvFuncSystem/Onnx
+    ../XvFuncCollection/XvFuncSystem/Interop)
 target_link_libraries(XvUiResponsivenessTests PRIVATE
     XvFuncSystem XvCore XvData XvDisplay XWidget XLog XLanguage
     Qt${QT_VERSION_MAJOR}::Test Qt${QT_VERSION_MAJOR}::Widgets)

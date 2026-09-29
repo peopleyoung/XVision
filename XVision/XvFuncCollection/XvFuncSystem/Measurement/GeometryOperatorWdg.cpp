@@ -1,4 +1,4 @@
-﻿#include "GeometryOperatorWdg.h"
+#include "GeometryOperatorWdg.h"
 
 #include "GeometryOperatorBase.h"
 #include "XPoint2D.h"
@@ -53,7 +53,7 @@ GeometryOperatorWdg::GeometryOperatorWdg(GeometryOperatorBase *func,QWidget *par
     {
         if(index<0) return;
         func->setProperty(propertyName.constData(),m_selector->itemData(index));
-        rebuildParameters();
+        scheduleParameterRebuild();
     });
     setMinimumSize(480,280);
 }
@@ -86,8 +86,7 @@ void GeometryOperatorWdg::rebuildParameters()
         if(editor)
             m_form->addRow(getUiText(object->dispalyName().isEmpty()?name:object->dispalyName()),editor);
     }
-    adjustSize();
-    resize(qMax(width(),480),qMax(height(),280));
+    prepareParameterLayout();
 }
 
 QWidget *GeometryOperatorWdg::createParameterEditor(XObject *object)

@@ -1,4 +1,4 @@
-﻿#ifndef BASEDATAINTCALC_H
+#ifndef BASEDATAINTCALC_H
 #define BASEDATAINTCALC_H
 
 #include "XVFuncSystemGlobal.h"
@@ -64,7 +64,7 @@ public:
 public slots:
     void onShowFunc() override;
 protected:
-    QPixmap funcIcon() override { return QPixmap(":/images/BaseDataIntCalc.svg");}
+
     EXvFuncRunStatus run() override;
 
     XvBaseParam *getParam() const override { return param;};
