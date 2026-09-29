@@ -78,7 +78,7 @@ try {
         }
     }
 
-    $CTestInventoryLines = & ctest --test-dir $BuildDir -C $Configuration `
+    $CTestInventoryLines = & ctest --preset $Preset -C $Configuration `
         --show-only=json-v1
     if ($LASTEXITCODE -ne 0) { throw "Unable to enumerate first-party tests." }
     $CTestInventory = ($CTestInventoryLines -join [Environment]::NewLine) |
