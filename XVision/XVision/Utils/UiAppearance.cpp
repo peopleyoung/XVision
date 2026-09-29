@@ -42,7 +42,7 @@ public:
             auto row=reinterpret_cast<QRgb*>(pixels.scanLine(y));
             for(int x=0;x<pixels.width();++x) {
                 QColor color=QColor::fromRgba(row[x]);if(!color.alpha())continue;
-                qreal h,s,l,a;color.getHslF(&h,&s,&l,&a);
+                const qreal h=color.hslHueF(),s=color.hslSaturationF(),l=color.lightnessF(),a=color.alphaF();
                 // Preserve semantic red/green accents while darkening pale line art.
                 if(l>0.55)color=QColor::fromHslF(h<0?0.59:h,s<0.1?0.35:s,mode==QIcon::Disabled?0.52:0.34,a);
                 row[x]=color.rgba();
@@ -98,7 +98,7 @@ QString checkedId(const QString &id) {
 }
 QColor themeColor(const QColor &color,const QString &id) {
     if(id=="tech-blue" || !color.isValid()) return color;
-    qreal h,s,l,a; color.getHslF(&h,&s,&l,&a);
+    qreal h=color.hslHueF(),s=color.hslSaturationF(),l=color.lightnessF(),a=color.alphaF();
     const bool blue=h>=0.45 && h<=0.72;
     if(id=="mist-white") {
         if(l>0.77) return QColor::fromHslF(0.59,0.32,0.18,a);
