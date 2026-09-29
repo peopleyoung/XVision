@@ -1,4 +1,4 @@
-﻿#ifndef APPMAINWINDOW_H
+#ifndef APPMAINWINDOW_H
 #define APPMAINWINDOW_H
 
 #include <QWidget>
@@ -48,6 +48,9 @@ public slots:
     void projectSetting();
     ///系统设置
     void systemSetting();
+    void globalManager();
+    void globalScript();
+    void variableManager();
 //*[帮助]*
     ///关于
     void about();

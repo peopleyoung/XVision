@@ -1,4 +1,4 @@
-﻿#ifndef XFLOWGRAPHICSELLIPSEITEM_H
+#ifndef XFLOWGRAPHICSELLIPSEITEM_H
 #define XFLOWGRAPHICSELLIPSEITEM_H
 
 #include "XFlowGraphicsItem.h"
@@ -8,6 +8,9 @@ class XFlowGraphicsEllipseItemPrivate;
 class XFLOWGRAPHICS_PUBLIC XFlowGraphicsEllipseItem:public XFlowGraphicsItem,public QGraphicsEllipseItem
 {
     Q_OBJECT
+public slots:
+    virtual void refreshThemePalette();
+private:
     Q_PROPERTY(QPen itemEllipsePen READ itemEllipsePen WRITE setItemEllipsePen)
     Q_PROPERTY(QBrush itemEllipseBrush READ itemEllipseBrush WRITE setItemEllipseBrush)
     Q_PROPERTY(QPen selectEllipsePen READ selectEllipsePen WRITE setSelectEllipsePen)

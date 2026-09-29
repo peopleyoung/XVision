@@ -1,4 +1,4 @@
-﻿#include "XvProject.h"
+#include "XvProject.h"
 
 #include <QUuid>
 #include <QElapsedTimer>
@@ -45,6 +45,8 @@ public:
     QMap<QString,XvFlow*>   mapFlow;
     ///项目运行配置
     XvProjectConfig        projectConfig;
+    XvGlobalState          globalState;
+    quint64                globalRevision=0;
     ///项目运行线程及状态
     QPointer<XThread>      runThread;
     QPointer<XvFlow>       currentFlow;
@@ -500,7 +502,22 @@ QDomElement XvProject::toXmlElement(QDomDocument &doc)
         flowsElement.appendChild(flowElement);
     }
     projectElement.appendChild(flowsElement);
+    projectElement.appendChild(d->globalState.toXml(doc));
     return projectElement;
+}
+
+XvGlobalState XvProject::globalState() const { Q_D(const XvProject); return d->globalState; }
+quint64 XvProject::globalRevision() const { Q_D(const XvProject); return d->globalRevision; }
+bool XvProject::hasActiveExecution() const {
+    if(isRunning()) return true;
+    for(auto flow:getXvFlows()) if(flow->isRunning()) return true;
+    return false;
+}
+bool XvProject::setGlobalState(const XvGlobalState &state) {
+    Q_D(XvProject);
+    if(QThread::currentThread()!=thread() || hasActiveExecution()) {setLastErrorMsg(QStringLiteral("运行期间不能修改全局配置"));return false;}
+    QString error;if(!state.validate(error)) {setLastErrorMsg(error);return false;}
+    d->globalState=state;++d->globalRevision;emit globalStateChanged();return true;
 }
 
 bool XvProject::fromXmlElement(QDomElement &xmlEle)
@@ -509,7 +526,7 @@ bool XvProject::fromXmlElement(QDomElement &xmlEle)
     QString error;
     if(xmlEle.tagName()!="Project"
             || !XvXml::validateAttributes(xmlEle,{"id","name"},{"id","name"},error)
-            || !XvXml::validateChildren(xmlEle,{"Config","Flows"},{"Flows"},error))
+            || !XvXml::validateChildren(xmlEle,{"Config","Flows","Globals"},{"Flows"},error))
     {
         setLastErrorMsg(error.isEmpty()?"无效的<Project>节点":error);
         return false;
@@ -634,6 +651,10 @@ bool XvProject::fromXmlElement(QDomElement &xmlEle)
             legacyConfig.mainFlows.append(XvProjectFlowEntry(flow->flowId()));
         }
         if(!setProjectConfig(legacyConfig)) return false;
+    }
+    XvGlobalState globals;
+    if(!XvGlobalState::fromXml(xmlEle.firstChildElement("Globals"),globals,error) || !setGlobalState(globals)) {
+        if(!error.isEmpty()) setLastErrorMsg(error);return false;
     }
     setProjectName(xmlEle.attribute("name"));
     return true;

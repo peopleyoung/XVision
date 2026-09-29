@@ -1,4 +1,4 @@
-﻿#ifndef XVPROJECT_H
+#ifndef XVPROJECT_H
 #define XVPROJECT_H
 
 #include "XvCoreGlobal.h"
@@ -6,6 +6,7 @@
 #include "IXvTokenMsgAble.h"
 #include "XvError.h"
 #include "XvProjectConfig.h"
+#include "XvGlobalState.h"
 #include "XvProjectRunInfo.h"
 #include "XmlSerializable.h"
 
@@ -90,6 +91,10 @@ public slots:
 /********************************************************/
 public:
     ///返回项目运行配置快照
+    XvGlobalState globalState() const;
+    bool setGlobalState(const XvGlobalState &state);
+    quint64 globalRevision() const;
+    bool hasActiveExecution() const;
     XvProjectConfig projectConfig() const;
     ///完整校验后原子替换项目运行配置
     bool setProjectConfig(const XvProjectConfig &config);
@@ -111,6 +116,7 @@ protected:
 signals:
     void projectNameChanged(const QString &name);
     void projectConfigChanged();
+    void globalStateChanged();
 
 /**********************XML序列化**********************/
 public:

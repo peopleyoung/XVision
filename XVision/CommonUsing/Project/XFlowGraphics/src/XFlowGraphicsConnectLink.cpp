@@ -1,9 +1,14 @@
-﻿#include "XFlowGraphicsConnectLink.h"
+#include <QGuiApplication>
+#include <QApplication>
+#include <QPalette>
+#include "XFlowGraphicsConnectLink.h"
 #include "XFlowGraphicsItem.h"
 #include "XFlowGraphicsScene.h"
 #include "XFlowGraphicsUtils.h"
 
 #include <QUuid>
+#include "XFlowGraphicsRouting.h"
+#include <QFontMetricsF>
 /*******************************/
 //* [XFlowGraphicsConnectLinkPrivate]
 /*******************************/
@@ -48,7 +53,21 @@ public:
         textPen.setWidth(1);
         textFont = QFont("YouYuan", 12, 2);
         textFont.setBold(false);
+        applyPalette(QApplication::palette());
+        QObject::connect(qGuiApp,&QGuiApplication::paletteChanged,q_ptr,[this](const QPalette &palette) {
+            applyPalette(palette); q_ptr->update();
+        });
     };
+    void applyPalette(const QPalette &palette) {
+        linkingCirclePen.setColor(palette.color(QPalette::Text));
+        linkingCircleBrush.setColor(palette.color(QPalette::Link));
+        linkingPen.setColor(palette.color(QPalette::Link));
+        linkedPen.setColor(palette.color(QPalette::Link));
+        linkSelectedPen.setColor(palette.color(QPalette::Link));
+        selectBoundingRectPen.setColor(palette.color(QPalette::Text));
+        highLightPen.setColor(palette.color(QPalette::Link));
+        textPen.setColor(palette.color(QPalette::Text));
+    }
     virtual ~XFlowGraphicsConnectLinkPrivate(){};
 
     XFlowGraphicsConnectLink                *const q_ptr;
@@ -251,6 +270,7 @@ void XFlowGraphicsConnectLink::setArrowSize(const double &size)
 {
     Q_D(XFlowGraphicsConnectLink);
     d->arrowSize=size;
+    updateXLink();
 }
 
 QPen XFlowGraphicsConnectLink::highLightPen() const
@@ -287,6 +307,7 @@ void XFlowGraphicsConnectLink::setTextFont(const QFont &font)
 {
     Q_D(XFlowGraphicsConnectLink);
     d->textFont=font;
+    updateXLink();
 }
 
 
@@ -346,15 +367,20 @@ void XFlowGraphicsConnectLink::onSonXItemUpdate()
 }
 
 
-/* ToDo:
- * 1.将当前直线优化为直角拐弯线，参考draw.io绘图软件的连接线；
- * 2.显示移动中点，拖动该点使线段移动;
- * 3.对当前经过的图元进行绕弯处理，防止重叠
-*/
 void XFlowGraphicsConnectLink::updateXLink()
 {
+    prepareGeometryChange();
+    // Keep the legacy endpoint line for consumers; all visible geometry uses the path.
     setLine(QLineF(m_ptSonEnd,m_ptFatherStart));
+    const auto bounds=[](XFlowGraphicsItem *node) {
+        return node && node->item() ? node->item()->sceneBoundingRect() : QRectF();
+    };
+    m_connectionPath=makeOrthogonalPath(m_ptFatherStart,m_ptSonEnd,bounds(m_fatherXItem),bounds(m_sonXItem));
     updateArrow();
+    const QPointF center=m_connectionPath.pointAtPercent(0.5);
+    const QRectF textBounds=QFontMetricsF(textFont()).boundingRect(m_LinkText);
+    m_LinkRectText=QRectF(center-QPointF(textBounds.width()/2,textBounds.height()/2),textBounds.size());
+    update();
 }
 
 /***************************XLink数据***************************/
@@ -487,23 +513,19 @@ void XFlowGraphicsConnectLink::setHighLight(bool highLight, bool bUpdate)
 
 QRectF XFlowGraphicsConnectLink::boundingRect() const
 {
-    qreal extra = (pen().width() + 20) / 2.0;
-
-    return QRectF(line().p1(), QSizeF(line().p2().x() - line().p1().x(),
-                                          line().p2().y() - line().p1().y()))
-            .normalized()
-            .adjusted(-extra, -extra, extra, extra);
+    QRectF bounds=m_connectionPath.boundingRect().united(m_polyArrowHead.boundingRect());
+    if(!m_LinkText.isEmpty()) bounds=bounds.united(m_LinkRectText);
+    return bounds.adjusted(-16,-16,16,16);
 }
-
 
 QPainterPath XFlowGraphicsConnectLink::shape() const
 {
-    QPainterPath path;
     QPainterPathStroker stroker;
-    stroker.setWidth(30);
-    path.moveTo(line().p1());
-    path.lineTo(line().p2());
-    return stroker.createStroke(path);
+    stroker.setWidth(16);
+    stroker.setJoinStyle(Qt::RoundJoin);
+    QPainterPath hit=stroker.createStroke(m_connectionPath);
+    hit.addPolygon(m_polyArrowHead);
+    return hit;
 }
 
 void XFlowGraphicsConnectLink::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
@@ -529,34 +551,20 @@ void XFlowGraphicsConnectLink::paint(QPainter *painter, const QStyleOptionGraphi
             painter->setPen(d->highLightPen);
             painter->setBrush(d->highLightPen.color());
         }
-        painter->drawLine(this->line());
+        painter->setBrush(Qt::NoBrush);
+        painter->drawPath(m_connectionPath);
+        painter->setBrush(painter->pen().color());
         painter->drawPolygon(m_polyArrowHead);
 
-        if(isSelected()) //选择状态绘制外框
-        {
-
-            painter->setPen(d->selectBoundingRectPen);
-            painter->setBrush(Qt::NoBrush);
-            double size=d->arrowSize/2.0;
-            double angle = std::atan2(-line().dy(), line().dx());
-
-            QPointF p1 = m_ptFatherStart + QPointF(sin(angle + M_PI) * size,cos(angle + M_PI) * size);
-            QPointF p2 = m_ptFatherStart+ QPointF(sin(angle + M_PI - M_PI ) * size,cos(angle + M_PI - M_PI ) * size);
-            QPointF p3 = m_ptSonEnd+ QPointF(sin(angle + M_PI - M_PI ) * size,cos(angle + M_PI - M_PI ) * size);
-            QPointF p4 = m_ptSonEnd + QPointF(sin(angle + M_PI) * size,cos(angle + M_PI) * size);
-
-            QPolygonF boundingRect;
-            boundingRect.clear();
-            boundingRect<<p1<<p2<<p3<<p4;
-            painter->drawPolygon(boundingRect);
-        }
 
     }
     else //未连接时
     {
        painter->setPen(d->linkingPen);
        painter->setBrush(d->linkingPen.color());
-       painter->drawLine(this->line());
+       painter->setBrush(Qt::NoBrush);
+        painter->drawPath(m_connectionPath);
+        painter->setBrush(painter->pen().color());
        painter->drawPolygon(m_polyArrowHead);
        painter->setPen(d->linkingCirclePen);
        painter->setBrush(d->linkingCircleBrush);
@@ -564,16 +572,6 @@ void XFlowGraphicsConnectLink::paint(QPainter *painter, const QStyleOptionGraphi
        painter->drawEllipse(this->sonEndPos(),radius,radius);
     }
 
-
-    double rectSize=line().length()/2;
-    if(rectSize<100)
-    {
-        rectSize=100;
-    }
-    QRect rect(0,0,rectSize,rectSize/2);
-    QPointF pos=line().center()-QPointF(rect.width()/2,rect.height()/2);
-    rect.moveTo(pos.toPoint());
-    m_LinkRectText=rect;
 
     if(!m_LinkText.isEmpty())
     {
@@ -590,16 +588,17 @@ void XFlowGraphicsConnectLink::paint(QPainter *painter, const QStyleOptionGraphi
 /***************************内部调用接口***************************/
 void XFlowGraphicsConnectLink::updateArrow()
 {
-    double angle = std::atan2(-line().dy(), line().dx());
-    double arrowSize=this->arrowSize();
-    const double coef=2.5;
-    QPointF arrowP1 = m_ptSonEnd + QPointF(sin(angle + M_PI / coef) * arrowSize,
-                                    cos(angle + M_PI / coef) * arrowSize);
-    QPointF arrowP2 = m_ptSonEnd+ QPointF(sin(angle + M_PI - M_PI / coef) * arrowSize,
-                                    cos(angle + M_PI - M_PI / coef) * arrowSize);
-
     m_polyArrowHead.clear();
-    m_polyArrowHead <<m_ptSonEnd << arrowP1 << arrowP2;
+    if(m_connectionPath.elementCount()<2) return;
+    const auto last=m_connectionPath.elementAt(m_connectionPath.elementCount()-1);
+    const auto before=m_connectionPath.elementAt(m_connectionPath.elementCount()-2);
+    const QPointF tip(last.x,last.y),previous(before.x,before.y);
+    const qreal length=QLineF(previous,tip).length();
+    if(length<0.001) return;
+    const QPointF direction=(tip-previous)/length,normal(-direction.y(),direction.x());
+    const qreal size=qMin(arrowSize(),length);
+    m_polyArrowHead << tip << tip-direction*size+normal*size*0.45
+                    << tip-direction*size-normal*size*0.45;
 }
 
 void XFlowGraphicsConnectLink::drawLinkText(QPainter *painter, const QString &text)
@@ -609,7 +608,7 @@ void XFlowGraphicsConnectLink::drawLinkText(QPainter *painter, const QString &te
     QFontMetrics fontMetrics = painter->fontMetrics();
     painter->setPen(textPen());
     QRect rect = fontMetrics.boundingRect(text);
-    QPointF pos=line().center()-QPointF(rect.width()/2,rect.height()/2);
+    QPointF pos=m_LinkRectText.center()-QPointF(rect.width()/2,rect.height()/2);
     rect.moveTo(pos.toPoint());
     painter->drawText(rect,text);
     painter->restore();
@@ -619,6 +618,12 @@ void XFlowGraphicsConnectLink::drawLinkText(QPainter *painter, const QString &te
 
 double XFlowGraphicsConnectLink::linkLength()
 {
-   return this->line().length();
+   return m_connectionPath.length();
 }
 
+
+void XFlowGraphicsConnectLink::refreshThemePalette() {
+    Q_D(XFlowGraphicsConnectLink);
+    d->applyPalette(QApplication::palette());
+    update();
+}

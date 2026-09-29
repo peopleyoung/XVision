@@ -1,4 +1,4 @@
-﻿#include "FrmLogShow.h"
+#include "FrmLogShow.h"
 #include "ui_FrmLogShow.h"
 #include <QMutexLocker>
 #include <QScrollBar>
@@ -6,7 +6,23 @@
 #include <QDesktopServices>
 #include <QTimer>
 #include <deque>
+#include <QApplication>
+#include <QTextBlock>
+#include <QEvent>
 
+namespace {
+QColor logTextColor(XLogger::ELogType level) {
+    const auto palette=QApplication::palette();
+    const bool light=palette.color(QPalette::Base).lightness()>128;
+    switch(level) {
+    case XLogger::Trace:return palette.color(QPalette::Disabled,QPalette::Text);
+    case XLogger::Debug:case XLogger::Event:return palette.color(QPalette::Link);
+    case XLogger::Warn:return QColor(light?"#946100":"#F5BF69");
+    case XLogger::Error:case XLogger::Critical:return QColor(light?"#B92344":"#FF7C8D");
+    default:return palette.color(QPalette::Text);
+    }
+}
+}
 struct FrmLogShow::PendingLogs
 {
     QMutex mutex;
@@ -84,34 +100,10 @@ void FrmLogShow::initFrm()
 void FrmLogShow::onSignalLog(const QString &log, const XLogger::ELogType &logType)
 {
     QTextCharFormat fmt;
-    QColor color=QColor("#C0D5EC");
-    //字体大小
+    const QColor color=logTextColor(logType);
     fmt.setFontWeight(QFont::Normal);
+    fmt.setProperty(QTextFormat::UserProperty+1,int(logType));
     auto *ptxt=ui->ptxtLog;
-    switch (logType)
-    {
-    case XLogger::Trace:
-        color=QColor("#93ABC7");
-        break;
-    case XLogger::Debug:
-        color=QColor("#A7AEFF");
-        break;
-    case XLogger::Info:
-        color=QColor("#B6D4EC");
-        break;
-    case XLogger::Event:
-        color=QColor("#65BBFF");
-        break;
-    case XLogger::Warn:
-        color=QColor("#F5BF69");
-        break;
-    case XLogger::Error:
-        color=QColor("#FF7C8D");
-        break;
-    case XLogger::Critical:
-        color=QColor("#FF9CA8");
-        break;
-    }
     //字体色
     fmt.setForeground(QBrush(color));
     //设置光标到文本末尾
@@ -167,3 +159,17 @@ void FrmLogShow::onOpenLogDir()
     deskSer.openUrl(QUrl("file:///"+logDir));
 }
 
+
+void FrmLogShow::changeEvent(QEvent *event) {
+    BaseWidget::changeEvent(event);
+    if(event->type()!=QEvent::PaletteChange || !ui || !ui->ptxtLog)return;
+    auto document=ui->ptxtLog->document();
+    for(auto block=document->begin();block.isValid();block=block.next()) {
+        if(block.begin().atEnd())continue;
+        const auto format=block.begin().fragment().charFormat();
+        if(!format.hasProperty(QTextFormat::UserProperty+1))continue;
+        const auto level=static_cast<XLogger::ELogType>(format.intProperty(QTextFormat::UserProperty+1));
+        QTextCursor cursor(block);cursor.select(QTextCursor::BlockUnderCursor);
+        QTextCharFormat color;color.setForeground(logTextColor(level));cursor.mergeCharFormat(color);
+    }
+}

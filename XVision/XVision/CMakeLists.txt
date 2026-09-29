@@ -1,4 +1,4 @@
-﻿cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.5)
 
 project(XVision VERSION 0.1 LANGUAGES CXX)
 
@@ -18,8 +18,8 @@ include (../CommonUsing/CommonUsing.cmake)
 
 
 #寻找QT库
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Xml Concurrent)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Xml Concurrent)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Xml Concurrent Qml)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Xml Concurrent Qml)
 
 set(XVAPPLICATION_CLASS QApplication)
 add_subdirectory(SingleApplication)
@@ -38,6 +38,7 @@ list(APPEND APP_LIBS
     Qt${QT_VERSION_MAJOR}::Gui
     Qt${QT_VERSION_MAJOR}::Xml
     Qt${QT_VERSION_MAJOR}::Concurrent
+    Qt${QT_VERSION_MAJOR}::Qml
 )
 if(XVISION_ENABLE_BREAKPAD)
     list(APPEND APP_LIBS QBreakpad)
@@ -138,6 +139,11 @@ add_executable(${PROJECT_NAME}
     ${PROJECT_SOURCES}
     ${PROJECT_RES}
 )
+
+# Only the desktop application uses the Windows GUI subsystem.
+if(WIN32)
+    set_target_properties(${PROJECT_NAME} PROPERTIES WIN32_EXECUTABLE TRUE)
+endif()
 
 #添加当前工程包含
 list(APPEND APP_INCLUDE_DIR

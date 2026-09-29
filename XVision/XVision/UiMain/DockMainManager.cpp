@@ -1,4 +1,5 @@
-﻿#include "DockMainManager.h"
+#include "UiAppearance.h"
+#include "DockMainManager.h"
 #include "XvUtils.h"
 
 #include <QLayout>
@@ -31,7 +32,7 @@ CDockWidget* DockMainManager::addDockWidget(const EDockArea &area, QWidget *widg
         dock->layout()->setSpacing(0);
         dock->setWidget(wdg);
         dock->setWindowTitle(wdg->windowTitle());
-        dock->setIcon(wdg->windowIcon());
+        dock->setIcon(uiThemeIcon(wdg->windowIcon()));
         dock->setWindowIcon(wdg->windowIcon());
         dock->tabWidget()->setContextMenuPolicy(Qt::NoContextMenu);
         return dock;
@@ -47,7 +48,7 @@ CDockWidget* DockMainManager::addDockWidget(const EDockArea &area, QWidget *widg
         dock->setWidget(widget);
         dock->setWindowTitle(widget->windowTitle());
         dock->setWindowIcon(widget->windowIcon());
-        dock->setIcon(widget->windowIcon());
+        dock->setIcon(uiThemeIcon(widget->windowIcon()));
         dock->tabWidget()->setContextMenuPolicy(Qt::NoContextMenu);
         return dock;
     }
@@ -137,6 +138,6 @@ void DockMainManager::init()
     dockArea->setContextMenuPolicy(Qt::NoContextMenu);
     m_mapDockAreaWidget[EDockArea::Work]=dockArea;
 
-    m_DockMainManager->setStyleSheet(XvUtils::getStyleByPath(":/style/DockMain_Default.css"));
+    setThemedStyle(m_DockMainManager,":/style/DockMain_Default.css");
 
 }

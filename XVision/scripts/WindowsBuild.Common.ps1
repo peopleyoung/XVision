@@ -1,4 +1,4 @@
-﻿function Get-XVisionFullFeatureArguments {
+function Get-XVisionFullFeatureArguments {
     param([string]$OpenCvRoot, [string]$OnnxRuntimeRoot)
     foreach ($Sdk in @(
         @{ Name = 'OpenCvRoot'; Path = $OpenCvRoot },
@@ -75,7 +75,7 @@ function Get-XVisionQtRuntimeFiles {
     param([ValidateSet('Debug', 'Release')][string]$Configuration)
     $Suffix = if ($Configuration -eq 'Debug') { 'd' } else { '' }
     foreach ($Module in @('Core', 'Gui', 'Widgets', 'Xml', 'Concurrent',
-        'Network', 'SerialPort', 'SerialBus', 'Sql', 'StateMachine')) {
+        'Qml', 'Network', 'SerialPort', 'SerialBus', 'Sql', 'StateMachine')) {
         "Qt6${Module}${Suffix}.dll"
     }
     "platforms/qwindows${Suffix}.dll"

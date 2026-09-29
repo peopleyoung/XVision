@@ -1,4 +1,4 @@
-﻿#include "XvDisplayView.h"
+#include "XvDisplayView.h"
 #include "XvDisplayScene.h"
 
 #include <QWheelEvent>
@@ -107,6 +107,8 @@ void XvDisplayView::setBackgroundPixmapSize(const int &size)
     Q_D(XvDisplayView);
     d->backgroundPixmapSize=size;
     d->updateBackground();
+    resetCachedContent();
+    viewport()->update();
 }
 
 QColor XvDisplayView::backgroundFillColor() const
@@ -120,6 +122,8 @@ void XvDisplayView::setBackgroundFillColor(const QColor &color)
     Q_D(XvDisplayView);
     d->backgroundFillColor=color;
     d->updateBackground();
+    resetCachedContent();
+    viewport()->update();
 }
 
 QColor XvDisplayView::backgroundGridColor() const
@@ -133,6 +137,8 @@ void XvDisplayView::setBackgroundGridColor(const QColor &color)
     Q_D(XvDisplayView);
     d->backgroundGridColor=color;
     d->updateBackground();
+    resetCachedContent();
+    viewport()->update();
 }
 
 bool XvDisplayView::resizeToFif() const

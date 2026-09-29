@@ -1,4 +1,4 @@
-﻿param(
+param(
     [ValidateSet("Debug", "Release")]
     [string]$Configuration = "Debug",
     [switch]$FullFeatures,
@@ -102,7 +102,8 @@ try {
         "source_notification",
         "onnx_operators",
         "ui_appearance",
-        "ui_responsiveness"
+        "ui_responsiveness",
+        "global_tools"
     )) {
         if ($DiscoveredTests -notcontains $ExpectedTest) {
             throw "Expected CTest entry is missing: $ExpectedTest"

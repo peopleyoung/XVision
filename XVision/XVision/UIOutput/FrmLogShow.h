@@ -1,4 +1,4 @@
-﻿#ifndef FRMLOGSHOW_H
+#ifndef FRMLOGSHOW_H
 #define FRMLOGSHOW_H
 
 #include "BaseWidget.h"
@@ -14,6 +14,9 @@ class FrmLogShow;
 class FrmLogShow : public BaseWidget
 {
     Q_OBJECT
+protected:
+    void changeEvent(QEvent *event) override;
+private:
 public:
     static FrmLogShow* getInstance();
 

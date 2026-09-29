@@ -1,5 +1,5 @@
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Gui Network SerialBus SerialPort Sql Test Widgets Xml)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Gui Network SerialBus SerialPort Sql Test Widgets Xml)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Gui Network SerialBus SerialPort Sql Test Widgets Xml Qml)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Gui Network SerialBus SerialPort Sql Test Widgets Xml Qml)
 include(../3rdparty/Common3rdparty.cmake)
 
 # Keep Qt Test output even when Windows GUI startup/output capture fails.
@@ -647,3 +647,21 @@ if(WIN32)
 endif()
 
 target_link_libraries(XvCommunicationOperatorTests PRIVATE Threads::Threads)
+
+# Project globals, isolated JavaScript execution, appearance and graph interaction.
+add_executable(XvGlobalToolsTests tst_globaltools.cpp
+    ../XVision/Utils/GlobalScript.cpp ../XVision/Utils/ProjectScript.cpp
+    ../XVision/Utils/UiAppearance.cpp ../XVision/UiMain/GlobalToolsDialog.cpp
+    ../XVision/Res/AppRes.qrc)
+set_target_properties(XvGlobalToolsTests PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON AUTORCC ON)
+target_include_directories(XvGlobalToolsTests PRIVATE ${XVISION_UI_TEST_INCLUDES})
+target_link_libraries(XvGlobalToolsTests PRIVATE XvCore XLanguage XFlowGraphics
+    Qt${QT_VERSION_MAJOR}::Qml Qt${QT_VERSION_MAJOR}::Test Qt${QT_VERSION_MAJOR}::Widgets)
+add_test(NAME global_tools COMMAND ${CMAKE_COMMAND} -E env
+    "QT_QPA_PLATFORM=offscreen"
+    "PATH=$<TARGET_FILE_DIR:XVision>$<SEMICOLON>$ENV{QTDIR}/bin$<SEMICOLON>$ENV{PATH}"
+    $<TARGET_FILE:XvGlobalToolsTests>
+    -o "${XVISION_QT_TEST_LOG_DIR}/global_tools.txt,txt" -o "-,txt")
+if(WIN32)
+    set_tests_properties(global_tools PROPERTIES ENVIRONMENT "QT_PLUGIN_PATH=$ENV{QTDIR}/plugins;QT_LOGGING_TO_CONSOLE=1")
+endif()

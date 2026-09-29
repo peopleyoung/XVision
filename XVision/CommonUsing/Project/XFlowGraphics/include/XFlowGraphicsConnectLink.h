@@ -1,4 +1,4 @@
-﻿#ifndef XFLOWGRAPHICSCONNECTLINK_H
+#ifndef XFLOWGRAPHICSCONNECTLINK_H
 #define XFLOWGRAPHICSCONNECTLINK_H
 
 #include <QtCore>
@@ -16,6 +16,9 @@ class XFlowGraphicsConnectLinkPrivate;
 class XFLOWGRAPHICS_PUBLIC XFlowGraphicsConnectLink:public QObject,public QGraphicsLineItem
 {
     Q_OBJECT
+public slots:
+    virtual void refreshThemePalette();
+private:
     Q_PROPERTY(QPen linkingCirclePen READ linkingCirclePen WRITE setLinkingCirclePen)
     Q_PROPERTY(QBrush linkingCircleBrush READ linkingCircleBrush WRITE setLinkingCircleBrush)
     Q_PROPERTY(double linkingCircleRadius READ linkingCircleRadius WRITE setLinkingCircleRadius)
@@ -124,6 +127,7 @@ protected slots:
 
     // QGraphicsItem interface
 public:    
+    QPainterPath connectionPath() const { return m_connectionPath; }
     QRectF boundingRect() const override;
     QPainterPath shape() const override;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
@@ -168,6 +172,7 @@ public:
     virtual void setText(const QString &text)
     {
         m_LinkText=text;
+        updateXLink();
     }
     ///返回文本显示矩形(link坐标)
     virtual QRectF textRect() const
@@ -238,7 +243,7 @@ public:
 protected:
 //*[XLink数据]*
     ///节点父Scene
-    XFlowGraphicsScene* m_parScene;
+    XFlowGraphicsScene* m_parScene=nullptr;
 
     ///连线Id
     QString m_LinkId;
@@ -269,6 +274,7 @@ protected:
 
 //*[XLink形状]*
     ///末端箭头
+    QPainterPath m_connectionPath;
     QPolygonF m_polyArrowHead;
     ///高亮显示
     bool m_bHighLight=false;

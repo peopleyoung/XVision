@@ -34,8 +34,8 @@ def case(name,config='Release',skip=False,skip_build=True,fault=''):
         for filename in crt_names: put(crt/filename)
         if fault=='missing_msvc': (crt/f'vcruntime140_1{suffix}.dll').unlink()
         qt=r/'Qt'; put(qt/'lib/cmake/Qt6/Qt6Config.cmake'); put(qt/f'bin/Qt6Test{suffix}.dll')
-        qt_modules=['Core','Gui','Widgets','Xml','Concurrent','Network','SerialPort','SerialBus','Sql','StateMachine']
-        missing_qt={'missing_sql':'Sql','missing_concurrent':'Concurrent','missing_state_machine':'StateMachine'}.get(fault)
+        qt_modules=['Core','Gui','Widgets','Xml','Concurrent','Qml','Network','SerialPort','SerialBus','Sql','StateMachine']
+        missing_qt={'missing_qml':'Qml','missing_sql':'Sql','missing_concurrent':'Concurrent','missing_state_machine':'StateMachine'}.get(fault)
         for module in qt_modules:
             if module!=missing_qt: put(qt/f'bin/Qt6{module}{suffix}.dll','qt-sdk-module')
         put(qt/'bin/qmake.exe','#!/bin/sh\nprintf "6.4.0\\n"\n',True)
@@ -95,7 +95,7 @@ sys.exit(9 if os.environ['FAULT']=='verify_fail' else 0)
         if fault:
             assert p.returncode!=0,(name,p.stdout)
             assert not archive.exists(),(name,'published despite fault')
-            expected={'missing_msvc':'Missing MSVC runtime','disabled':'XVISION_ENABLE_ONNXRUNTIME=ON','missing_backend':'enabled backend runtime','missing_sql':'Qt6Sql.dll','missing_concurrent':'Qt6Concurrent.dll','missing_state_machine':'Qt6StateMachine.dll','wrong_debug':'qwindowsd.dll','plugin_fail':'Packaged plugin failed','verify_fail':'First-party tests for the existing Windows build failed'}[fault]
+            expected={'missing_msvc':'Missing MSVC runtime','disabled':'XVISION_ENABLE_ONNXRUNTIME=ON','missing_backend':'enabled backend runtime','missing_qml':'Qt6Qml.dll','missing_sql':'Qt6Sql.dll','missing_concurrent':'Qt6Concurrent.dll','missing_state_machine':'Qt6StateMachine.dll','wrong_debug':'qwindowsd.dll','plugin_fail':'Packaged plugin failed','verify_fail':'First-party tests for the existing Windows build failed'}[fault]
             assert expected in p.stdout,(name,p.stdout)
         else:
             assert p.returncode==0,(name,p.stdout)
@@ -122,6 +122,6 @@ case('Debug with correct DLL suffixes',config='Debug')
 case('Explicitly skipped tests are recorded',skip=True)
 case('Fresh build forwards SDK roots',skip_build=False)
 case('Skipped tests still enable backends',skip=True,skip_build=False)
-for fault in ['missing_msvc','disabled','missing_backend','missing_sql','missing_concurrent','missing_state_machine','wrong_debug','plugin_fail','verify_fail']:
+for fault in ['missing_msvc','disabled','missing_backend','missing_qml','missing_sql','missing_concurrent','missing_state_machine','wrong_debug','plugin_fail','verify_fail']:
     case('Reject '+fault,config='Debug' if fault=='wrong_debug' else 'Release',fault=fault)
 print('14 packaging flow fixtures passed; mock tools do not establish Windows runtime acceptance.')

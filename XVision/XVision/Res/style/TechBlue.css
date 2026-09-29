@@ -7,7 +7,7 @@ QMainWindow, QDialog, .BaseWidget, .BaseDialog, .AppMainWindow { background: #08
 QStatusBar { background: #0C192A; color: #93ABC7; border-top: 1px solid #253E5C; }
 QStatusBar::item { border: none; }
 QLabel { background: transparent; }
-QToolTip { color: #E3EDF9; background: #19324F; border: 1px solid #3B9EFF; padding: 7px 10px; }
+QToolTip { color: #E3EDF9; background: #19324F; border: 1px solid #3B9EFF; border-radius: 3px; padding: 3px 6px; font-size: 11px; }
 QMenuBar, .XTitleBar, .XTitleBar QMenuBar { background: #0C192A; color: #D8E9FF; }
 QMenuBar::item { padding: 6px 14px; background: transparent; }
 QMenuBar::item:selected, QMenuBar::item:pressed { background: #1B3A5C; }
@@ -114,3 +114,9 @@ QSpinBox::up-button:hover, QSpinBox::down-button:hover, QDoubleSpinBox::up-butto
 QSpinBox::up-arrow, QDoubleSpinBox::up-arrow { image: url(:/images/Ui/SmallChevronUp.svg); width: 9px; height: 9px; }
 QSpinBox::down-arrow, QDoubleSpinBox::down-arrow { image: url(:/images/Ui/SmallChevronDown.svg); width: 9px; height: 9px; }
 #btnPin:checked { background: #24568A; border-bottom: 2px solid #64D6EF; }
+
+XvDisplayView { qproperty-backgroundFillColor:#0B1728; qproperty-backgroundGridColor:#11233A; }
+
+XMatFlatButton { qproperty-foregroundColor:#E3EDF9; qproperty-backgroundColor:#101F33; qproperty-rippleColor:#54BBFF; qproperty-overlayColor:#152A43; qproperty-disabledForegroundColor:#627B98; qproperty-disabledBackgroundColor:#111F30; }
+
+XMatComboBox { qproperty-normalColor:#54BBFF; qproperty-showPopupColor:#54BBFF; qproperty-backgroundColor:#0B192B; qproperty-borderColor:#2B4565; qproperty-textColor:#E3EDF9; qproperty-disabledForegroundColor:#627B98; qproperty-disabledBackgroundColor:#111F30; }

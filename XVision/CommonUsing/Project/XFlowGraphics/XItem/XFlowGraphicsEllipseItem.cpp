@@ -1,4 +1,7 @@
-﻿#include "XFlowGraphicsEllipseItem.h"
+#include <QGuiApplication>
+#include <QApplication>
+#include <QPalette>
+#include "XFlowGraphicsEllipseItem.h"
 #include <QGraphicsScene>
 #include <QStaticText>
 #include <QGraphicsSceneMouseEvent>
@@ -30,7 +33,18 @@ public:
 
         connectEllipseSize=10;
 
+        applyPalette(QApplication::palette());
+        QObject::connect(qGuiApp,&QGuiApplication::paletteChanged,q_ptr,[this](const QPalette &palette) {
+            applyPalette(palette); q_ptr->update();
+        });
     };
+    void applyPalette(const QPalette &palette) {
+        itemEllipsePen.setColor(palette.color(QPalette::Link));
+        itemEllipseBrush.setColor(palette.color(QPalette::Button));
+        selectEllipsePen.setColor(palette.color(QPalette::Link));
+        selectEllipseBrush.setColor(palette.color(QPalette::AlternateBase));
+        selectBoundingEllipsePen.setColor(palette.color(QPalette::Text));
+    }
     virtual ~XFlowGraphicsEllipseItemPrivate(){};
 
     XFlowGraphicsEllipseItem              *const q_ptr;
@@ -428,21 +442,17 @@ void XFlowGraphicsEllipseItem::paint(QPainter *painter, const QStyleOptionGraphi
 
 QVariant XFlowGraphicsEllipseItem::itemChange(GraphicsItemChange change, const QVariant &value)
 {
-    if (change == ItemPositionChange  &&  scene()) // 控件发生移动
-    {
-        QPointF newPos = value.toPointF(); //即将要移动的位置
-        QRectF rect(0, 0, scene()->width(), scene()->height()); // 你要限制的区域
-        if (!rect.contains(newPos)) // 是否在区域内
-        {
-            newPos.setX(qMin(rect.right(), qMax(newPos.x(), rect.left())));
-            newPos.setY(qMin(rect.bottom(), qMax(newPos.y(), rect.top())));
-            emit posChanged();
-            return newPos;
-        }
-        emit posChanged();
-     }
-
-    return QGraphicsEllipseItem::itemChange(change, value);
+    if(change==ItemPositionChange && scene()) {
+        QPointF point=value.toPointF();
+        const QRectF bounds=scene()->sceneRect();
+        point.setX(qBound(bounds.left(),point.x(),bounds.right()));
+        point.setY(qBound(bounds.top(),point.y(),bounds.bottom()));
+        return point;
+    }
+    const QVariant result=QGraphicsEllipseItem::itemChange(change,value);
+    // Subscribers must read the new scene position, including programmatic moves.
+    if(change==ItemPositionHasChanged) emit posChanged();
+    return result;
 }
 
 
@@ -455,3 +465,10 @@ QVariant XFlowGraphicsEllipseItem::itemChange(GraphicsItemChange change, const Q
 
 
 
+
+void XFlowGraphicsEllipseItem::refreshThemePalette() {
+    XFlowGraphicsItem::refreshThemePalette();
+    Q_D(XFlowGraphicsEllipseItem);
+    d->applyPalette(QApplication::palette());
+    update();
+}

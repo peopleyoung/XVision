@@ -1,4 +1,4 @@
-﻿#ifndef XFLOWGRAPHICSRECTITEM_H
+#ifndef XFLOWGRAPHICSRECTITEM_H
 #define XFLOWGRAPHICSRECTITEM_H
 
 #include "XFlowGraphicsItem.h"
@@ -9,6 +9,9 @@ class XFlowGraphicsRectItemPrivate;
 class XFLOWGRAPHICS_PUBLIC XFlowGraphicsRectItem:public XFlowGraphicsItem,public QGraphicsRectItem
 {
     Q_OBJECT
+public slots:
+    virtual void refreshThemePalette();
+private:
     Q_PROPERTY(double rectRounded READ rectRounded WRITE setRectRounded)
     Q_PROPERTY(double connectRectSize READ connectRectSize WRITE setConnectRectSize)
     Q_PROPERTY(QPen itemRectPen READ itemRectPen WRITE setItemRectPen)

@@ -1,4 +1,6 @@
-﻿#include "AppMainWindow.h"
+#include "GlobalToolsDialog.h"
+#include "UiAppearance.h"
+#include "AppMainWindow.h"
 //Qt
 #include <QToolButton>
 #include <QDesktopServices>
@@ -252,10 +254,16 @@ void AppMainWindowPrivate::initMwTitleBar(XTitleBar* tb)
 
     //*[系统菜单]*
     menu=funcAddMenu(menuBarTitle,getLang(App_AppMainWindow_System,"系统"));
-//TODO
-    //*[系统菜单]*
+    act=funcAddAct(menu,QStringLiteral("外观主题"),"actAppearance",QIcon(":/images/Ui/AppMainWindowSystemSetting.svg"));
+    QObject::connect(act,&QAction::triggered,q,&AppMainWindow::systemSetting);
+    //*[工具菜单]*
     menu=funcAddMenu(menuBarTitle,getLang(App_AppMainWindow_Tool,"工具"));
-//TODO
+    act=funcAddAct(menu,QStringLiteral("全局管理"),"actGlobalManager",QIcon(":/images/Ui/AppMainWindowGlobalManager.svg"));
+    QObject::connect(act,&QAction::triggered,q,&AppMainWindow::globalManager);
+    act=funcAddAct(menu,QStringLiteral("全局脚本"),"actGlobalScript",QIcon(":/images/Ui/AppMainWindowGlobalScript.svg"));
+    QObject::connect(act,&QAction::triggered,q,&AppMainWindow::globalScript);
+    act=funcAddAct(menu,QStringLiteral("变量管理"),"actVariableManager",QIcon(":/images/Ui/AppMainWindowVariantManager.svg"));
+    QObject::connect(act,&QAction::triggered,q,&AppMainWindow::variableManager);
     //*[帮助菜单]*
     menu=funcAddMenu(menuBarTitle,getLang(App_AppMainWindow_Help,"帮助"));
     auto subMenu=menu->addMenu(getLang(App_AppMainWindow_Language,"语言"));
@@ -316,16 +324,8 @@ void AppMainWindowPrivate::initMwToolBar(QFrame* fm)
 {
     Q_Q(AppMainWindow);
 
-    auto funcBtnTodo=[&](QToolButton* btn)
-    {
-        QObject::connect(btn,&QToolButton::clicked,q,[]()
-        {
-            Log_Critical("xie.y todo:此功能未完成");
-        });
-    };
-
     auto funcAddBtn=[&](QHBoxLayout *layout,const QString &text,const QString &objName,
-                       QIcon icon,const QString &tip="",bool todo=true)
+                       QIcon icon,const QString &tip="")
     {
 
         QToolButton* btn = new QToolButton(fm);
@@ -340,7 +340,6 @@ void AppMainWindowPrivate::initMwToolBar(QFrame* fm)
         btn->setToolTip(tip);
         btn->setIconSize(QSize(22,22));
         layout->addWidget(btn);
-        if(todo) funcBtnTodo(btn);
         return btn;
     };
     auto funcAddVLine=[&](QHBoxLayout *layout,const QString &objName)
@@ -362,36 +361,39 @@ void AppMainWindowPrivate::initMwToolBar(QFrame* fm)
     hLayout->setContentsMargins(8, 6, 8, 6);
     fm->setLayout(hLayout);
 //项目保存加载
-    auto btn= funcAddBtn(hLayout,getLang(App_AppMainWindow_SaveProject,"保存项目"),"btnSaveProject", QIcon(":/images/Ui/AppMainWindowSaveProject.svg"),getLang(App_AppMainWindow_SaveProject,"保存项目"),false);
+    auto btn= funcAddBtn(hLayout,getLang(App_AppMainWindow_SaveProject,"保存项目"),"btnSaveProject", QIcon(":/images/Ui/AppMainWindowSaveProject.svg"),getLang(App_AppMainWindow_SaveProject,"保存项目"));
     QObject::connect(btn,&QToolButton::clicked,q,&AppMainWindow::saveProject);    
-    btn= funcAddBtn(hLayout,getLang(App_AppMainWindow_OpenProject,"打开项目"),"btnOpenProject", QIcon(":/images/Ui/AppMainWindowOpenProject.svg"),getLang(App_AppMainWindow_OpenProject,"打开项目"),false);
+    btn= funcAddBtn(hLayout,getLang(App_AppMainWindow_OpenProject,"打开项目"),"btnOpenProject", QIcon(":/images/Ui/AppMainWindowOpenProject.svg"),getLang(App_AppMainWindow_OpenProject,"打开项目"));
     QObject::connect(btn,&QToolButton::clicked,q,&AppMainWindow::openProject);
     funcAddVLine(hLayout,"vLine1");
 //项目操作
     btn= funcAddBtn(hLayout,getLang(App_AppMainWindow_ProjectOnceRun,"项目单次运行"),"btnProjectOnceRun",
-                    QIcon(":/images/Ui/AppMainWindowProjectOnceRun.svg"),getLang(App_AppMainWindow_ProjectOnceRun,"项目单次运行"),false);
+                    QIcon(":/images/Ui/AppMainWindowProjectOnceRun.svg"),getLang(App_AppMainWindow_ProjectOnceRun,"项目单次运行"));
     btn->setProperty("toolbarTone", "primary");
     QObject::connect(btn,&QToolButton::clicked,q,&AppMainWindow::projectOnceRun);
     btn= funcAddBtn(hLayout,getLang(App_AppMainWindow_ProjectLoopRun,"项目重复运行"),"btnProjectLoopRun",
-                    QIcon(":/images/Ui/AppMainWindowProjectLoopRun.svg"),getLang(App_AppMainWindow_ProjectLoopRun,"项目重复运行"),false);
+                    QIcon(":/images/Ui/AppMainWindowProjectLoopRun.svg"),getLang(App_AppMainWindow_ProjectLoopRun,"项目重复运行"));
     QObject::connect(btn,&QToolButton::clicked,q,&AppMainWindow::projectLoopRun);
     btn= funcAddBtn(hLayout,getLang(App_AppMainWindow_ProjectStop,"项目停止运行"),"btnProjectStop",
-                    QIcon(":/images/Ui/AppMainWindowProjectStop.svg"),getLang(App_AppMainWindow_ProjectStop,"项目停止运行"),false);
+                    QIcon(":/images/Ui/AppMainWindowProjectStop.svg"),getLang(App_AppMainWindow_ProjectStop,"项目停止运行"));
     btn->setProperty("toolbarTone", "danger");
     QObject::connect(btn,&QToolButton::clicked,q,&AppMainWindow::projectStop);
 
     funcAddVLine(hLayout,"vLine2");
     btn= funcAddBtn(hLayout,getLang(App_AppMainWindow_ProjectSetting,"项目设置"),"btnProjectSetting",
-                    QIcon(":/images/Ui/AppMainWindowProjectSetting.svg"),getLang(App_AppMainWindow_ProjectSetting,"项目设置"),false);
+                    QIcon(":/images/Ui/AppMainWindowProjectSetting.svg"),getLang(App_AppMainWindow_ProjectSetting,"项目设置"));
     QObject::connect(btn,&QToolButton::clicked,q,&AppMainWindow::projectSetting);
 
 //全局管理/变量监控/全局脚本
     btn= funcAddBtn(hLayout,getLang(App_AppMainWindow_GlobalManager,"全局管理"),"btnGlobalManager",
                     QIcon(":/images/Ui/AppMainWindowGlobalManager.svg"),getLang(App_AppMainWindow_GlobalManager,"全局管理"));
+    QObject::connect(btn,&QToolButton::clicked,q,&AppMainWindow::globalManager);
     btn= funcAddBtn(hLayout,getLang(App_AppMainWindow_GlobalScript,"全局脚本"),"btnGlobalScript",
                     QIcon(":/images/Ui/AppMainWindowGlobalScript.svg"),getLang(App_AppMainWindow_GlobalScript,"全局脚本"));
+    QObject::connect(btn,&QToolButton::clicked,q,&AppMainWindow::globalScript);
     btn= funcAddBtn(hLayout,getLang(App_AppMainWindow_VariantManager,"变量管理"),"btnVariantManager",
                     QIcon(":/images/Ui/AppMainWindowVariantManager.svg"),getLang(App_AppMainWindow_VariantManager,"变量管理"));
+    QObject::connect(btn,&QToolButton::clicked,q,&AppMainWindow::variableManager);
 
     hLayout->addSpacerItem(new QSpacerItem(40, 20, QSizePolicy::Expanding ,QSizePolicy::Minimum));
     rightToolBar=new XMatToolBar(fm);
@@ -755,7 +757,7 @@ void AppMainWindow::projectSetting()
 
 void AppMainWindow::systemSetting()
 {
-
+    showUiSettings(this);
 }
 
 void AppMainWindow::about()
@@ -780,3 +782,7 @@ void AppMainWindow::onStatusBarInfoUpdate(const QString &runTime,const QString &
 
 
 }
+
+void AppMainWindow::globalManager() { showGlobalManager(XvWorkMgr->getXvProjevt(),this); }
+void AppMainWindow::globalScript() { showGlobalScript(XvWorkMgr->getXvProjevt(),this); }
+void AppMainWindow::variableManager() { showVariableMonitor(XvWorkMgr->getXvProjevt(),this); }

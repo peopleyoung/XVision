@@ -1,4 +1,4 @@
-﻿#ifndef XFLOWGRAPHICSITEM_H
+#ifndef XFLOWGRAPHICSITEM_H
 #define XFLOWGRAPHICSITEM_H
 
 #include <QtCore>
@@ -70,6 +70,9 @@ class XFlowGraphicsItemPrivate;
 class XFLOWGRAPHICS_PUBLIC XFlowGraphicsItem:public QObject
 {
     Q_OBJECT
+public slots:
+    virtual void refreshThemePalette();
+private:
     Q_PROPERTY(QPen connectAreaPen READ connectAreaPen WRITE setConnectAreaPen)
     Q_PROPERTY(QBrush connectAreaBrush READ connectAreaBrush WRITE setConnectAreaBrush)
     Q_PROPERTY(QPen textPen READ textPen WRITE setTextPen)

@@ -1,4 +1,7 @@
-﻿#include "XFlowGraphicsItem.h"
+#include <QGuiApplication>
+#include <QApplication>
+#include <QPalette>
+#include "XFlowGraphicsItem.h"
 #include "XFlowGraphicsScene.h"
 #include "XFlowGraphicsConnectLink.h"
 #include <QGraphicsSceneMouseEvent>
@@ -28,7 +31,18 @@ public:
         highLightPen.setWidth(5);
         highLightBrush=QBrush(QColor("#1B4166"));
 
+        applyPalette(QApplication::palette());
+        QObject::connect(qGuiApp,&QGuiApplication::paletteChanged,q_ptr,[this](const QPalette &palette) {
+            applyPalette(palette); q_ptr->item()->update();
+        });
     };
+    void applyPalette(const QPalette &palette) {
+        connectAreaPen.setColor(palette.color(QPalette::Mid));
+        connectAreaBrush.setColor(palette.color(QPalette::Link));
+        textPen.setColor(palette.color(QPalette::Text));
+        highLightPen.setColor(palette.color(QPalette::Link));
+        highLightBrush.setColor(palette.color(QPalette::Highlight));
+    }
     virtual ~XFlowGraphicsItemPrivate(){};
 
     XFlowGraphicsItem              *const q_ptr;
@@ -505,3 +519,9 @@ bool XFlowGraphicsItem::switchShowPixKey(const QString &pixKey,const QString &pe
 
 }
 
+
+void XFlowGraphicsItem::refreshThemePalette() {
+    Q_D(XFlowGraphicsItem);
+    d->applyPalette(QApplication::palette());
+    item()->update();
+}

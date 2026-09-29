@@ -1,4 +1,5 @@
-﻿#include "UiXvWorkManager.h"
+#include "UiAppearance.h"
+#include "UiXvWorkManager.h"
 //Qt
 #include <QToolButton>
 #include <QFileDialog>
@@ -177,7 +178,7 @@ void UiXvWorkManager::initDock()
     ads::CDockManager::setConfigFlag(ads::CDockManager::DockAreaDynamicTabsMenuButtonVisibility, true);
     m_dockFlowManager=new CDockManager();
     m_dockFlowManager->setObjectName("dockFlowManager");
-    m_dockFlowManager->setStyleSheet(XvUtils::getStyleByPath(":/style/DockFlow_Default.css"));
+    setThemedStyle(m_dockFlowManager,":/style/DockFlow_Default.css");
 
     auto dock=funcCreateDock();
     m_dockFlowArea= m_dockFlowManager->addDockWidget(ads::CenterDockWidgetArea, dock);

@@ -1,4 +1,4 @@
-﻿param(
+param(
     [Parameter(Mandatory = $true)]
     [string]$SdkDirectory
 )
@@ -65,7 +65,7 @@ if (-not (Test-Path -LiteralPath (Join-Path $QtDirectory 'bin/qmake.exe')) -or
     )
 }
 
-foreach ($QtComponent in @('Qt6Core', 'Qt6Svg', 'Qt6SerialPort', 'Qt6SerialBus', 'Qt6Sql', 'Qt6StateMachine')) {
+foreach ($QtComponent in @('Qt6Core', 'Qt6Qml', 'Qt6Svg', 'Qt6SerialPort', 'Qt6SerialBus', 'Qt6Sql', 'Qt6StateMachine')) {
     if (-not (Test-Path -LiteralPath (Join-Path $QtDirectory "bin/$QtComponent.dll"))) {
         throw "Qt installation is missing $QtComponent."
     }
