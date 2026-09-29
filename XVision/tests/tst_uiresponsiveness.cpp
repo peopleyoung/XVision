@@ -10,7 +10,6 @@
 #include <QFrame>
 #include <QAbstractSpinBox>
 #include <QDir>
-#include <QElapsedTimer>
 #include <memory>
 #include "SystemXvFactoryPlugin.h"
 #include "UiAppearance.h"
@@ -114,9 +113,12 @@ private slots:
         QCoreApplication::processEvents();
         qInfo()<<"LAYOUT communication window"<<window->size();
         QVERIFY2(window->height()<=440,"Long parameter form forces the whole dialog beyond the available height");
-        auto scroll=window->findChild<QScrollArea*>();
+        auto scroll=window->findChild<QScrollArea*>("operatorParameterScroll");
         QVERIFY2(scroll,"Long parameter forms need a scrollable content area");
-        QVERIFY(scroll->verticalScrollBar()->maximum()>0);
+        // Qt 6 posts additional layout requests while polishing/showing children.
+        // One processEvents() call need not settle the scroll range on Windows.
+        QTRY_VERIFY_WITH_TIMEOUT(scroll->verticalScrollBar()->maximum()>0,1000);
+        QVERIFY(scroll->widget()->height()>scroll->viewport()->height());
         window->close();
     }
     void communicationEditorsSurviveTheirOwnSignal()
