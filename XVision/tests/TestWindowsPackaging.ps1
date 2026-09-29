@@ -28,6 +28,16 @@ try {
         Assert-True ($ParseErrors.Count -eq 0) "$Script has parse errors: $ParseErrors"
     }
 
+    # Renaming a test must update both Windows preset filters, not only inventory checks.
+    $PresetsPath = Join-Path $SourceDirectory 'CMakePresets.json'
+    $Presets = Get-Content -LiteralPath $PresetsPath -Raw | ConvertFrom-Json
+    foreach ($Preset in $Presets.testPresets) {
+        $Pattern = $Preset.filter.include.name
+        Assert-True ('operator_catalog' -match $Pattern) "$($Preset.name) omits operator_catalog."
+        Assert-True ('operator_catalog_rejections' -match $Pattern) "$($Preset.name) omits operator_catalog_rejections."
+        Assert-True ('visionmaster_matrix' -notmatch $Pattern) "$($Preset.name) still selects the retired matrix."
+    }
+
     $OpenCvRoot = Join-Path $TemporaryDirectory 'OpenCV SDK'
     $OnnxRuntimeRoot = Join-Path $TemporaryDirectory 'ONNX SDK'
     New-Item -ItemType Directory -Path $OpenCvRoot, $OnnxRuntimeRoot | Out-Null
