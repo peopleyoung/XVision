@@ -1,5 +1,6 @@
 ﻿#include "AppMainWindow.h"
 //Qt
+#include <QToolButton>
 #include <QDesktopServices>
 #include <QVBoxLayout>
 #include <QFrame>
@@ -15,10 +16,8 @@
 
 //XWidget
 #include "XTitleBar.h"
-#include "XMatToolButton.h"
 #include "XMatMenuBar.h"
 #include "XMatMenu.h"
-#include "XMatVLine.h"
 #include "XMatHLine.h"
 #include "XMatToolBar.h"
 #include "XMessageBox.h"
@@ -155,8 +154,8 @@ void AppMainWindowPrivate::initFrm()
 
     fmToolBar=new QFrame(mw);
     fmToolBar->setObjectName("fmToolBar");
-    fmToolBar->setMinimumSize(QSize(0, 40));
-    fmToolBar->setMaximumSize(QSize(16777215, 40));
+    fmToolBar->setMinimumSize(QSize(0, 48));
+    fmToolBar->setMaximumSize(QSize(16777215, 48));
     fmToolBar->setFrameShape(QFrame::StyledPanel);
     fmToolBar->setFrameShadow(QFrame::Raised);
     verticalLayout->addWidget(fmToolBar);
@@ -317,9 +316,9 @@ void AppMainWindowPrivate::initMwToolBar(QFrame* fm)
 {
     Q_Q(AppMainWindow);
 
-    auto funcBtnTodo=[&](XMatToolButton* btn)
+    auto funcBtnTodo=[&](QToolButton* btn)
     {
-        QObject::connect(btn,&XMatToolButton::clicked,q,[]()
+        QObject::connect(btn,&QToolButton::clicked,q,[]()
         {
             Log_Critical("xie.y todo:此功能未完成");
         });
@@ -329,33 +328,38 @@ void AppMainWindowPrivate::initMwToolBar(QFrame* fm)
                        QIcon icon,const QString &tip="",bool todo=true)
     {
 
-        auto fmH=fm->minimumHeight()-2;
-        XMatToolButton* btn = new XMatToolButton(fm);
+        QToolButton* btn = new QToolButton(fm);
         btn->setObjectName(objName);
-        btn->setMinimumSize(QSize(fmH, fmH));
+        btn->setFixedSize(34, 34);
+        btn->setProperty("toolbarButton", true);
+        btn->setToolButtonStyle(Qt::ToolButtonIconOnly);
+        btn->setFocusPolicy(Qt::StrongFocus);
+        btn->setAccessibleName(text);
         btn->setText(text);
         btn->setIcon(icon);
         btn->setToolTip(tip);
-        btn->setIconSize(QSize(25,25));
+        btn->setIconSize(QSize(22,22));
         layout->addWidget(btn);
         if(todo) funcBtnTodo(btn);
         return btn;
     };
     auto funcAddVLine=[&](QHBoxLayout *layout,const QString &objName)
     {
-       auto vline= new XMatVLine(fm);
+       auto vline = new QFrame(fm);
        vline->setObjectName(objName);
-       vline->setLineWidth(1);
-       vline->setLineCurLen(5);
+       vline->setProperty("toolbarSeparator", true);
+       vline->setFixedSize(1, 20);
+       layout->addSpacing(6);
        layout->addWidget(vline);
+       layout->addSpacing(6);
        return vline;
     };
 
     if(!fm) return;
     QHBoxLayout *hLayout = new QHBoxLayout(fm);
-    hLayout->setSpacing(0);
-    hLayout->setObjectName("verticalLayout");
-    hLayout->setContentsMargins(0, 0, 0, 0);
+    hLayout->setSpacing(4);
+    hLayout->setObjectName("mainToolbarLayout");
+    hLayout->setContentsMargins(8, 6, 8, 6);
     fm->setLayout(hLayout);
 //项目保存加载
     auto btn= funcAddBtn(hLayout,getLang(App_AppMainWindow_SaveProject,"保存项目"),"btnSaveProject", QIcon(":/images/Ui/AppMainWindowSaveProject.svg"),getLang(App_AppMainWindow_SaveProject,"保存项目"),false);
@@ -366,20 +370,21 @@ void AppMainWindowPrivate::initMwToolBar(QFrame* fm)
 //项目操作
     btn= funcAddBtn(hLayout,getLang(App_AppMainWindow_ProjectOnceRun,"项目单次运行"),"btnProjectOnceRun",
                     QIcon(":/images/Ui/AppMainWindowProjectOnceRun.svg"),getLang(App_AppMainWindow_ProjectOnceRun,"项目单次运行"),false);
+    btn->setProperty("toolbarTone", "primary");
     QObject::connect(btn,&QToolButton::clicked,q,&AppMainWindow::projectOnceRun);
     btn= funcAddBtn(hLayout,getLang(App_AppMainWindow_ProjectLoopRun,"项目重复运行"),"btnProjectLoopRun",
                     QIcon(":/images/Ui/AppMainWindowProjectLoopRun.svg"),getLang(App_AppMainWindow_ProjectLoopRun,"项目重复运行"),false);
     QObject::connect(btn,&QToolButton::clicked,q,&AppMainWindow::projectLoopRun);
     btn= funcAddBtn(hLayout,getLang(App_AppMainWindow_ProjectStop,"项目停止运行"),"btnProjectStop",
                     QIcon(":/images/Ui/AppMainWindowProjectStop.svg"),getLang(App_AppMainWindow_ProjectStop,"项目停止运行"),false);
-    btn->setRippleColor(Qt::red);
+    btn->setProperty("toolbarTone", "danger");
     QObject::connect(btn,&QToolButton::clicked,q,&AppMainWindow::projectStop);
 
+    funcAddVLine(hLayout,"vLine2");
     btn= funcAddBtn(hLayout,getLang(App_AppMainWindow_ProjectSetting,"项目设置"),"btnProjectSetting",
                     QIcon(":/images/Ui/AppMainWindowProjectSetting.svg"),getLang(App_AppMainWindow_ProjectSetting,"项目设置"),false);
     QObject::connect(btn,&QToolButton::clicked,q,&AppMainWindow::projectSetting);
 
-    funcAddVLine(hLayout,"vLine2");
 //全局管理/变量监控/全局脚本
     btn= funcAddBtn(hLayout,getLang(App_AppMainWindow_GlobalManager,"全局管理"),"btnGlobalManager",
                     QIcon(":/images/Ui/AppMainWindowGlobalManager.svg"),getLang(App_AppMainWindow_GlobalManager,"全局管理"));

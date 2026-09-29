@@ -24,8 +24,22 @@ QToolButton:pressed, QPushButton:pressed, QToolButton:checked { background: #245
 QPushButton:default { background: #186AC3; border-color: #3B9EFF; }
 QToolButton:focus, QPushButton:focus { border-color: #70C8FF; }
 QToolButton:disabled, QPushButton:disabled { background: #111F30; color: #5B728D; border-color: #23364D; }
-#fmToolBar QToolButton { background: transparent; border-color: transparent; }
-#fmToolBar QToolButton:hover { background: #1D3D60; border-color: #315A85; }
+#rightToolBar QToolButton { background: transparent; border-color: transparent; }
+#rightToolBar QToolButton:hover { background: #1D3D60; border-color: #315A85; }
+/* Toolbar icons share a restrained surface and a visible keyboard focus. */
+QFrame[toolbarSeparator="true"] { background: #2A4563; border: none; }
+QToolButton[toolbarButton="true"] { background: #132940; border: 1px solid #294763; border-radius: 6px; padding: 0px; }
+QToolButton[toolbarButton="true"]:hover { background: #214766; border-color: #5DAAE0; }
+QToolButton[toolbarButton="true"]:pressed, QToolButton[toolbarButton="true"]:checked { background: #285D84; border-color: #83DCFF; }
+QToolButton[toolbarButton="true"][toolbarTone="primary"] { background: #174A6D; border-color: #358FC2; }
+QToolButton[toolbarButton="true"][toolbarTone="primary"]:hover { background: #206589; border-color: #78D7F0; }
+QToolButton[toolbarButton="true"][toolbarTone="primary"]:pressed { background: #143A56; border-color: #A3EFFF; }
+QToolButton[toolbarButton="true"][toolbarTone="danger"] { background: #302735; border-color: #654050; }
+QToolButton[toolbarButton="true"][toolbarTone="danger"]:hover { background: #523043; border-color: #D47C91; }
+QToolButton[toolbarButton="true"][toolbarTone="danger"]:pressed { background: #6A3549; border-color: #F6A1B3; }
+QToolButton[toolbarButton="true"]:focus { border: 2px solid #B3E6FF; }
+QToolButton[toolbarButton="true"]:disabled { background: #111F30; border-color: #23364D; }
+
 QLineEdit, QTextEdit, QPlainTextEdit, QSpinBox, QDoubleSpinBox, QComboBox { color: #E3EDF9; background: #0B192B; border: 1px solid #2B4565; border-radius: 4px; padding: 5px; selection-background-color: #24568A; }
 QLineEdit:focus, QTextEdit:focus, QPlainTextEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus, QComboBox:focus { border-color: #3B9EFF; }
 QLineEdit:disabled, QComboBox:disabled, QSpinBox:disabled, QDoubleSpinBox:disabled { color: #627B98; background: #111F30; }

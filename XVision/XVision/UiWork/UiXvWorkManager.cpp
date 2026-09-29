@@ -1,5 +1,6 @@
 ﻿#include "UiXvWorkManager.h"
 //Qt
+#include <QToolButton>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QLayout>
@@ -17,10 +18,9 @@
 #include "XMatLabel.h"
 #include "XMatScrollBar.h"
 #include "XMatSlider.h"
-#include "XMatToolButton.h"
+#include <QFrame>
 #include "XInputDialog.h"
 #include "XMessageBox.h"
-#include "XMatVLine.h"
 
 //XConcurrent
 #include "XConcurrentManager.h"
@@ -187,85 +187,128 @@ void UiXvWorkManager::initDock()
 void UiXvWorkManager::initToolBtn()
 {
     auto bar= m_dockFlowArea->titleBar();
-    auto btnSize=bar->height();
-    auto iconSize=btnSize-2;
+    const int btnSize=28;
+    const int iconSize=18;
 
-    auto btn=new XMatToolButton(bar);
+    auto btn=new QToolButton(bar);
     btn->setObjectName("btnFlowImport");
     U_initSetButton(btn,getLang(App_UiXvWorkMgr_FlowImport,"流程导入"),getLang(App_UiXvWorkMgr_FlowImport,"流程导入"),
                     QIcon(":/images/Ui/UiXvWorkManagerFlowImport.svg"),iconSize,
                     QSize(btnSize,btnSize), QSize(btnSize,btnSize)
                     );
+    btn->setProperty("toolbarButton", true);
+    btn->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    btn->setFocusPolicy(Qt::StrongFocus);
+    btn->setAccessibleName(btn->text());
     bar->insertWidget(-1, btn);
-    connect(btn,&XMatToolButton::clicked,this,&UiXvWorkManager::flowImport);
+    connect(btn,&QToolButton::clicked,this,&UiXvWorkManager::flowImport);
 
-    btn=new XMatToolButton(bar);
+    btn=new QToolButton(bar);
     btn->setObjectName("btnFlowExport");
     U_initSetButton(btn,getLang(App_UiXvWorkMgr_FlowExport,"流程导出"),getLang(App_UiXvWorkMgr_FlowExport,"流程导出"),
                         QIcon(":/images/Ui/UiXvWorkManagerFlowExport.svg"),iconSize,
                         QSize(btnSize,btnSize), QSize(btnSize,btnSize)
                         );
+    btn->setProperty("toolbarButton", true);
+    btn->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    btn->setFocusPolicy(Qt::StrongFocus);
+    btn->setAccessibleName(btn->text());
     bar->insertWidget(-1, btn);
-    connect(btn,&XMatToolButton::clicked,this,&UiXvWorkManager::flowExport);
+    connect(btn,&QToolButton::clicked,this,&UiXvWorkManager::flowExport);
 
-    bar->insertWidget(-1,new XMatVLine(bar));
+    {
+        auto separator = new QFrame(bar);
+        separator->setProperty("toolbarSeparator", true);
+        separator->setFixedSize(1, 16);
+        bar->insertWidget(-1, separator);
+    }
 
-    btn=new XMatToolButton(bar);
+    btn=new QToolButton(bar);
     btn->setObjectName("btnFlowConfig");
     U_initSetButton(btn,getLang(App_UiXvWorkMgr_FlowConfig,"流程配置"),getLang(App_UiXvWorkMgr_FlowConfig,"流程配置"),
                     QIcon(":/images/Ui/UiXvWorkManagerFlowConfig.svg"),iconSize,
                     QSize(btnSize,btnSize), QSize(btnSize,btnSize)
                     );
+    btn->setProperty("toolbarButton", true);
+    btn->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    btn->setFocusPolicy(Qt::StrongFocus);
+    btn->setAccessibleName(btn->text());
     bar->insertWidget(-1, btn);
-    connect(btn,&XMatToolButton::clicked,this,&UiXvWorkManager::flowShowConfig);
+    connect(btn,&QToolButton::clicked,this,&UiXvWorkManager::flowShowConfig);
 
-    btn=new XMatToolButton(bar);
+    btn=new QToolButton(bar);
     btn->setObjectName("btnFlowOnceRun");
     U_initSetButton(btn,getLang(App_UiXvWorkMgr_FlowOnceRun,"流程单次运行"),getLang(App_UiXvWorkMgr_FlowOnceRun,"流程单次运行"),
                     QIcon(":/images/Ui/UiXvWorkManagerFlowOnceRun.svg"),iconSize,
                      QSize(btnSize,btnSize), QSize(btnSize,btnSize)
                     );
+    btn->setProperty("toolbarButton", true);
+    btn->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    btn->setFocusPolicy(Qt::StrongFocus);
+    btn->setAccessibleName(btn->text());
     bar->insertWidget(-1, btn);
-    connect(btn,&XMatToolButton::clicked,this,&UiXvWorkManager::flowOnceRun);
+    btn->setProperty("toolbarTone", "primary");
+    connect(btn,&QToolButton::clicked,this,&UiXvWorkManager::flowOnceRun);
 
-    btn=new XMatToolButton(bar);
+    btn=new QToolButton(bar);
     btn->setObjectName("btnFlowLoopRun");
     U_initSetButton(btn,getLang(App_UiXvWorkMgr_FlowLoopRun,"流程重复运行"),getLang(App_UiXvWorkMgr_FlowLoopRun,"流程重复运行"),
                     QIcon(":/images/Ui/UiXvWorkManagerFlowLoopRun.svg"),iconSize,
                     QSize(btnSize,btnSize), QSize(btnSize,btnSize)
                     );
+    btn->setProperty("toolbarButton", true);
+    btn->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    btn->setFocusPolicy(Qt::StrongFocus);
+    btn->setAccessibleName(btn->text());
     bar->insertWidget(-1, btn);
-    connect(btn,&XMatToolButton::clicked,this,&UiXvWorkManager::flowLoopRun);
+    connect(btn,&QToolButton::clicked,this,&UiXvWorkManager::flowLoopRun);
 
-    btn=new XMatToolButton(bar);
+    btn=new QToolButton(bar);
     btn->setObjectName("btnFlowStop");
     U_initSetButton(btn,getLang(App_UiXvWorkMgr_FlowStop,"流程停止运行"),getLang(App_UiXvWorkMgr_FlowStop,"流程停止运行"),
                     QIcon(":/images/Ui/UiXvWorkManagerFlowStop.svg"),iconSize,
                     QSize(btnSize,btnSize), QSize(btnSize,btnSize)
                     );
-    btn->setRippleColor(Qt::red);
+    btn->setProperty("toolbarTone", "danger");
+    btn->setProperty("toolbarButton", true);
+    btn->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    btn->setFocusPolicy(Qt::StrongFocus);
+    btn->setAccessibleName(btn->text());
     bar->insertWidget(-1, btn);
-    connect(btn,&XMatToolButton::clicked,this,&UiXvWorkManager::flowStopRun);
+    connect(btn,&QToolButton::clicked,this,&UiXvWorkManager::flowStopRun);
 
-    bar->insertWidget(-1,new XMatVLine(bar));
+    {
+        auto separator = new QFrame(bar);
+        separator->setProperty("toolbarSeparator", true);
+        separator->setFixedSize(1, 16);
+        bar->insertWidget(-1, separator);
+    }
 
-    btn=new XMatToolButton(bar);
+    btn=new QToolButton(bar);
     btn->setObjectName("btnFlowDel");
     U_initSetButton(btn,getLang(App_UiXvWorkMgr_FlowDel,"流程删除"),getLang(App_UiXvWorkMgr_FlowDel,"流程删除"),
                     QIcon(":/images/Ui/UiXvWorkManagerFlowDel.svg"),iconSize,
                     QSize(btnSize,btnSize), QSize(btnSize,btnSize)
                     );
+    btn->setProperty("toolbarButton", true);
+    btn->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    btn->setFocusPolicy(Qt::StrongFocus);
+    btn->setAccessibleName(btn->text());
     bar->insertWidget(-1, btn);
-    connect(btn,&XMatToolButton::clicked,this,&UiXvWorkManager::flowRemove);
+    connect(btn,&QToolButton::clicked,this,&UiXvWorkManager::flowRemove);
 
-    btn=new XMatToolButton(bar);
+    btn=new QToolButton(bar);
     btn->setObjectName("btnFlowAdd");
     U_initSetButton(btn,getLang(App_UiXvWorkMgr_FlowAdd,"流程添加"),getLang(App_UiXvWorkMgr_FlowAdd,"流程添加"),
                     QIcon(":/images/Ui/UiXvWorkManagerFlowAdd.svg"),iconSize,
                     QSize(btnSize,btnSize), QSize(btnSize,btnSize)
                     );
+    btn->setProperty("toolbarButton", true);
+    btn->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    btn->setFocusPolicy(Qt::StrongFocus);
+    btn->setAccessibleName(btn->text());
     bar->insertWidget(-1, btn);
-    connect(btn,&XMatToolButton::clicked,this,&UiXvWorkManager::flowAdd);
+    connect(btn,&QToolButton::clicked,this,&UiXvWorkManager::flowAdd);
 }
 
 void UiXvWorkManager::initStatusBar()
