@@ -1,0 +1,11 @@
+{
+  "before_entries": 165,
+  "after_entries": 123,
+  "before_unique_configurations": 123,
+  "after_unique_configurations": 123,
+  "removed_unique_configurations": 0,
+  "added_unique_configurations": 0,
+  "retired_ids_still_registered": [],
+  "canonical_roles": 39,
+  "presets": 84
+}
