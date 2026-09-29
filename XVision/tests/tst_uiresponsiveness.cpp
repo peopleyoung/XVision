@@ -115,8 +115,12 @@ private slots:
         QVERIFY2(window->height()<=440,"Long parameter form forces the whole dialog beyond the available height");
         auto scroll=window->findChild<QScrollArea*>("operatorParameterScroll");
         QVERIFY2(scroll,"Long parameter forms need a scrollable content area");
-        // Qt 6 posts additional layout requests while polishing/showing children.
-        // One processEvents() call need not settle the scroll range on Windows.
+        // A 420px dialog may fit this form with compact Windows font/frame metrics.
+        // Force actual overflow before requiring a scrollbar; normal 640x420 layouts
+        // are still checked for every operator by allParameterWindowsFit().
+        window->resize(640,320);
+        QTRY_VERIFY_WITH_TIMEOUT(window->height()<=340,1000);
+        // Qt may post further layout requests during child polish/show.
         QTRY_VERIFY_WITH_TIMEOUT(scroll->verticalScrollBar()->maximum()>0,1000);
         QVERIFY(scroll->widget()->height()>scroll->viewport()->height());
         window->close();
