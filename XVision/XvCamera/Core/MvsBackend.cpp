@@ -108,6 +108,7 @@ public:
     ~MvsBackend() override { close(); }
     Result open() override
     {
+        m_requested.clear();
         {
             std::lock_guard<std::mutex> lock(m_api->enumeration);
             Result result=m_api->ensure(); if(!result) return result;
@@ -212,6 +213,7 @@ public:
             const QString mode=value.toString();
             if(value.userType()!=QMetaType::QString || (mode!=QStringLiteral("Continuous") && mode!=QStringLiteral("Software") && mode!=QStringLiteral("Line0")))
                 return {EXvCameraError::InvalidArgument,QStringLiteral("无效的触发模式")};
+            if(mode==m_trigger) return {};
             Result result=mvsResult(m_api->stop(m_handle),QStringLiteral("停止海康采集失败"));
             if(!result) return result;
             m_started=false;
@@ -227,16 +229,22 @@ public:
             return mvsResult(started?started:code,QStringLiteral("设置海康触发模式失败，设备可能不支持此触发源"));
         }
         if(key!=QStringLiteral("ExposureTime") && key!=QStringLiteral("Gain")) return Backend::setParameter(key,value);
-        double number=0; Abi::MvsFloat range{};
+        double number=0;
+        if(!numericParameter(value,number)) return {EXvCameraError::InvalidArgument,QStringLiteral("相机参数必须为有限数值")};
+        if(m_requested.contains(key) && m_requested.value(key)==number) return {};
+        Abi::MvsFloat range{};
         Result result=mvsResult(m_api->getFloat(m_handle,key.toLatin1().constData(),&range),QStringLiteral("读取海康参数范围失败"));
         if(!result) return result;
         if(!numericParameter(value,number) || number<range.minimum || number>range.maximum)
             return {EXvCameraError::InvalidArgument,QStringLiteral("参数超出相机允许范围")};
         result=mvsResult(m_api->setEnum(m_handle,key==QStringLiteral("Gain")?"GainAuto":"ExposureAuto","Off"),QStringLiteral("关闭相机自动调节失败"));
         if(!result) return result;
-        return mvsResult(m_api->setFloat(m_handle,key.toLatin1().constData(),float(number)),QStringLiteral("设置海康参数失败"));
+        result=mvsResult(m_api->setFloat(m_handle,key.toLatin1().constData(),float(number)),QStringLiteral("设置海康参数失败"));
+        if(result) m_requested.insert(key,number);
+        return result;
     }
 private:
+    QHash<QString,double> m_requested;
     Device m_device; std::shared_ptr<Api> m_api; void *m_handle=nullptr;
     bool m_open=false,m_started=false; QString m_trigger=QStringLiteral("Continuous");
 };

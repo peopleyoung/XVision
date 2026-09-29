@@ -53,7 +53,7 @@ EXvCameraError Camera::close()
     QMetaObject::invokeMethod(this,[this]() { emit statusChanged(status()); },Qt::QueuedConnection);
     return finish({});
 }
-EXvCameraError Camera::acquire(XvCameraFrame &frame,unsigned int timeoutMs,bool streaming)
+EXvCameraError Camera::acquire(XvCameraFrame &frame,unsigned int timeoutMs,bool streaming,const QVariantMap &values)
 {
     frame={};
     if(!m_io.tryLock()) return finish({EXvCameraError::Busy,QStringLiteral("相机正在执行其他操作")});
@@ -63,6 +63,11 @@ EXvCameraError Camera::acquire(XvCameraFrame &frame,unsigned int timeoutMs,bool 
        (!streaming && state!=EXvCameraStatus::Open))
         return finish({state==EXvCameraStatus::Streaming?EXvCameraError::Busy:EXvCameraError::NotOpen,
                        QStringLiteral("相机未就绪或正在连续采集")});
+    for(auto it=values.cbegin();it!=values.cend();++it)
+    {
+        const Result configured=m_backend->setParameter(it.key(),it.value());
+        if(!configured) return finish(configured);
+    }
     QElapsedTimer timer;
     timer.start();
     Result result=m_backend->beginFrame();
@@ -91,6 +96,8 @@ EXvCameraError Camera::acquire(XvCameraFrame &frame,unsigned int timeoutMs,bool 
 }
 EXvCameraError Camera::grabFrame(XvCameraFrame &frame,unsigned int timeoutMs)
 { return acquire(frame,timeoutMs,false); }
+EXvCameraError Camera::grabFrameWithParameters(XvCameraFrame &frame,unsigned int timeoutMs,const QVariantMap &values)
+{ return acquire(frame,timeoutMs,false,values); }
 void Camera::postFrame(const XvCameraFrame &frame,quint64 generation)
 {
     QMutexLocker lock(&m_deliveryMutex);

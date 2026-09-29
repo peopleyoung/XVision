@@ -269,7 +269,8 @@ EXvFuncRunStatus ImageAcquisition::run()
             return EXvFuncRunStatus::Error;
         }
 
-        XvCamera::IXvCamera *camera=XvCameraMgr->camera(deviceId);
+        auto cameraLease=XvCameraMgr->cameraLease(deviceId);
+        XvCamera::IXvCamera *camera=cameraLease.data();
         if(camera && camera->status()==XvCamera::EXvCameraStatus::Streaming)
         {
             setRunMsg(getLang("XvFuncSystem_ImageAcquisition_CameraStreaming",
@@ -285,6 +286,8 @@ EXvFuncRunStatus ImageAcquisition::run()
         {
             const XvCamera::EXvCameraError openResult=
                     XvCameraMgr->openCamera(deviceId,&camera);
+            cameraLease=XvCameraMgr->cameraLease(deviceId);
+            camera=cameraLease.data();
             if((openResult!=XvCamera::EXvCameraError::None
                     && openResult!=XvCamera::EXvCameraError::AlreadyOpen)
                     || !camera)
@@ -307,24 +310,18 @@ EXvFuncRunStatus ImageAcquisition::run()
         }
         const QString provider=camera->deviceInfo().providerId;
         const bool industrial=provider=="hik-mvs" || provider=="daheng-galaxy";
+        QVariantMap cameraValues;
         if(industrial)
         {
             const QStringList modes={"Continuous","Software","Line0"};
-            const auto apply=[&](const QString &key,const QVariant &value)
-            {
-                if(camera->parameter(key)==value) return true;
-                if(camera->setParameter(key,value)==XvCamera::EXvCameraError::None) return true;
-                setRunMsg(camera->lastError());
-                return false;
-            };
-            if(!apply("TriggerMode",modes.at(cameraTriggerMode())) ||
-               (cameraExposureUs()>0 && !apply("ExposureTime",cameraExposureUs())) ||
-               (cameraGain()>=0 && !apply("Gain",cameraGain()))) return EXvFuncRunStatus::Error;
+            cameraValues.insert("TriggerMode",modes.at(cameraTriggerMode()));
+            if(cameraExposureUs()>0) cameraValues.insert("ExposureTime",cameraExposureUs());
+            if(cameraGain()>=0) cameraValues.insert("Gain",cameraGain());
         }
 
         XvCamera::XvCameraFrame frame;
         const XvCamera::EXvCameraError grabResult=
-                camera->grabFrame(frame,static_cast<unsigned int>(timeoutMs));
+                camera->grabFrameWithParameters(frame,static_cast<unsigned int>(timeoutMs),cameraValues);
         if(grabResult!=XvCamera::EXvCameraError::None || !frame.isValid())
         {
             const QString detail=camera->lastError();

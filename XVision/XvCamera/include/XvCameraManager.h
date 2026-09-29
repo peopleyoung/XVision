@@ -6,6 +6,7 @@
 
 #include <QObject>
 #include <QScopedPointer>
+#include <QSharedPointer>
 
 namespace XvCamera
 {
@@ -33,6 +34,9 @@ public:
     EXvCameraError openCamera(const QString &deviceId,IXvCamera **camera=nullptr);
     EXvCameraError closeCamera(const QString &deviceId);
     IXvCamera *camera(const QString &deviceId) const;
+    // Retains object lifetime across a concurrent close; native commands may
+    // still report NotOpen. Callers must not delete or reparent the camera.
+    QSharedPointer<IXvCamera> cameraLease(const QString &deviceId) const;
     void shutdown();
 
     XvDirectoryCameraProvider *directoryProvider() const;

@@ -72,6 +72,7 @@ public:
     ~GalaxyBackend() override { close(); }
     Result open() override
     {
+        m_requested.clear();
         {
             std::lock_guard<std::mutex> lock(m_api->enumeration);
             Result result=m_api->ensure(); if(!result) return result;
@@ -159,6 +160,7 @@ public:
             const QString mode=value.toString();
             if(value.userType()!=QMetaType::QString || (mode!=QStringLiteral("Continuous") && mode!=QStringLiteral("Software") && mode!=QStringLiteral("Line0")))
                 return {EXvCameraError::InvalidArgument,QStringLiteral("无效的触发模式")};
+            if(mode==m_trigger) return {};
             Result result=galaxyResult(m_api->command(m_handle,Abi::GxStop),QStringLiteral("停止大恒采集失败"));
             if(!result) return result;
             m_started=false;
@@ -174,17 +176,23 @@ public:
             return galaxyResult(started?started:code,QStringLiteral("设置大恒触发模式失败，设备可能不支持此触发源"));
         }
         if(key!=QStringLiteral("ExposureTime") && key!=QStringLiteral("Gain")) return Backend::setParameter(key,value);
+        double number=0;
+        if(!numericParameter(value,number)) return {EXvCameraError::InvalidArgument,QStringLiteral("相机参数必须为有限数值")};
+        if(m_requested.contains(key) && m_requested.value(key)==number) return {};
         const int32_t feature=key==QStringLiteral("Gain")?Abi::GxGain:Abi::GxExposure;
-        Abi::GalaxyFloatRange range{}; double number=0;
+        Abi::GalaxyFloatRange range{};
         Result result=galaxyResult(m_api->floatRange(m_handle,feature,&range),QStringLiteral("读取大恒参数范围失败"));
         if(!result) return result;
         if(!numericParameter(value,number) || number<range.minimum || number>range.maximum)
             return {EXvCameraError::InvalidArgument,QStringLiteral("参数超出相机允许范围")};
         result=galaxyResult(m_api->setEnum(m_handle,key==QStringLiteral("Gain")?Abi::GxGainAuto:Abi::GxExposureAuto,0),QStringLiteral("关闭大恒自动调节失败"));
         if(!result) return result;
-        return galaxyResult(m_api->setFloat(m_handle,feature,number),QStringLiteral("设置大恒参数失败"));
+        result=galaxyResult(m_api->setFloat(m_handle,feature,number),QStringLiteral("设置大恒参数失败"));
+        if(result) m_requested.insert(key,number);
+        return result;
     }
 private:
+    QHash<QString,double> m_requested;
     Device m_device; std::shared_ptr<Api> m_api; void *m_handle=nullptr;
     bool m_started=false; QByteArray m_pixels; QString m_trigger=QStringLiteral("Continuous");
 };

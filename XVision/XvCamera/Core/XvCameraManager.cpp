@@ -26,7 +26,7 @@ public:
     XvCameraManager *const q_ptr;
     mutable QMutex mutex;
     QMap<QString,QPointer<XvCameraProvider>> providers;
-    QMap<QString,QPointer<IXvCamera>> cameras;
+    QMap<QString,QSharedPointer<IXvCamera>> cameras;
     QPointer<XvDirectoryCameraProvider> directoryProvider;
     mutable QString lastError;
     QSet<QString> opening;
@@ -165,7 +165,7 @@ bool XvCameraManager::unregisterProvider(const QString &providerId)
             d->lastError=QString("Camera provider [%1] was not found").arg(providerId);
             return false;
         }
-        for(const QPointer<IXvCamera> &camera:d->cameras)
+        for(const QSharedPointer<IXvCamera> &camera:d->cameras)
         {
             if(camera && camera->deviceInfo().providerId==providerId)
             {
@@ -256,8 +256,13 @@ EXvCameraError XvCameraManager::openCamera(const QString &deviceId,IXvCamera **c
     Q_D(XvCameraManager);
     if(cameraOut) *cameraOut=nullptr;
     IXvCamera *candidate=nullptr;
+    QSharedPointer<IXvCamera> retained;
     EXvCameraError prepared=EXvCameraError::Internal;
-    const auto prepare=[&]() { prepared=prepareCamera(deviceId,&candidate); };
+    const auto prepare=[&]()
+    {
+        prepared=prepareCamera(deviceId,&candidate);
+        if(candidate) { QMutexLocker lock(&d->mutex); retained=d->cameras.value(deviceId); }
+    };
     if(QThread::currentThread()==thread()) prepare();
     else if(!QMetaObject::invokeMethod(this,prepare,Qt::BlockingQueuedConnection))
     { setLastError(QStringLiteral("无法创建相机对象")); return EXvCameraError::Internal; }
@@ -279,7 +284,7 @@ EXvCameraError XvCameraManager::openCamera(const QString &deviceId,IXvCamera **c
     }
     if(result!=EXvCameraError::None || cancelled)
     {
-        candidate->close(); candidate->deleteLater();
+        candidate->close();
         return cancelled?EXvCameraError::NotOpen:result;
     }
     if(cameraOut) *cameraOut=candidate;
@@ -299,7 +304,7 @@ EXvCameraError XvCameraManager::prepareCamera(const QString &deviceId,IXvCamera 
         QMutexLocker locker(&d->mutex);
         if(d->opening.contains(deviceId))
         { d->lastError=QStringLiteral("相机正在打开"); return EXvCameraError::Busy; }
-        IXvCamera *existing=d->cameras.value(deviceId);
+        IXvCamera *existing=d->cameras.value(deviceId).data();
         if(existing)
         {
             if(cameraOut) *cameraOut=existing;
@@ -346,7 +351,13 @@ EXvCameraError XvCameraManager::prepareCamera(const QString &deviceId,IXvCamera 
     }
     {
         QMutexLocker locker(&d->mutex);
-        d->cameras.insert(deviceId,candidate);
+        const QPointer<IXvCamera> guard(candidate);
+        d->cameras.insert(deviceId,QSharedPointer<IXvCamera>(candidate,[guard](IXvCamera *)
+        {
+            // The manager remains the QObject parent. Deferred retirement must
+            // tolerate manager destruction having already deleted its children.
+            if(guard) guard->deleteLater();
+        }));
         d->opening.insert(deviceId);
         d->lastError.clear();
     }
@@ -355,7 +366,7 @@ EXvCameraError XvCameraManager::prepareCamera(const QString &deviceId,IXvCamera 
     {
         Q_D(XvCameraManager);
         QMutexLocker locker(&d->mutex);
-        if(d->cameras.value(deviceId)==cameraIdentity)
+        if(d->cameras.value(deviceId).data()==cameraIdentity)
             d->cameras.remove(deviceId);
     });
     if(cameraOut) *cameraOut=candidate;
@@ -365,7 +376,7 @@ EXvCameraError XvCameraManager::prepareCamera(const QString &deviceId,IXvCamera 
 EXvCameraError XvCameraManager::closeCamera(const QString &deviceId)
 {
     Q_D(XvCameraManager);
-    QPointer<IXvCamera> camera;
+    QSharedPointer<IXvCamera> camera;
     {
         QMutexLocker locker(&d->mutex);
         if(d->opening.contains(deviceId))
@@ -380,7 +391,6 @@ EXvCameraError XvCameraManager::closeCamera(const QString &deviceId)
     const EXvCameraError result=camera->close();
     if(result!=EXvCameraError::None) setLastError(camera->lastError());
     else setLastError(QString());
-    camera->deleteLater();
     emit cameraClosed(deviceId);
     return result;
 }
@@ -389,13 +399,20 @@ IXvCamera *XvCameraManager::camera(const QString &deviceId) const
 {
     Q_D(const XvCameraManager);
     QMutexLocker locker(&d->mutex);
-    return d->opening.contains(deviceId)?nullptr:d->cameras.value(deviceId);
+    return d->opening.contains(deviceId)?nullptr:d->cameras.value(deviceId).data();
+}
+
+QSharedPointer<IXvCamera> XvCameraManager::cameraLease(const QString &deviceId) const
+{
+    Q_D(const XvCameraManager);
+    QMutexLocker locker(&d->mutex);
+    return d->opening.contains(deviceId)?QSharedPointer<IXvCamera>{}:d->cameras.value(deviceId);
 }
 
 void XvCameraManager::shutdown()
 {
     Q_D(XvCameraManager);
-    QList<QPointer<IXvCamera>> cameras;
+    QList<QSharedPointer<IXvCamera>> cameras;
     {
         QMutexLocker locker(&d->mutex);
         for(auto it=d->cameras.begin();it!=d->cameras.end();)
@@ -404,12 +421,11 @@ void XvCameraManager::shutdown()
             else { cameras.append(it.value()); it=d->cameras.erase(it); }
         }
     }
-    for(const QPointer<IXvCamera> &camera:cameras)
+    for(const QSharedPointer<IXvCamera> &camera:cameras)
     {
         if(!camera) continue;
         const QString id=camera->deviceInfo().deviceId;
         camera->close();
-        camera->deleteLater();
         emit cameraClosed(id);
     }
 }

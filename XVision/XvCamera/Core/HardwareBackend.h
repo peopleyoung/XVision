@@ -53,6 +53,7 @@ public:
     EXvCameraError open() override;
     EXvCameraError close() override;
     EXvCameraError grabFrame(XvCameraFrame &,unsigned int timeoutMs) override;
+    EXvCameraError grabFrameWithParameters(XvCameraFrame &,unsigned int,const QVariantMap &) override;
     EXvCameraError startContinuous() override;
     EXvCameraError stopContinuous() override;
     QList<XvCameraParameterDescriptor> parameters() const override;
@@ -60,7 +61,7 @@ public:
     EXvCameraError setParameter(const QString &key,const QVariant &value) override;
 private:
     EXvCameraError finish(const Result &result);
-    EXvCameraError acquire(XvCameraFrame &,unsigned int,bool streaming);
+    EXvCameraError acquire(XvCameraFrame &,unsigned int,bool streaming,const QVariantMap &values={});
     void postFrame(const XvCameraFrame &,quint64 generation);
     Device m_device;
     std::unique_ptr<Backend> m_backend;

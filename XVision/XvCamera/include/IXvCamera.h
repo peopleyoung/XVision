@@ -24,6 +24,17 @@ public:
     virtual EXvCameraError close()=0;
     virtual EXvCameraError grabFrame(XvCameraFrame &frame,
                                      unsigned int timeoutMs=1000)=0;
+    virtual EXvCameraError grabFrameWithParameters(XvCameraFrame &frame,
+            unsigned int timeoutMs,const QVariantMap &values)
+    {
+        frame={};
+        for(auto it=values.cbegin();it!=values.cend();++it)
+        {
+            const auto result=setParameter(it.key(),it.value());
+            if(result!=EXvCameraError::None) return result;
+        }
+        return grabFrame(frame,timeoutMs);
+    }
     virtual EXvCameraError startContinuous()=0;
     virtual EXvCameraError stopContinuous()=0;
 

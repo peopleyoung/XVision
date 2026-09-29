@@ -10,11 +10,12 @@ using namespace XvCamera::Hardware;
 #define MOCK_API extern "C" __attribute__((visibility("default")))
 #endif
 namespace {
-std::atomic_int fault{0},outstanding{0},handles{0};
+std::atomic_int fault{0},outstanding{0},handles{0},writes{0};
 struct Handle { double exposure=1000,gain=2; bool started=false; unsigned char pixels[6]={1,2,3,4,5,6}; };
 }
 MOCK_API void XV_CAMERA_CALL XvMockSetFault(int value) { fault=value; }
 MOCK_API int XV_CAMERA_CALL XvMockOutstanding() { return outstanding.load(); }
+MOCK_API int XV_CAMERA_CALL XvMockWrites() { return writes.load(); }
 MOCK_API int XV_CAMERA_CALL XvMockHandles() { return handles.load(); }
 #ifdef XVISION_MOCK_MVS
 MOCK_API int XV_CAMERA_CALL MV_CC_Initialize() { return 0; }
@@ -53,7 +54,7 @@ MOCK_API int XV_CAMERA_CALL MV_CC_GetFloatValue(void *handle,const char *key,Abi
     value->value=float(std::strcmp(key,"Gain")==0?static_cast<Handle*>(handle)->gain:static_cast<Handle*>(handle)->exposure); return 0;
 }
 MOCK_API int XV_CAMERA_CALL MV_CC_SetFloatValue(void *handle,const char *key,float value)
-{ (std::strcmp(key,"Gain")==0?static_cast<Handle*>(handle)->gain:static_cast<Handle*>(handle)->exposure)=value; return 0; }
+{ ++writes; (std::strcmp(key,"Gain")==0?static_cast<Handle*>(handle)->gain:static_cast<Handle*>(handle)->exposure)=value; return 0; }
 MOCK_API int XV_CAMERA_CALL MV_CC_SetCommandValue(void*,const char*) { return 0; }
 MOCK_API int XV_CAMERA_CALL MV_CC_ClearImageBuffer(void*) { return 0; }
 #else
@@ -93,5 +94,5 @@ MOCK_API int32_t XV_CAMERA_CALL GXGetFloat(void *handle,int32_t feature,double *
 MOCK_API int32_t XV_CAMERA_CALL GXGetFloatRange(void*,int32_t,Abi::GalaxyFloatRange *range)
 { *range={}; range->maximum=100000; return 0; }
 MOCK_API int32_t XV_CAMERA_CALL GXSetFloat(void *handle,int32_t feature,double value)
-{ (feature==Abi::GxGain?static_cast<Handle*>(handle)->gain:static_cast<Handle*>(handle)->exposure)=value; return 0; }
+{ ++writes; (feature==Abi::GxGain?static_cast<Handle*>(handle)->gain:static_cast<Handle*>(handle)->exposure)=value; return 0; }
 #endif

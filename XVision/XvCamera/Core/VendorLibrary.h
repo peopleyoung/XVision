@@ -2,6 +2,7 @@
 #include "HardwareBackend.h"
 #include "VendorAbi.h"
 #include <QLibrary>
+#include <QHash>
 #include <QDir>
 #include <QFileInfo>
 #include <QCoreApplication>
