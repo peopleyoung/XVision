@@ -1,0 +1,108 @@
+{
+  "run_id": 36517009532,
+  "commit": "7f2fc4268e26fd36e33c827d4b7319b8466e6a09",
+  "suites": [
+    {
+      "test": "camera",
+      "passed": 9,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "test": "communication_operators",
+      "passed": 9,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "test": "detect_record",
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "test": "geometry_measurement",
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "test": "onnx_operators",
+      "passed": 8,
+      "failed": 0,
+      "skipped": 1
+    },
+    {
+      "test": "opencv_image_operators",
+      "passed": 5,
+      "failed": 0,
+      "skipped": 1
+    },
+    {
+      "test": "opencv_morphology_detectors",
+      "passed": 5,
+      "failed": 0,
+      "skipped": 3
+    },
+    {
+      "test": "opencv_template_rectification",
+      "passed": 7,
+      "failed": 0,
+      "skipped": 1
+    },
+    {
+      "test": "projectxml",
+      "passed": 42,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "test": "source_notification",
+      "passed": 5,
+      "failed": 0,
+      "skipped": 1
+    },
+    {
+      "test": "systemplugin",
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "test": "ui_appearance",
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "test": "ui_responsiveness",
+      "passed": 136,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "test": "visionmaster_backend_boundary",
+      "passed": 9,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "test": "visionmaster_data",
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0
+    }
+  ],
+  "passed": 266,
+  "failed": 0,
+  "skipped": 7,
+  "skip_reasons": [
+    "SKIP   : OnnxOperatorTests::operatorDefaultsAndDisabledBackend() Disabled-backend operator contract requires XVISION_ENABLE_ONNXRUNTIME=OFF",
+    "SKIP   : OpenCvImageOperatorTests::disabledBackendPreservesExistingResults() OpenCV backend is enabled",
+    "SKIP   : OpenCvMorphologyDetectorTests::disabledBackendPreservesStructuredResults() OpenCV backend is enabled",
+    "SKIP   : OpenCvMorphologyDetectorTests::registeredQrAssetDecodes() XVISION_TEST_QR_IMAGE is not registered",
+    "SKIP   : OpenCvMorphologyDetectorTests::registeredCascadeAssetLoads() XVISION_TEST_CASCADE_PATH is not registered",
+    "SKIP   : OpenCvTemplatingTests::disabledBackendClearsTransientResults() OpenCV backend is enabled",
+    "SKIP   : SourceNotificationTests::videoContractDefaultsAndDisabledBackend() OpenCV backend is enabled"
+  ]
+}

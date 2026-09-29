@@ -1,0 +1,9 @@
+{
+  "run_id": 36517009532,
+  "commit": "7f2fc4268e26fd36e33c827d4b7319b8466e6a09",
+  "artifact_id": 11011821476,
+  "transport_digest": "sha256:50aea79007af3a6855e80cabcabec167b05eba761e914a38f5c5e313e25375ba",
+  "zip": "/home/hdzk/YangS01/XVision/XVision/dist/XVision-TechBlue-7f2fc42-win64.zip",
+  "exe": "/home/hdzk/YangS01/XVision/XVision/dist/XVision-TechBlue-7f2fc42-win64/XVision.exe",
+  "zip_sha256": "f8913632775eaff889d74f817e3559ef9dc1b7e6ce2aa33ee098b17799230b23"
+}

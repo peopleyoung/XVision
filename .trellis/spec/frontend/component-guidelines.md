@@ -136,3 +136,11 @@ Use the 24x24 blue SVG family, explicit tooltip/accessibility text and registere
 Qt 6 on Windows may post additional layout requests during polish/show. Geometry regressions must wait for the promised final state with bounded QTRY assertions; one processEvents() call is not a completion barrier. Keep the positive scroll-range/content-height assertions, rather than dropping them.
 
 Scroll regression fixtures must first force content overflow independently of platform font/frame metrics (the communication fixture uses a 640x320 viewport). A form that fits a 640x420 window correctly has no scrollbar; normal-size layout checks and forced-overflow checks are separate contracts.
+
+## Toolbar Icon Rendering
+Use registered 24x24 round-cap SVGs and standard QToolButton controls with explicit
+icon-only mode, accessible names and localized tooltips. Scope toolbar QSS through
+properties so main-strip ID selectors do not override pressed/disabled states.
+On Qt 5, enable AA_EnableHighDpiScaling and AA_UseHighDpiPixmaps before constructing
+the application. Inspect actual 150%/200% captures: an SVG resource alone does not
+prevent a low-resolution pixmap path. Keep these attributes guarded out on Qt 6.
