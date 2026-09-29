@@ -3,6 +3,7 @@
 #include <QPlainTextEdit>
 #include <QToolButton>
 #include <QComboBox>
+#include <QDoubleSpinBox>
 #include <QPointer>
 #include <QScrollArea>
 #include <QScrollBar>
@@ -98,6 +99,35 @@ private slots:
         window->resize(640,420);
         QCoreApplication::processEvents();
         QVERIFY2(window->height()<=440,"Parameter window cannot fit a small desktop");
+        window->close();
+    }
+    void industrialCameraControlsRemainReadableAndPersist()
+    {
+        ImageAcquisition function;
+        function.setAcqType(ImageAcquisition::Camera);
+        function.setCameraDeviceId("hik-mvs:test-offline-device");
+        function.setCameraExposureUs(1500);
+        function.setCameraGain(2.5);
+        const auto before=QApplication::topLevelWidgets();
+        function.onShowFunc();
+        QWidget *window=nullptr;
+        for(auto candidate:QApplication::topLevelWidgets())
+            if(!before.contains(candidate) && candidate->isVisible()) window=candidate;
+        QVERIFY(window); window->resize(640,420);
+        auto exposure=window->findChild<QDoubleSpinBox*>("cameraExposureUs");
+        auto gain=window->findChild<QDoubleSpinBox*>("cameraGain");
+        auto trigger=window->findChild<QComboBox*>("cameraTriggerMode");
+        auto scroll=window->findChild<QScrollArea*>("operatorParameterScroll");
+        QVERIFY(exposure); QVERIFY(gain); QVERIFY(trigger); QVERIFY(scroll);
+        QTRY_VERIFY(exposure->isVisible()); QTRY_VERIFY(gain->height()>=24);
+        QCOMPARE(exposure->value(),1500.0); QCOMPARE(gain->value(),2.5);
+        exposure->setValue(3200); gain->setValue(4.75); trigger->setCurrentIndex(1);
+        QCOMPARE(function.cameraExposureUs(),3200.0); QCOMPARE(function.cameraGain(),4.75);
+        QCOMPARE(function.cameraTriggerMode(),1);
+        scroll->ensureWidgetVisible(trigger);
+        QTRY_VERIFY(trigger->mapTo(scroll->viewport(),QPoint()).y()<scroll->viewport()->height());
+        const QString screenshots=QString::fromLocal8Bit(qgetenv("XVISION_UI_SCREENSHOT_DIR"));
+        if(!screenshots.isEmpty()) { QDir().mkpath(screenshots); window->grab().save(screenshots+"/industrial-camera.png"); }
         window->close();
     }
     void communicationWindowFitsSmallDesktop()

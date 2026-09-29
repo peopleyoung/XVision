@@ -484,6 +484,13 @@ add_test(NAME projectxml
         -o "-,txt"
 )
 
+# Test-only runtime libraries exercise the actual industrial adapters without a camera.
+find_package(Threads REQUIRED)
+add_library(XvMockMvs SHARED camera_mock_sdk.cpp)
+add_library(XvMockGalaxy SHARED camera_mock_sdk.cpp)
+target_compile_definitions(XvMockMvs PRIVATE XVISION_MOCK_MVS=1)
+set_target_properties(XvMockMvs XvMockGalaxy PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON)
+
 add_executable(XvCameraTests
     tst_camera.cpp
 )
@@ -496,7 +503,13 @@ target_include_directories(XvCameraTests PRIVATE
     ../XvCamera/include
 )
 
+add_dependencies(XvCameraTests XvMockMvs XvMockGalaxy)
+target_compile_definitions(XvCameraTests PRIVATE
+    XVISION_MOCK_MVS_PATH="$<TARGET_FILE:XvMockMvs>"
+    XVISION_MOCK_GALAXY_PATH="$<TARGET_FILE:XvMockGalaxy>"
+)
 target_link_libraries(XvCameraTests PRIVATE
+    Threads::Threads
     XvCamera
     Qt${QT_VERSION_MAJOR}::Core
     Qt${QT_VERSION_MAJOR}::Gui

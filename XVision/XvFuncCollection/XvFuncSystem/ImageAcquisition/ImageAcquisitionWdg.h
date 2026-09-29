@@ -1,4 +1,4 @@
-﻿#ifndef IMAGEACQUISITIONWDG_H
+#ifndef IMAGEACQUISITIONWDG_H
 #define IMAGEACQUISITIONWDG_H
 
 #include "BaseSystemFuncWdg.h"
@@ -12,6 +12,8 @@ class ImageAcquisitionWdg;
 class XMatTabs;
 class QLineEdit;
 class QSpinBox;
+class QDoubleSpinBox;
+class QComboBox;
 class QCheckBox;
 class QWidget;
 class ImageAcquisitionWdg : public BaseSystemFuncWdg
@@ -32,6 +34,10 @@ protected slots:
 private:
     Ui::ImageAcquisitionWdg *ui;
     XMatTabs* m_tabs=nullptr;
+    QWidget *m_industrialSettings=nullptr;
+    QDoubleSpinBox *m_cameraExposure=nullptr;
+    QDoubleSpinBox *m_cameraGain=nullptr;
+    QComboBox *m_cameraTrigger=nullptr;
     QWidget* m_videoPage=nullptr;
     QLineEdit* m_videoPath=nullptr;
     QSpinBox* m_videoStart=nullptr;

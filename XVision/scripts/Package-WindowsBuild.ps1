@@ -183,7 +183,13 @@ $PackageReadmePath = Join-Path $PackageDirectory "PACKAGE-README.txt"
     "Start the application with XVision.exe.",
     "Keep XvFuncCollection beside XVision.exe; it contains the operator plugin.",
     "This build contains no HALCON operators or HALCON runtime dependency.",
-    "Camera drivers and real serial/Modbus devices are deployment-machine dependencies."
+    "Camera drivers and real serial/Modbus devices are deployment-machine dependencies.",
+    "相机接入：支持普通 USB/UVC、海康 MVS 和大恒 Galaxy 三类后端。",
+    "工业相机需要安装对应的 64 位 SDK 与驱动，先在厂商客户端验证采图，再关闭客户端以免占用。",
+    "相机算子页面可刷新设备，设置单帧超时；工业设备支持曝光、增益和连续/软件/Line0 触发。",
+    "特殊安装路径可用 XVISION_MVS_LIBRARY 或 XVISION_GALAXY_LIBRARY 指定运行库绝对路径后重启程序。",
+    "大恒请使用 Mono8、Bayer8、RGB8 或 BGR8；其他像素格式会明确报错。",
+    "软件自动化验证不等于实机验收；具体相机型号仍须在目标电脑测试。"
 ) | Set-Content -LiteralPath $PackageReadmePath -Encoding UTF8
 
 # windeployqt handles Qt dependencies; these checks cover the project-specific

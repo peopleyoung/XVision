@@ -31,3 +31,10 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE XVCAMERA_LIBRARY)
 add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
+
+find_package(Threads REQUIRED)
+target_link_libraries(XvCamera PRIVATE Threads::Threads)
+if(WIN32)
+    target_link_libraries(XvCamera PRIVATE mfplat mfreadwrite mfuuid mf ole32)
+    target_compile_definitions(XvCamera PRIVATE NOMINMAX WIN32_LEAN_AND_MEAN)
+endif()

@@ -23,6 +23,10 @@ public:
     virtual IXvCamera *createCamera(const QString &deviceId,
                                     QObject *parent=nullptr)=0;
 
+    virtual void refreshDevices() {}
+    virtual QString diagnostic() const { return {}; }
+    virtual bool isRefreshing() const { return false; }
+
 signals:
     void devicesChanged();
 };

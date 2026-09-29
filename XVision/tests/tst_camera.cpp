@@ -10,6 +10,12 @@
 #include "IXvCamera.h"
 #include "XvCameraManager.h"
 #include "XvDirectoryCamera.h"
+#include "../XvCamera/Core/HardwareBackend.h"
+#include "../XvCamera/Core/VendorLibrary.h"
+#include <QTimer>
+#include <atomic>
+#include <future>
+#include <thread>
 
 using namespace XvCamera;
 
@@ -29,6 +35,60 @@ private:
     XvCameraDeviceInfo m_device;
 };
 
+namespace {
+struct HardwareState
+{
+    std::atomic_int reads{0},opens{0},closes{0};
+    std::atomic_bool timeout{false},offline{false},empty{false};
+    std::atomic_int delay{0};
+};
+class TestHardwareBackend final : public Hardware::Backend
+{
+public:
+    explicit TestHardwareBackend(std::shared_ptr<HardwareState> state):state(std::move(state)) {}
+    Hardware::Result open() override
+    { ++state->opens; if(state->delay>0) QThread::msleep(unsigned(state->delay.load())); return {}; }
+    void close() override { ++state->closes; }
+    Hardware::Result read(QImage &image,unsigned int timeout) override
+    {
+        ++state->reads;
+        if(state->offline) return {EXvCameraError::Disconnected,QStringLiteral("测试设备断线")};
+        if(state->timeout) { QThread::msleep(timeout); return {EXvCameraError::Timeout,QStringLiteral("测试超时")}; }
+        if(!state->empty) { image=QImage(3,2,QImage::Format_RGB32); image.fill(Qt::red); }
+        return {};
+    }
+    std::shared_ptr<HardwareState> state;
+};
+class TestHardwareSystem final : public Hardware::System
+{
+public:
+    QString id() const override { return "hardware-test"; }
+    QString name() const override { return QStringLiteral("硬件测试后端"); }
+    Hardware::Result scan(QList<Hardware::Device> &devices) override
+    {
+        ++scans; QThread::msleep(80);
+        Hardware::Device device;
+        device.info.providerId=id(); device.info.deviceId="hardware-test:serial-42";
+        devices.append(device); return {};
+    }
+    std::unique_ptr<Hardware::Backend> create(const Hardware::Device &) override
+    { return std::make_unique<TestHardwareBackend>(state); }
+    std::shared_ptr<HardwareState> state=std::make_shared<HardwareState>();
+    std::atomic_int scans{0};
+};
+struct EnvironmentValue
+{
+    QByteArray name,old; bool wasSet;
+    EnvironmentValue(const char *key,const QByteArray &value):name(key),old(qgetenv(key)),wasSet(qEnvironmentVariableIsSet(key)) { qputenv(key,value); }
+    ~EnvironmentValue() { if(wasSet) qputenv(name.constData(),old); else qunsetenv(name.constData()); }
+};
+Hardware::Device hardwareDevice()
+{
+    Hardware::Device device; device.info.providerId="hardware-test"; device.info.deviceId="hardware-test:serial-42";
+    return device;
+}
+}
+
 class CameraTest : public QObject
 {
     Q_OBJECT
@@ -47,6 +107,190 @@ class CameraTest : public QObject
     }
 
 private slots:
+    void hardwareFramesAreOwnedAndFailuresClearResults()
+    {
+        auto state=std::make_shared<HardwareState>();
+        Hardware::Camera camera(hardwareDevice(),std::make_unique<TestHardwareBackend>(state));
+        QCOMPARE(camera.open(),EXvCameraError::None);
+        XvCameraFrame frame;
+        QCOMPARE(camera.grabFrame(frame,100),EXvCameraError::None);
+        QCOMPARE(frame.sequence,quint64(1));
+        const QImage retained=frame.image;
+        state->timeout=true;
+        QElapsedTimer timer; timer.start();
+        QCOMPARE(camera.grabFrame(frame,20),EXvCameraError::Timeout);
+        QVERIFY(timer.elapsed()<250); QVERIFY(!frame.isValid());
+        QCOMPARE(camera.status(),EXvCameraStatus::Open);
+        state->timeout=false;
+        QCOMPARE(camera.grabFrame(frame,0),EXvCameraError::None);
+        QCOMPARE(frame.sequence,quint64(2));
+        state->empty=true;
+        QCOMPARE(camera.grabFrame(frame,10),EXvCameraError::IoError); QVERIFY(!frame.isValid());
+        state->offline=true;
+        QSignalSpy offline(&camera,&IXvCamera::disconnected);
+        QCOMPARE(camera.grabFrame(frame,10),EXvCameraError::Disconnected);
+        QCOMPARE(camera.status(),EXvCameraStatus::Disconnected);
+        QTRY_COMPARE(offline.count(),1);
+        QCOMPARE(retained.pixelColor(0,0),QColor(Qt::red));
+        QCOMPARE(camera.close(),EXvCameraError::None);
+    }
+    void hardwareStopIsBoundedAndDeliveryIsCoalesced()
+    {
+        auto state=std::make_shared<HardwareState>();
+        Hardware::Camera camera(hardwareDevice(),std::make_unique<TestHardwareBackend>(state));
+        QCOMPARE(camera.open(),EXvCameraError::None);
+        QSignalSpy frames(&camera,&IXvCamera::frameReady);
+        for(int i=0;i<15;++i)
+        {
+            QCOMPARE(camera.startContinuous(),EXvCameraError::None);
+            QCOMPARE(camera.stopContinuous(),EXvCameraError::None);
+            QCOMPARE(camera.status(),EXvCameraStatus::Open);
+        }
+        QCOMPARE(camera.startContinuous(),EXvCameraError::None);
+        QThread::msleep(35); // Simulate a GUI that has not consumed frames yet.
+        QVERIFY(state->reads.load()>1);
+        QCoreApplication::processEvents();
+        QVERIFY(frames.count()<=2);
+        QCOMPARE(camera.stopContinuous(),EXvCameraError::None);
+        const int stoppedFrames=frames.count();
+        QTest::qWait(30); QCOMPARE(frames.count(),stoppedFrames);
+        state->timeout=true;
+        QCOMPARE(camera.startContinuous(),EXvCameraError::None);
+        QTest::qWait(10);
+        QElapsedTimer timer; timer.start();
+        QCOMPARE(camera.close(),EXvCameraError::None);
+        QVERIFY2(timer.elapsed()<400,"Stopping must not wait for a full operator timeout");
+    }
+    void hardwareDiscoveryIsCachedAndNonBlocking()
+    {
+        auto system=std::make_shared<TestHardwareSystem>();
+        Hardware::Provider provider(system);
+        QSignalSpy changed(&provider,&XvCameraProvider::devicesChanged);
+        QElapsedTimer timer; timer.start();
+        provider.refreshDevices(); provider.refreshDevices();
+        QVERIFY(timer.elapsed()<50); QVERIFY(provider.devices().isEmpty());
+        QTRY_VERIFY(!provider.isRefreshing());
+        QCOMPARE(system->scans.load(),1); QCOMPARE(provider.devices().size(),1);
+        QVERIFY(changed.count()>=2);
+        auto camera=std::unique_ptr<IXvCamera>(provider.createCamera("hardware-test:serial-42"));
+        QVERIFY(camera); QCOMPARE(camera->open(),EXvCameraError::None);
+        QVERIFY(!provider.createCamera("hardware-test:missing"));
+    }
+    void hardwareOpeningDoesNotBlockGuiEvents()
+    {
+        auto system=std::make_shared<TestHardwareSystem>();
+        auto provider=new Hardware::Provider(system);
+        QVERIFY(XvCameraMgr->registerProvider(provider));
+        provider->refreshDevices(); QTRY_VERIFY(!provider->isRefreshing());
+        system->state->delay=120;
+        std::atomic_bool done{false}; EXvCameraError result=EXvCameraError::Internal;
+        IXvCamera *camera=nullptr;
+        int ticks=0; QTimer timer; timer.setInterval(5);
+        connect(&timer,&QTimer::timeout,this,[&]() { ++ticks; }); timer.start();
+        auto work=std::async(std::launch::async,[&]() { result=XvCameraMgr->openCamera("hardware-test:serial-42",&camera); done=true; });
+        QTRY_VERIFY(done.load()); work.get(); timer.stop();
+        QCOMPARE(result,EXvCameraError::None); QVERIFY(camera); QVERIFY(ticks>=3);
+        QCOMPARE(camera->thread(),XvCameraMgr->thread());
+        QCOMPARE(XvCameraMgr->closeCamera(camera->deviceInfo().deviceId),EXvCameraError::None);
+        QVERIFY(XvCameraMgr->unregisterProvider("hardware-test"));
+    }
+    void hardwareCloseCancelsAnOpeningDevice()
+    {
+        auto system=std::make_shared<TestHardwareSystem>();
+        auto provider=new Hardware::Provider(system);
+        QVERIFY(XvCameraMgr->registerProvider(provider));
+        provider->refreshDevices(); QTRY_VERIFY(!provider->isRefreshing());
+        system->state->delay=120;
+        std::atomic_bool done{false}; EXvCameraError result=EXvCameraError::Internal;
+        auto work=std::async(std::launch::async,[&]() { result=XvCameraMgr->openCamera("hardware-test:serial-42"); done=true; });
+        QTRY_VERIFY(system->state->opens.load()>0);
+        QCOMPARE(XvCameraMgr->closeCamera("hardware-test:serial-42"),EXvCameraError::Busy);
+        QTRY_VERIFY(done.load()); work.get();
+        QCOMPARE(result,EXvCameraError::NotOpen); QVERIFY(!XvCameraMgr->camera("hardware-test:serial-42"));
+        QVERIFY(XvCameraMgr->unregisterProvider("hardware-test"));
+    }
+    void industrialDriversAreOptionalAndDiagnosed()
+    {
+        EnvironmentValue mvs("XVISION_MVS_LIBRARY","/definitely/missing/MvCameraControl.dll");
+        EnvironmentValue galaxy("XVISION_GALAXY_LIBRARY","/definitely/missing/GxIAPI.dll");
+        for(const auto &system:{Hardware::makeMvsSystem(),Hardware::makeGalaxySystem()})
+        {
+            QList<Hardware::Device> devices;
+            const auto result=system->scan(devices);
+            QCOMPARE(result.error,EXvCameraError::Unsupported); QVERIFY(devices.isEmpty());
+            QVERIFY(result.message.contains("SDK")); QVERIFY(result.message.contains("XVISION_"));
+        }
+    }
+    void industrialAdaptersExecuteSdkContract_data()
+    {
+        QTest::addColumn<bool>("mvs");
+        QTest::newRow("Hikrobot-MVS") << true;
+        QTest::newRow("Daheng-Galaxy") << false;
+    }
+    void industrialAdaptersExecuteSdkContract()
+    {
+        QFETCH(bool,mvs);
+        const QByteArray path=mvs?QByteArray(XVISION_MOCK_MVS_PATH):QByteArray(XVISION_MOCK_GALAXY_PATH);
+        EnvironmentValue environment(mvs?"XVISION_MVS_LIBRARY":"XVISION_GALAXY_LIBRARY",path);
+        QLibrary library(QString::fromUtf8(path)); QVERIFY2(library.load(),qPrintable(library.errorString()));
+        using SetFault=void (XV_CAMERA_CALL *)(int);
+        using Count=int (XV_CAMERA_CALL *)();
+        const auto setFault=reinterpret_cast<SetFault>(library.resolve("XvMockSetFault"));
+        const auto outstanding=reinterpret_cast<Count>(library.resolve("XvMockOutstanding"));
+        const auto handles=reinterpret_cast<Count>(library.resolve("XvMockHandles"));
+        QVERIFY(setFault); QVERIFY(outstanding); QVERIFY(handles); setFault(0);
+        auto system=mvs?Hardware::makeMvsSystem():Hardware::makeGalaxySystem();
+        QList<Hardware::Device> devices;
+        const auto scan=system->scan(devices); QVERIFY2(bool(scan),qPrintable(scan.message)); QCOMPARE(devices.size(),1);
+        QCOMPARE(devices.first().info.serialNumber,mvs?QString("TEST-MVS-001"):QString("TEST-GALAXY-001"));
+        Hardware::Camera camera(devices.first(),system->create(devices.first()));
+        QCOMPARE(camera.open(),EXvCameraError::None); QCOMPARE(handles(),1);
+        QVERIFY(camera.parameters().size()>=3);
+        QCOMPARE(camera.setParameter("ExposureTime",1200.0),EXvCameraError::None);
+        QCOMPARE(camera.parameter("ExposureTime").toDouble(),1200.0);
+        QCOMPARE(camera.setParameter("Gain",4.0),EXvCameraError::None);
+        QCOMPARE(camera.parameter("Gain").toDouble(),4.0);
+        QCOMPARE(camera.setParameter("Gain",-999.0),EXvCameraError::InvalidArgument);
+        QCOMPARE(camera.setParameter("Gain",QString("4")),EXvCameraError::InvalidArgument);
+        QCOMPARE(camera.setParameter("TriggerMode",QString("Software")),EXvCameraError::None);
+        XvCameraFrame frame;
+        QCOMPARE(camera.grabFrame(frame,100),EXvCameraError::None);
+        QCOMPARE(frame.image.pixelColor(0,0).red(),1); // MVS mock mutates SDK memory when released.
+        QCOMPARE(outstanding(),0);
+        const QImage retained=frame.image;
+        setFault(3);
+        QCOMPARE(camera.grabFrame(frame,10),EXvCameraError::IoError); QVERIFY(!frame.isValid()); QCOMPARE(outstanding(),0);
+        setFault(2);
+        QCOMPARE(camera.grabFrame(frame,5),EXvCameraError::Timeout); QCOMPARE(camera.status(),EXvCameraStatus::Open);
+        setFault(1);
+        QCOMPARE(camera.grabFrame(frame,10),EXvCameraError::Disconnected); QCOMPARE(camera.status(),EXvCameraStatus::Disconnected);
+        QCOMPARE(camera.close(),EXvCameraError::None); QCOMPARE(handles(),0);
+        QCOMPARE(retained.pixelColor(0,0).red(),1);
+        setFault(5);
+        QVERIFY(camera.open()!=EXvCameraError::None); QCOMPARE(handles(),0);
+        setFault(0);
+        QCOMPARE(camera.open(),EXvCameraError::None); QCOMPARE(camera.close(),EXvCameraError::None); QCOMPARE(handles(),0);
+    }
+    void packedPixelsValidateBoundsAndOwnMemory()
+    {
+        QByteArray pixels(12,char(100)); QImage image;
+        QCOMPARE(Hardware::copyPackedImage(pixels.constData(),4,3,Hardware::Abi::Mono8,12,image).error,EXvCameraError::None);
+        pixels.fill(char(0)); QCOMPARE(image.pixelColor(0,0).red(),100);
+        QCOMPARE(Hardware::copyPackedImage(pixels.constData(),4,3,Hardware::Abi::Rgb8,12,image).error,EXvCameraError::IoError);
+        QVERIFY(image.isNull());
+        QCOMPARE(Hardware::copyPackedImage(pixels.constData(),0,3,Hardware::Abi::Mono8,12,image).error,EXvCameraError::IoError);
+        for(int pattern=0;pattern<4;++pattern)
+        {
+            pixels.fill(char(70));
+            QCOMPARE(Hardware::copyPackedImage(pixels.constData(),4,3,0x01080008+pattern,12,image).error,EXvCameraError::None);
+            QCOMPARE(image.pixelColor(0,0),QColor(70,70,70));
+            QCOMPARE(image.pixelColor(3,2),QColor(70,70,70));
+        }
+        const uchar rgb[]={20,40,80};
+        QCOMPARE(Hardware::copyPackedImage(rgb,1,1,Hardware::Abi::Bgr8,3,image).error,EXvCameraError::None);
+        QCOMPARE(image.pixelColor(0,0),QColor(80,40,20));
+    }
+
     void init()
     {
         XvCameraMgr->shutdown();

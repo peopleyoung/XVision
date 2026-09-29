@@ -17,6 +17,12 @@ public:
                 getLang("XvFuncSystem_ImageAcquisition_CameraDeviceId","相机设备"));
         cameraTimeoutMs=new XInt("cameraTimeoutMs",1000,this,
                 getLang("XvFuncSystem_ImageAcquisition_CameraTimeout","相机超时(ms)"));
+        cameraExposureUs=new XReal("cameraExposureUs",0.0,this,
+                getLang("Camera_ExposureUs","曝光时间（微秒，0 保持相机设置）"));
+        cameraGain=new XReal("cameraGain",-1.0,this,
+                getLang("Camera_Gain","增益（-1 保持相机设置）"));
+        cameraTriggerMode=new XInt("cameraTriggerMode",0,this,
+                getLang("Camera_TriggerMode","触发模式"));
         videoPath=new XString("videoPath","",this,
                 getLang("XvFuncSystem_ImageAcquisition_VideoPath","视频文件"));
         videoStartFrame=new XInt("videoStartFrame",0,this,
@@ -31,6 +37,9 @@ public:
 public:
     XString *cameraDeviceId=nullptr;
     XInt *cameraTimeoutMs=nullptr;
+    XReal *cameraExposureUs=nullptr;
+    XReal *cameraGain=nullptr;
+    XInt *cameraTriggerMode=nullptr;
     XString *videoPath=nullptr;
     XInt *videoStartFrame=nullptr;
     XInt *videoEndFrame=nullptr;
@@ -161,6 +170,13 @@ public:
             param->cameraTimeoutMs->setValue(timeoutMs);
     }
 
+    double cameraExposureUs() const { return param->cameraExposureUs->value(); }
+    void setCameraExposureUs(double value) { param->cameraExposureUs->setValue(value); }
+    double cameraGain() const { return param->cameraGain->value(); }
+    void setCameraGain(double value) { param->cameraGain->setValue(value); }
+    int cameraTriggerMode() const { return param->cameraTriggerMode->value(); }
+    void setCameraTriggerMode(int value) { param->cameraTriggerMode->setValue(value); }
+
     QString videoPath() const
     {
         return param&&param->videoPath?param->videoPath->value():QString();
@@ -193,7 +209,7 @@ public:
     }
     QStringList optionalPersistentParameterNames() const override
     {
-        return {"cameraDeviceId","cameraTimeoutMs","videoPath",
+        return {"cameraDeviceId","cameraTimeoutMs","cameraExposureUs","cameraGain","cameraTriggerMode","videoPath",
                 "videoStartFrame","videoEndFrame","videoFrameStep","videoLoop"};
     }
 

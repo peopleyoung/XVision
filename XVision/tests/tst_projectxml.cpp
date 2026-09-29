@@ -2710,6 +2710,9 @@ private slots:
         acquisition->setAcqType(ImageAcquisition::Camera);
         acquisition->setCameraDeviceId("sim-directory:saved-device");
         acquisition->setCameraTimeoutMs(4321);
+        acquisition->setCameraExposureUs(12000.5);
+        acquisition->setCameraGain(3.25);
+        acquisition->setCameraTriggerMode(1);
 
         QVERIFY(manager->saveXvProject(projectPath));
         QVERIFY(manager->exportXvFlow(flow->flowId(),flowPath));
@@ -2721,6 +2724,9 @@ private slots:
         QCOMPARE(restored->acqType(),ImageAcquisition::Camera);
         QCOMPARE(restored->cameraDeviceId(),QString("sim-directory:saved-device"));
         QCOMPARE(restored->cameraTimeoutMs(),4321);
+        QCOMPARE(restored->cameraExposureUs(),12000.5);
+        QCOMPARE(restored->cameraGain(),3.25);
+        QCOMPARE(restored->cameraTriggerMode(),1);
 
         XvFlow *imported=manager->importXvFlow(flowPath);
         QVERIFY(imported);
@@ -2750,7 +2756,7 @@ private slots:
         {
             QDomElement next=value.nextSiblingElement("Value");
             const QString name=value.attribute("name");
-            if(name=="cameraDeviceId" || name=="cameraTimeoutMs"
+            if(name=="cameraDeviceId" || name=="cameraTimeoutMs" || name=="cameraExposureUs" || name=="cameraGain" || name=="cameraTriggerMode"
                     || name=="videoPath" || name=="videoStartFrame"
                     || name=="videoEndFrame" || name=="videoFrameStep"
                     || name=="videoLoop")
@@ -2765,6 +2771,9 @@ private slots:
         QVERIFY(restored);
         QVERIFY(restored->cameraDeviceId().isEmpty());
         QCOMPARE(restored->cameraTimeoutMs(),1000);
+        QCOMPARE(restored->cameraExposureUs(),0.0);
+        QCOMPARE(restored->cameraGain(),-1.0);
+        QCOMPARE(restored->cameraTriggerMode(),0);
         QVERIFY(restored->videoPath().isEmpty());
         QCOMPARE(restored->videoStartFrame(),0);
         QCOMPARE(restored->videoEndFrame(),-1);

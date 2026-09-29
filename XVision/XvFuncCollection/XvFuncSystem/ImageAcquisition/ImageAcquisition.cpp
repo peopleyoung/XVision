@@ -174,6 +174,13 @@ bool ImageAcquisition::readPersistentData(const QDomElement &dataElement,
         error="ImageAcquisition camera timeout must be in [0,60000]";
         return false;
     }
+    if(!std::isfinite(cameraExposureUs()) || cameraExposureUs()<0 || cameraExposureUs()>60000000 ||
+       !std::isfinite(cameraGain()) || cameraGain()<-1 || cameraGain()>1000000 ||
+       cameraTriggerMode()<0 || cameraTriggerMode()>2)
+    {
+        error="ImageAcquisition camera exposure/gain/trigger configuration is invalid";
+        return false;
+    }
     if(static_cast<int>(m_AcqType)<static_cast<int>(AcqType::File)
             || static_cast<int>(m_AcqType)>static_cast<int>(AcqType::Video))
     {
@@ -289,6 +296,30 @@ EXvFuncRunStatus ImageAcquisition::run()
                           :detail);
                 return EXvFuncRunStatus::Error;
             }
+        }
+
+        if(!std::isfinite(cameraExposureUs()) || cameraExposureUs()<0 || cameraExposureUs()>60000000 ||
+           !std::isfinite(cameraGain()) || cameraGain()<-1 || cameraGain()>1000000 ||
+           cameraTriggerMode()<0 || cameraTriggerMode()>2)
+        {
+            setRunMsg(getLang("Camera_InvalidSettings","相机曝光、增益或触发参数无效"));
+            return EXvFuncRunStatus::Error;
+        }
+        const QString provider=camera->deviceInfo().providerId;
+        const bool industrial=provider=="hik-mvs" || provider=="daheng-galaxy";
+        if(industrial)
+        {
+            const QStringList modes={"Continuous","Software","Line0"};
+            const auto apply=[&](const QString &key,const QVariant &value)
+            {
+                if(camera->parameter(key)==value) return true;
+                if(camera->setParameter(key,value)==XvCamera::EXvCameraError::None) return true;
+                setRunMsg(camera->lastError());
+                return false;
+            };
+            if(!apply("TriggerMode",modes.at(cameraTriggerMode())) ||
+               (cameraExposureUs()>0 && !apply("ExposureTime",cameraExposureUs())) ||
+               (cameraGain()>=0 && !apply("Gain",cameraGain()))) return EXvFuncRunStatus::Error;
         }
 
         XvCamera::XvCameraFrame frame;

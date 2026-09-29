@@ -6,6 +6,7 @@
 #include <QLineEdit>
 #include <QSignalBlocker>
 #include <QSpinBox>
+#include <QDoubleSpinBox>
 #include <QStyle>
 #include <QToolButton>
 #include <QVBoxLayout>
@@ -102,7 +103,7 @@ void ImageAcquisitionWdg::initFrm()
     ui->spbCameraTimeout->setSuffix(" ms");
 
     connect(ui->btnCameraRefresh,&QToolButton::clicked,
-            this,&ImageAcquisitionWdg::refreshCameraDevices);
+            this,[]() { XvCameraMgr->refreshDevices(); });
     connect(XvCameraMgr,&XvCamera::XvCameraManager::devicesChanged,
             this,&ImageAcquisitionWdg::refreshCameraDevices);
     connect(ui->cmbCameraDevice,qOverload<int>(&QComboBox::currentIndexChanged),
@@ -116,6 +117,39 @@ void ImageAcquisitionWdg::initFrm()
     {
         if(m_bShowing) func->setCameraTimeoutMs(value);
     });
+
+    m_industrialSettings=new QWidget(ui->wdgPgCamera);
+    auto cameraForm=new QFormLayout(m_industrialSettings);
+    cameraForm->setContentsMargins(0,0,0,0);
+    cameraForm->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
+    cameraForm->setRowWrapPolicy(QFormLayout::WrapLongRows);
+    m_cameraExposure=new QDoubleSpinBox(m_industrialSettings);
+    m_cameraExposure->setObjectName("cameraExposureUs");
+    m_cameraExposure->setRange(0,60000000); m_cameraExposure->setDecimals(2);
+    m_cameraExposure->setSuffix(" μs");
+    m_cameraExposure->setSpecialValueText(getLang("Camera_KeepSetting","保持相机设置"));
+    m_cameraGain=new QDoubleSpinBox(m_industrialSettings);
+    m_cameraGain->setObjectName("cameraGain");
+    m_cameraGain->setRange(-1,1000000); m_cameraGain->setDecimals(3);
+    m_cameraGain->setSpecialValueText(getLang("Camera_KeepSetting","保持相机设置"));
+    m_cameraTrigger=new QComboBox(m_industrialSettings);
+    m_cameraTrigger->setObjectName("cameraTriggerMode");
+    m_cameraTrigger->addItem(getLang("Camera_Continuous","连续采集"),0);
+    m_cameraTrigger->addItem(getLang("Camera_Software","软件触发"),1);
+    m_cameraTrigger->addItem(getLang("Camera_Line0","外部触发（Line0）"),2);
+    cameraForm->addRow(getLang("Camera_Exposure","曝光时间"),m_cameraExposure);
+    cameraForm->addRow(getLang("Camera_GainShort","增益"),m_cameraGain);
+    cameraForm->addRow(getLang("Camera_TriggerMode","触发模式"),m_cameraTrigger);
+    auto hint=new QLabel(getLang("Camera_ParameterHint",
+        "工业相机参数在下次采集时应用；范围由设备校验。外部触发需接线，曝光较长时请增大单帧超时。"),m_industrialSettings);
+    hint->setWordWrap(true); cameraForm->addRow(hint);
+    ui->verticalLayout_2->insertWidget(4,m_industrialSettings);
+    connect(m_cameraExposure,qOverload<double>(&QDoubleSpinBox::valueChanged),this,[=](double value)
+    { if(m_bShowing) func->setCameraExposureUs(value); });
+    connect(m_cameraGain,qOverload<double>(&QDoubleSpinBox::valueChanged),this,[=](double value)
+    { if(m_bShowing) func->setCameraGain(value); });
+    connect(m_cameraTrigger,qOverload<int>(&QComboBox::currentIndexChanged),this,[=](int index)
+    { if(m_bShowing && index>=0) func->setCameraTriggerMode(m_cameraTrigger->itemData(index).toInt()); });
 
     connect(videoOpen,&QToolButton::clicked,this,[=]()
     {
@@ -192,7 +226,12 @@ void ImageAcquisitionWdg::refreshCameraDevices()
     auto func=getFunc<ImageAcquisition>();
     if(!func) return;
 
+    ui->btnCameraRefresh->setEnabled(!XvCameraMgr->isRefreshing());
+    const QStringList diagnostics=XvCameraMgr->providerDiagnostics();
+    ui->lbCameraStatus->setWordWrap(true);
+    ui->lbCameraStatus->setToolTip(diagnostics.join("\n"));
     const QString selectedId=func->cameraDeviceId();
+    if(m_industrialSettings) m_industrialSettings->setVisible(selectedId.startsWith("hik-mvs:") || selectedId.startsWith("daheng-galaxy:"));
     const QList<XvCamera::XvCameraDeviceInfo> devices=XvCameraMgr->devices();
     QSignalBlocker blocker(ui->cmbCameraDevice);
     ui->cmbCameraDevice->clear();
@@ -249,7 +288,9 @@ void ImageAcquisitionWdg::refreshCameraDevices()
                     ?device.deviceId:details.join(" / "));
             break;
         }
-    }
+    }    if(!diagnostics.isEmpty())
+        ui->lbCameraStatus->setText(ui->lbCameraStatus->text()+"\n"+diagnostics.join("\n"));
+
 }
 
 void ImageAcquisitionWdg::onShow()
@@ -261,10 +302,14 @@ void ImageAcquisitionWdg::onShow()
     ui->ptxLocalImage->setPlainText(func->localFlie());
     ui->ptxLocalDir->setPlainText(func->localDir());
     ui->spbCameraTimeout->setValue(func->cameraTimeoutMs());
+    m_cameraExposure->setValue(func->cameraExposureUs());
+    m_cameraGain->setValue(func->cameraGain());
+    m_cameraTrigger->setCurrentIndex(func->cameraTriggerMode());
     m_videoPath->setText(func->videoPath());
     m_videoStart->setValue(func->videoStartFrame());
     m_videoEnd->setValue(func->videoEndFrame());
     m_videoStep->setValue(func->videoFrameStep());
     m_videoLoop->setChecked(func->videoLoop());
     refreshCameraDevices();
+    XvCameraMgr->refreshDevices();
 }

@@ -26,6 +26,9 @@ public:
     bool registerProvider(XvCameraProvider *provider);
     bool unregisterProvider(const QString &providerId);
     QList<XvCameraDeviceInfo> devices() const;
+    void refreshDevices();
+    QStringList providerDiagnostics() const;
+    bool isRefreshing() const;
 
     EXvCameraError openCamera(const QString &deviceId,IXvCamera **camera=nullptr);
     EXvCameraError closeCamera(const QString &deviceId);
@@ -42,6 +45,7 @@ signals:
 
 private:
     explicit XvCameraManager(QObject *parent=nullptr);
+    EXvCameraError prepareCamera(const QString &deviceId,IXvCamera **camera);
     void setLastError(const QString &message) const;
 
     const QScopedPointer<XvCameraManagerPrivate> d_ptr;
