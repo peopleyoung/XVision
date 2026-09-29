@@ -20,6 +20,7 @@ build integration.
 | [Historical: Halcon Object Detection](./halcon-object-detection.md) | HALCON detection assets, portable boxes, transient results, and fixture wiring |
 | [Project Run Configuration](./project-run-config.md) | Main-flow order, enable state, error policy, XML migration, and UI boundary |
 | [Project Sequential Execution](./project-execution.md) | Managed scheduling, stop/wait semantics, final status, and edit protection |
+| [Global State and JavaScript](./global-script.md) | Typed project globals, XML persistence, isolated script workers, and atomic scalar updates |
 | [Camera Runtime](./camera-runtime.md) | Provider ABI, device identity, acquisition threads, errors, and directory simulation |
 | [Operator Catalog](./operator-catalog.md) | 123 distinct entries, Role.EnumKey IDs, removed compatibility IDs, and validation gates |
 | [Optional Vision Backend Adapters](./vision-backend-adapters.md) | Optional OpenCV/ONNX SDK discovery, owned image conversion, stable tensor metadata, and runtime values |

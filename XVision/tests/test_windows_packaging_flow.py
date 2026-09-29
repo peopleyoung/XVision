@@ -4,6 +4,7 @@ ROOT=pathlib.Path(__file__).resolve().parents[2]
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--pwsh',default=shutil.which('pwsh'),help='PowerShell 7 executable')
 PWSH=parser.parse_args().pwsh
+passed_cases=[]
 if os.name!='posix' or not PWSH:
     parser.error('Run on POSIX with PowerShell 7 installed or pass --pwsh.')
 def put(path,text='fixture',exe=False):
@@ -116,6 +117,7 @@ sys.exit(9 if os.environ['FAULT']=='verify_fail' else 0)
                 for module in ['Concurrent','StateMachine']:
                     assert z.read(f'Qt6{module}{suffix}.dll')==b'qt-sdk-module'
                 assert not any('XvSystemPluginTests' in n or 'Qt6Test' in n for n in names)
+        passed_cases.append(name)
         print('PASS',name,flush=True)
 case('Release with verified staging')
 case('Debug with correct DLL suffixes',config='Debug')
@@ -124,4 +126,4 @@ case('Fresh build forwards SDK roots',skip_build=False)
 case('Skipped tests still enable backends',skip=True,skip_build=False)
 for fault in ['missing_msvc','disabled','missing_backend','missing_qml','missing_sql','missing_concurrent','missing_state_machine','wrong_debug','plugin_fail','verify_fail']:
     case('Reject '+fault,config='Debug' if fault=='wrong_debug' else 'Release',fault=fault)
-print('14 packaging flow fixtures passed; mock tools do not establish Windows runtime acceptance.')
+print(f'{len(passed_cases)} packaging flow fixtures passed; mock tools do not establish Windows runtime acceptance.')

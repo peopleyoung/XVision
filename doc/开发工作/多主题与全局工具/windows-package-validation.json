@@ -1,0 +1,9 @@
+{
+  "run_id": 36538872138,
+  "commit": "e721e579d95e9f88d6ace922b351d51f961e3296",
+  "artifact_id": 11020016466,
+  "transport_digest": "sha256:da81eaa82badc18d79cacfd08c169f9312672dcab9e623bd6e495f40dfdea903",
+  "zip": "XVision-Themes-e721e57-win64.zip",
+  "exe": "XVision-Themes-e721e57-win64/XVision.exe",
+  "zip_sha256": "031e0f4401c1e828143af95f363e05fd41e209027bd94586f2c320c37f53a51b"
+}

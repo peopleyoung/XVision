@@ -281,6 +281,7 @@ Apply when changing Windows build verification, runtime deployment, or packaging
 - Run the system-plugin test again in the staging directory with build/SDK locations removed
   from PATH; fail packaging on missing dependencies or role/preset mismatches.
 - PowerShell scripts containing non-ASCII paths use UTF-8 BOM for Windows PowerShell 5.1.
+- Adding a CTest suite also requires updating both Windows build target lists and test-preset filters. Verification must enumerate the effective preset with ctest --preset <name> --show-only=json-v1; enumerating the unfiltered build directory can falsely confirm a registered test that the preset never builds or runs.
 - Qt Test programs with custom positional inputs construct QCoreApplication with the original
   arguments, then pass only Qt Test arguments to qExec.
 

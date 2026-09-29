@@ -149,6 +149,8 @@ prevent a low-resolution pixmap path. Keep these attributes guarded out on Qt 6.
 
 UiAppearance owns five stable theme IDs and user-scoped INI preferences. Theme changes update QSS/palette, property-tagged dock styles, graphics scenes and original-vector icon engines. Unknown saved IDs fall back to tech-blue. Verify light-theme logs, custom controls and icons.
 
+Use QColor scalar getters (hslHueF, hslSaturationF, lightnessF, alphaF) for shared Qt 5/6 color transforms. Qt 6 getHslF accepts float pointers, while the Qt 5 signature accepts qreal pointers; passing qreal addresses breaks the native Qt 6 Windows build. Verify both supported Qt versions after theme changes.
+
 Qt5 QApplication palette changes do not reliably notify non-widget graphics through QGuiApplication::paletteChanged. Graph objects expose refreshThemePalette, invoked once per retained scene on a theme switch. New objects read QApplication::palette. The graph library must not depend on app theme IDs.
 
 Orthogonal links share one QPainterPath for paint, arrows, length, hit testing and bounds. Emit posChanged on ItemPositionHasChanged so subscribers read the committed position. Call prepareGeometryChange before replacing paths. Current routing avoids endpoint rectangles, not all scene obstacles.
